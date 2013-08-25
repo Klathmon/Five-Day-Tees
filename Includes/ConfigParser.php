@@ -75,4 +75,9 @@ class ConfigParser
     {
         return $this->configVariables['BASE_DIR'];
     }
+
+    public function getStaticURL()
+    {
+        return $this->configVariables['STATIC_URL'];
+    }
 }

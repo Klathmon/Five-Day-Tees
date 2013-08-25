@@ -13,7 +13,7 @@ function Autoloader($className)
     }
     $fileName .= str_replace('_', DIRECTORY_SEPARATOR, $className) . '.php';
 
-    if (is_file('Includes/' . $fileName)) {
+    if (is_file(get_include_path() . $fileName)) {
         include $fileName;
     } else {
         switch ($className) {
