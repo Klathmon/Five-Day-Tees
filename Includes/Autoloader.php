@@ -18,7 +18,7 @@ function Autoloader($className)
     } else {
         switch ($className) {
             default:
-                throw new Exception('Class ' . $className . ' cannot be loaded!');
+                //throw new Exception('Class ' . $className . ' cannot be loaded!');
         }
     }
 }

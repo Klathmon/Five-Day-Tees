@@ -33,8 +33,10 @@ if ($config->getMode() == 'DEV') {
     error_reporting(0);
 }
 
-$database = new PDO("mysql:host={$config->getDatabaseHost()};dbname={$config->getDatabaseName()}",
-    $config->getDatabaseUsername(), $config->getDatabasePassword());
+$database = new PDO(
+    "mysql:host={$config->getDatabaseHost()};dbname={$config->getDatabaseName()}",
+    $config->getDatabaseUsername(), $config->getDatabasePassword()
+);
 $database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 /** @var Query $query Parse the URL into it's parts */

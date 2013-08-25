@@ -80,4 +80,14 @@ class ConfigParser
     {
         return $this->configVariables['STATIC_URL'];
     }
+
+    public function getSiteName()
+    {
+        return $this->configVariables['SITE_NAME'];
+    }
+
+    public function getGoogleAnalytics()
+    {
+        return $this->configVariables['GOOGLE_ANALYTICS'];
+    }
 }
