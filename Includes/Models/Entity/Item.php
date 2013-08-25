@@ -38,6 +38,10 @@ class Item implements Entity
     private $sizesAvailable;
     /** @var DateTime */
     private $lastUpdated;
+    /** @var int */
+    private $numberSold;
+    /** @var int */
+    private $votes;
 
 
     public function __construct($ID = null)
@@ -250,13 +254,75 @@ class Item implements Entity
         //TODO: add hasSize to Item class
     }
 
+    /**
+     * Gets the LastUpdated time
+     *
+     * @return DateTime
+     */
     public function getLastUpdated()
     {
         return $this->lastUpdated;
     }
 
+    /**
+     * Set the LastUpdated time
+     *
+     * @param DateTime $dateTime
+     */
     public function setLastUpdated($dateTime)
     {
         $this->lastUpdated = $dateTime;
+    }
+
+    /**
+     * Set the number sold
+     *
+     * @param int $numberSold
+     */
+    public function setNumberSold($numberSold)
+    {
+        $this->numberSold = $numberSold;
+    }
+
+    /**
+     * Get the number sold
+     *
+     * @return int
+     */
+    public function getNumberSold()
+    {
+        $sold = $this->numberSold;
+
+        if (is_null($sold)) {
+            return 0;
+        } else {
+            return $sold;
+        }
+    }
+
+    /**
+     * Get the current Votes
+     *
+     * @param int $votes
+     */
+    public function setVotes($votes)
+    {
+        $this->votes = $votes;
+    }
+
+    /**
+     * Set the current votes
+     *
+     * @return int
+     */
+    public function getVotes()
+    {
+        $votes = $this->votes;
+
+        if (is_null($votes)) {
+            return 0;
+        } else {
+            return $votes;
+        }
     }
 }

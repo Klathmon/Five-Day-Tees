@@ -189,19 +189,21 @@ class SpreadshirtItems
      */
     private function setCommonData($item)
     {
-        list($salesLimit, $displayDate) = $this->itemMapper->getItemsCommonByName($item->getName());
+        list($salesLimit, $displayDate, $votes) = $this->itemMapper->getItemsCommonByName($item->getName());
 
-        if ($salesLimit === false || $displayDate === false) {
+        if ($salesLimit === false || $displayDate === false || $votes === false) {
             /* That name does not exist, use defaults for the data */
             $numberOfDays = $this->settings->getDaysApart();
 
             $displayDate = $this->itemMapper->getLastDate()->modify("+$numberOfDays days");
             $salesLimit  = $this->settings->getSalesLimit();
+            $votes       = 0;
         }
 
         /* Set the data to the item */
         $item->setSalesLimit($salesLimit);
         $item->setDisplayDate($displayDate);
+        $item->setVotes($votes);
     }
 
     /**

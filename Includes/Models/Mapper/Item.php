@@ -52,7 +52,7 @@ class Item implements Mapper
     {
         $sql
                    = <<<SQL
-SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit 
+SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes
   FROM Items 
     LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
   WHERE Items.`ID` = :ID
@@ -80,7 +80,7 @@ SQL;
 
         $sql
             = <<<SQL
-SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit 
+SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes
   FROM Items 
     LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
   LIMIT :start, :number
@@ -111,7 +111,7 @@ SQL;
     {
         $statement = $this->database->prepare(
             <<<SQL
-            SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit 
+            SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes
   FROM Items 
     LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
   WHERE Items.Name = :Name AND Items.Gender = :Gender
@@ -133,16 +133,16 @@ SQL
      */
     public function getItemsCommonByName($name)
     {
-        $statement = $this->database->prepare('SELECT DisplayDate, SalesLimit FROM ItemsCommon WHERE Name=:Name LIMIT 1');
+        $statement = $this->database->prepare('SELECT DisplayDate, SalesLimit, Votes FROM ItemsCommon WHERE Name=:Name LIMIT 1');
         $statement->bindValue(':Name', $name, PDO::PARAM_STR);
         $statement->execute();
 
         $row = $statement->fetch(PDO::FETCH_ASSOC);
 
         if ($row === false) {
-            return [false, false];
+            return [false, false, false];
         } else {
-            return [$row['SalesLimit'], DateTime::createFromFormat('Y-m-d', $row['DisplayDate'])];
+            return [$row['SalesLimit'], DateTime::createFromFormat('Y-m-d', $row['DisplayDate']), $row['Votes']];
         }
     }
 
@@ -200,14 +200,6 @@ SQL
      */
     public function persist($entity)
     {
-        /**
-         * 3 use cases:
-         *
-         * 1. insert completely new ItemsCommon
-         * 2. Update ItemsCommon with the same Name (key)
-         * 3. Update ItemsCommon with a new Name (key)
-         */
-
         try{
 
             /* Start the transaction */
@@ -227,10 +219,12 @@ SQL
   SET
     Name=:Name,
     SalesLimit=:SalesLimit,
-    DisplayDate=:DisplayDate
+    DisplayDate=:DisplayDate,
+    Votes=:Votes
   ON DUPLICATE KEY UPDATE
     SalesLimit=:SalesLimit,
-    DisplayDate=:DisplayDate
+    DisplayDate=:DisplayDate,
+    Votes=:Votes
 SQL
             );
 
@@ -250,7 +244,8 @@ SQL
     ProductImage=:ProductImage,
     DesignImage=:DesignImage,
     SizesAvailable=:SizesAvailable,
-    LastUpdated=:LastUpdated
+    LastUpdated=:LastUpdated,
+    Sold=:Sold
   ON DUPLICATE KEY UPDATE
     Name=:Name,
     Gender=:Gender,
@@ -262,7 +257,8 @@ SQL
     ProductImage=:ProductImage,
     DesignImage=:DesignImage,
     SizesAvailable=:SizesAvailable,
-    LastUpdated=:LastUpdated
+    LastUpdated=:LastUpdated,
+    Sold=:Sold
 SQL
             );
 
@@ -272,6 +268,7 @@ SQL
             $itemsCommon->bindValue(':Name', $entity->getName(), PDO::PARAM_STR);
             $itemsCommon->bindValue(':SalesLimit', $entity->getSalesLimit(), PDO::PARAM_INT);
             $itemsCommon->bindValue(':DisplayDate', $entity->getDisplayDate()->format('Y-m-d'), PDO::PARAM_STR);
+            $itemsCommon->bindValue(':Votes', $entity->getVotes(), PDO::PARAM_INT);
 
             $items->bindValue(':ID', $entity->getID(), PDO::PARAM_INT);
             $items->bindValue(':Name', $entity->getName(), PDO::PARAM_STR);
@@ -285,6 +282,7 @@ SQL
             $items->bindValue(':DesignImage', $entity->getDesignImage(), PDO::PARAM_STR);
             $items->bindValue(':SizesAvailable', implode(',', $entity->getSizesAvailable()), PDO::PARAM_STR);
             $items->bindValue(':LastUpdated', $entity->getLastUpdated()->format('Y-m-d H:i:s'), PDO::PARAM_STR);
+            $items->bindValue(':Sold', $entity->getNumberSold(), PDO::PARAM_INT);
 
             /* Execute the SELECT/INSERT statements */
             $itemsDeleteCheck->execute();
@@ -348,6 +346,8 @@ SQL
             $entity->setDesignImage($data['DesignImage']);
             $entity->setSizesAvailable(explode(',', $data['SizesAvailable']));
             $entity->setLastUpdated(DateTime::createFromFormat('Y-m-d H:i:s', $data['LastUpdated']));
+            $entity->setNumberSold($data['Sold']);
+            $entity->setVotes($data['Votes']);
         }
 
         return $entity;
