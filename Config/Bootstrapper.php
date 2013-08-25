@@ -11,18 +11,19 @@ if (session_id() == '') {
 /** Set the current working directory to the public root */
 chdir(__DIR__ . '/../');
 
+set_include_path('Includes/');
+
 /** Include and construct the ConfigParser */
-require('Includes/ConfigParser.php');
+require('ConfigParser.php');
 $config = new ConfigParser('Config/development.ini');
 
 /** Include Debug.php if we are in development */
 if ($config->getMode() == 'DEV') {
-    include('Includes/Library/Debug.php');
+    include('Library/Debug.php');
 }
 
 /** Setup Timezone, Autoloader, and Error Reporting */
 date_default_timezone_set('America/New_York');
-set_include_path('Includes/');
 include('Autoloader.php');
 spl_autoload_register('Autoloader');
 if ($config->getMode() == 'DEV') {
