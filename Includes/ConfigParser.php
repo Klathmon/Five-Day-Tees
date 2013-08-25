@@ -70,4 +70,9 @@ class ConfigParser
     {
         return $this->configVariables['SPREAD_SHOP_ID'];
     }
+
+    public function getBaseDirectory()
+    {
+        return $this->configVariables['BASE_DIR'];
+    }
 }
