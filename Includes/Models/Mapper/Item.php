@@ -100,6 +100,25 @@ SQL;
         return $array;
     }
 
+
+    public function getFeatured()
+    {
+        $statement = $this->database->prepare(
+            <<<SQL
+            SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes
+  FROM Items 
+    LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  WHERE DisplayDate >= :StartDate
+    AND DisplayDate <= :EndDate
+  ORDER BY DisplayDate DESC, Gender ASC
+SQL
+        );
+
+        //TODO: Start here! get start and end dates (days apart * 2 minus and plus todays date) and return the values
+        //TODO: Also add a thing to the function to allow me to select a "Preview" of only one item of each name, or a FULLDATA of each item
+    }
+
+
     /**
      * Returns an item based on it's name and gender
      *

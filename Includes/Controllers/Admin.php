@@ -18,7 +18,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settings->setLevel2(Sanitize::preserveGivenCharacters($_POST['Level2'], '1234567890.'));
             $settings->setLevel3(Sanitize::preserveGivenCharacters($_POST['Level3'], '1234567890.'));
             $settings->persistSelf();
-            $response['status'] = 'OK';
+            $response['status']  = 'OK';
+            $response['message'] = 'Saved!';
+            break;
+        case 'SaveItem':
+            $item = $itemsMapper->getByID(Sanitize::cleanInteger($_POST['ID']));
+            $item->setName($_POST['Name']);
+            $item->setDescription($_POST['Description']);
+            $item->setRetail(Sanitize::preserveGivenCharacters($_POST['Retail'], '1234567890.'));
+            $item->setDisplayDate(DateTime::createFromFormat('Y-m-d', $_POST['DisplayDate']));
+            $item->setVotes(Sanitize::cleanInteger($_POST['Votes']));
+            $item->setNumberSold(Sanitize::cleanInteger($_POST['Sold']));
+            $item->setSalesLimit(Sanitize::cleanInteger($_POST['SalesLimit']));
+            $itemsMapper->persist($item);
+            $response['status']  = 'OK';
+            $response['message'] = 'Item Saved!';
+            break;
+        case 'DeleteItem':
+            $item = $itemsMapper->getByID(Sanitize::cleanInteger($_POST['ID']));
+            $itemsMapper->delete($item);
+            $response['status']  = 'OK';
+            $response['message'] = 'Item Deleted!';
+            break;
+        case 'GetNewItems':
+            $spreadshirt = new SpreadshirtItems($database, $config);
+            $spreadshirt->getNewItems();
+            unset($spreadshirt);
+            $response['status']  = 'OK';
+            $response['command'] = 'refreshPage';
             break;
         default:
             $response['status']  = 'ERROR';

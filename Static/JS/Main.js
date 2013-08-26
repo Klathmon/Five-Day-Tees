@@ -13,15 +13,18 @@
     });
 
     function attachHandlers(){
-        $('#Admin.Page').find('#saveGlobalSettings').on('click', saveGlobalSettings);
+        $('#Admin.Page')
+            .find('#SaveGlobalSettings').on('click', saveGlobalSettings)
+            .find('#SaveItem').on('click', saveItem)
+            .find('#DeleteItem').on('click', deleteItem);
     }
+
+    /** Admin Page Functions **/
 
     function saveGlobalSettings(event){
         var $row = $(event.target).closest('TR');
 
         var data = {};
-
-        data['Command'] = 'SaveGlobals';
         data['StartingDisplayDate'] = $row.find('#StartingDisplayDate').val();
         data['Retail'] = $row.find('#Retail').val();
         data['SalesLimit'] = $row.find('#SalesLimit').val();
@@ -30,14 +33,53 @@
         data['Level2'] = $row.find('#Level2').val();
         data['Level3'] = $row.find('#Level3').val();
 
-        console.log(data);
+        sendCommand('/Admin', 'SaveGlobals', data);
+    }
 
-        $.post('/Admin', data, function(data){
-            obj = $.parseJSON(data);
+    function saveItem(event){
+        var $row = $(event.target).closest('TR');
+
+        var data = {};
+        data['ID'] = $row.data('id');
+        data['Name'] = $row.find('#Name').val();
+        data['Description'] = $row.find('#Description').val();
+        data['Retail'] = $row.find('#Retail').val();
+        data['DisplayDate'] = $row.find('#DisplayDate').val();
+        data['Votes'] = $row.find('#Votes').val();
+        data['Sold'] = $row.find('#Sold').val();
+        data['SalesLimit'] = $row.find('#SalesLimit').val();
+
+        sendCommand('/Admin', 'SaveItem', data);
+    }
+
+    function deleteItem(event){
+        var $row = $(event.target).closest('TR');
+
+        var data = {'ID': $row.data('id')};
+        var name = $row.find('#Name').val();
+
+        var okay = confirm('Are you sure you want to delete ' + name + '?');
+
+        if(okay){
+            sendCommand('/Admin', 'DeleteItem', data);
+        }
+    }
+
+
+    /** Helper Functions **/
+
+    function sendCommand(url, command, data){
+
+        data['Command'] = command;
+
+        $.post(url, data, function(returnData){
+            obj = $.parseJSON(returnData);
             if(obj['status'] == 'OK'){
-                alert('Saved!');
-            }else{
+                alert(obj['message']);
+            }else if(obj['status'] == 'ERROR'){
                 alert('ERROR! ' + obj['message']);
+            }else{
+                alert('Unknown Error!');
             }
         });
     }

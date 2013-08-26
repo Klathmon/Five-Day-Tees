@@ -22,7 +22,7 @@
             <td><input type="number" id="Level2" value="{$level2}" step="1" min="0" max="10"/></td>
             <td><input type="number" id="Level3" value="{$level3}" step="1" min="0" max="10"/></td>
             <td>
-                <button id="saveGlobalSettings">Save</button>
+                <button id="SaveGlobalSettings">Save</button>
             </td>
         </tr>
     </table>
@@ -43,7 +43,7 @@
             <th></th>
         </tr>
         {foreach $items as $item}
-            <tr>
+            <tr data-id="{$item->getID()}">
                 <td><input type="text" id="Name" value="{$item->getName()}"/></td>
                 <td><input type="text" value="{$item->getGender()}" disabled/></td>
                 <td><textarea id="Description">{$item->getDescription()}</textarea></td>
