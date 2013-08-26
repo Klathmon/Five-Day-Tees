@@ -35,7 +35,7 @@ class FDTSmarty extends Smarty
 
         if ($this->config->getMode() == 'DEV') {
             $this->force_compile = true;
-            $this->debugging     = true;
+            //$this->debugging     = true;
         } else {
             $this->debugging = false;
         }

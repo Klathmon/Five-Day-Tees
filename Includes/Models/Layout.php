@@ -29,7 +29,7 @@ class Layout
         $this->page->addCss('normalize.css');
         $this->page->addCss('style.css');
 
-        $this->page->addJs('main.js');
+        $this->page->addJs('Main.js');
 
         $this->page->assign('mainTemplate', $template);
     }
@@ -37,5 +37,10 @@ class Layout
     public function output()
     {
         $this->page->output();
+    }
+
+    public function assign($tpl_var, $value = null, $nocache = false)
+    {
+        $this->page->assign($tpl_var, $value, $nocache);
     }
 }

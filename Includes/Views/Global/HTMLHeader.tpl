@@ -10,12 +10,13 @@
 
     {* This is a Box-Sizing polyfill for IE5.5 6 and 7 *}
     {* I use Box-Sizing:border-box heavily, so this makes layout easier *}
+    {* TODO: Add the Boxsizing polyfill script *}
     <style>
         * {
             box-sizing: border-box;
             -webkit-box-sizing: border-box;
             -moz-box-sizing: border-box;
-            *behavior: url("{$const.STATIC_URL}js/polyfills/boxsizing.htc");
+            *behavior: url("{$config->getStaticURL()}JS/polyfills/boxsizing.htc");
         }
     </style>
 

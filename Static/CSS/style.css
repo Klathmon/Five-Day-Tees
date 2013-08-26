@@ -1,1 +1,149 @@
-/*Main*/
+/*[fmt]0*//*GLOBAL*/
+NAV > UL > LI {
+    display: block;
+    float: left;
+    list-style: none;
+}
+
+A {
+    color: #4C4C4C;
+}
+
+A:hover {
+    color: #AAA;
+}
+
+/*BODY*/
+HTML {
+    background-image: url('/Static/Images/Layout/Background.png');
+    background-attachment: fixed;
+    background-size: cover;
+}
+
+BODY {
+    width: 1000px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/*HEADER*/
+HEADER {
+    margin-top: 5px;
+}
+
+HEADER #logo {
+    display: block;
+    margin-left: auto;
+    margin-right: auto;
+    width: 300px;
+}
+
+#logo IMG {
+    width: 300px;
+}
+
+NAV#SubNav {
+    float: right;
+    margin-right: 10px;
+    margin-top: -75px;
+}
+
+#SubNav LI:first-child {
+    color: #4C4C4C;
+    text-decoration: underline;
+    margin-top: -8px;
+}
+
+#SubNav LI:first-child:hover {
+    cursor: pointer;
+    color: #AAA;
+}
+
+#SubNav LI:not(:first-child):before {
+    content: "|";
+    margin-left: 7px;
+    margin-right: 7px;
+}
+
+NAV#MainNav {
+    background-image: url('/Static/Images/Header/NavBar.png');
+    background-size: 100% 58px;
+    padding-top: 9px;
+    overflow: hidden;
+}
+
+#MainNav UL {
+    float: left;
+    margin: 0px;
+    padding: 0px;
+}
+
+#MainNav LI:first-child {
+    margin-left: 35px;
+}
+
+#MainNav LI:hover {
+    /*+opacity:75%;*/
+    filter: alpha(opacity=75);
+    -ms-filter: progid
+
+:DXImageTransform.Microsoft.
+
+Alpha
+(
+Opacity
+
+=
+75
+)
+;
+-moz-opacity:
+
+0.75
+;
+opacity:
+
+0.75
+;
+    }
+
+#MainNav UL LI:not(:first-child):before {
+    content: " ";
+    background-color: #FFF;
+    width: 10px;
+    height: 10px;
+    display: block;
+    float: left; /*+border-radius:1px;*/
+    -moz-border-radius: 1px;
+    -webkit-border-radius: 1px;
+    -khtml-border-radius: 1px;
+    border-radius: 1px;
+    margin-top: 14px;
+    margin-right: 11px;
+    margin-left: 11px;
+}
+
+#MainNav H1 {
+    float: right;
+    display: block;
+    padding: 0px;
+    margin: 0px 25px 0px 0px;
+    color: #FFF;
+    font-family: Impact;
+    font-size: 30px;
+    font-weight: normal;
+}
+
+/*ADMIN*/
+#Admin.Page #Global TD {
+    width: 130px;
+    text-align: center;
+}
+
+#Admin.Page #Global TD INPUT {
+    width: 130px;
+}
+
+#Admin.Page #Items TD, #Admin.Page #Items TD INPUT, #Admin.Page #Items TD TEXTAREA {
+    width: 91px;
+}

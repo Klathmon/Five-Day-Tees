@@ -83,6 +83,7 @@ SQL;
 SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes
   FROM Items 
     LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  ORDER BY DisplayDate DESC, Gender ASC
   LIMIT :start, :number
 SQL;
 
