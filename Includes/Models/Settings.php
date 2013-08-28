@@ -153,4 +153,93 @@ SQL
     {
         $this->data['Level3'] = $amount;
     }
+
+    /**
+     * Returns the item's current price based on it's category
+     *
+     * @param \Entity\Item $item
+     *
+     * @return string
+     */
+    public function getItemCurrentPrice($item)
+    {
+        $currentPrice = $item->getRetail();
+
+        switch ($item->getCategory()) {
+            case 'Level1':
+                $currentPrice += $this->getLevel1();
+                break;
+            case 'Level2':
+                $currentPrice += $this->getLevel2();
+                break;
+            case 'Level3':
+                $currentPrice += $this->getLevel3();
+                break;
+            case 'Vault':
+            case 'Default':
+            default:
+                $currentPrice = '999.99';
+                break;
+        }
+
+        return $currentPrice;
+    }
+
+    /**
+     * This will return the item's "Category"
+     * Return Values can be:
+     * Disabled In the queue and/or not to be sold yet
+     * Level1   The current day's/time's featured item
+     * Level2   In the current featured period, but not the featured item
+     * Level3   In the store, the highest price items
+     * Vault    Similar to disabled, When a item's total sold is >= the sales limit
+     *
+     * @param \Entity\Item $item
+     *
+     * @return string
+     */
+    public function getItemCategory($item)
+    {
+        $dates       = $this->getFeaturedDates();
+        $displayDate = $item->getDisplayDate()->format('z');
+
+        $oldestDate = $dates[0]->format('z');
+        $olderDate  = $dates[1]->format('z');
+        $newerDate  = $dates[2]->format('z');
+        $newestDate = $dates[3]->format('z');
+
+        if ($item->getTotalSold() >= $item->getSalesLimit()) {
+            $category = 'Vault';
+        } elseif ($displayDate <= $oldestDate) {
+            $category = 'Level3';
+        } elseif ($displayDate > $newerDate) {
+            $category = 'Disabled';
+        } elseif ($displayDate >= $olderDate && $displayDate < $newerDate) {
+            $category = 'Level1';
+        } elseif ($displayDate <= $newerDate && $displayDate < $newestDate) {
+            $category = 'Level2';
+        }
+
+        return $category;
+
+    }
+
+    /**
+     * Returns the past and future dates for the Featured page
+     * These dates are the dividers for all the categories and are used in a ton of places.
+     *
+     * @return DateTime[]
+     */
+    public function getFeaturedDates()
+    {
+        $daysApart   = $this->getDaysApart();
+        $currentDate = DateTime::createFromFormat('U', time())->modify('-' . $daysApart * 3 . ' days');
+
+        $oldestDate = clone $currentDate;
+        $olderDate  = clone $currentDate->modify('+' . $daysApart * 2 . ' days');
+        $newerDate  = clone $currentDate->modify('+' . $daysApart * 1 . ' days');
+        $newestDate = clone $currentDate->modify('+' . $daysApart * 2 . ' days')->modify('+1 day');
+
+        return [$oldestDate, $olderDate, $newerDate, $newestDate];
+    }
 }

@@ -9,6 +9,7 @@ $itemsMapper = new \Mapper\Item($database, $config);
 
 $layout = new Layout($config, 'Featured.tpl', 'Featured');
 
+$layout->assign('settings', $settings);
 $layout->assign('items', $itemsMapper->getFeatured(true));
 
 $layout->output();

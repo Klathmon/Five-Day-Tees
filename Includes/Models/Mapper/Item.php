@@ -28,7 +28,6 @@ class Item implements Mapper
      */
     private $settings;
 
-    private $sqlRootSelect = 'SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes FROM Items LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)';
 
     /**
      * Pass the $database connection in at construction.
@@ -52,8 +51,18 @@ class Item implements Mapper
      */
     public function getByID($ID)
     {
-        $sql = $this->sqlRootSelect;
-        $sql .= ' WHERE Items.`ID` = :ID LIMIT 1';
+        $sql
+            = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE Items.ID = :ID
+  LIMIT 1
+SQL;
+
         $statement = $this->database->prepare($sql);
 
         $statement->bindValue(':ID', $ID, PDO::PARAM_INT);
@@ -64,23 +73,33 @@ class Item implements Mapper
     }
 
     /**
-     * Returns an array of all Items in the table, between start and stop (inclusive)
+     * Returns an array of all Items in the table
      *
      * @param int $start
-     * @param int $stop
+     * @param int $limit
      *
      * @return \Entity\Item[]
      */
-    public function listAll($start = 0, $stop = null)
+    public function listAll($start = 0, $limit = null)
     {
-        $maxNumber = (is_null($stop) ? 1000 : $stop - $start);
 
-        $sql = $this->sqlRootSelect;
-        $sql .= ' ORDER BY DisplayDate DESC, Gender ASC LIMIT :start, :number';
+        $sql
+            = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC 
+  LIMIT :Start, :Amount
+SQL;
 
         $statement = $this->database->prepare($sql);
-        $statement->bindValue(':start', $start, PDO::PARAM_INT);
-        $statement->bindValue(':number', $maxNumber, PDO::PARAM_INT);
+
+        $statement->bindValue(':Start', $start, PDO::PARAM_INT);
+        $statement->bindValue(':Amount', $limit, PDO::PARAM_INT);
+
         $statement->execute();
 
 
@@ -95,21 +114,51 @@ class Item implements Mapper
      * Gets the shirts that are queue'd up to be shown at a later date
      *
      * @param bool $preview If true, it will only return one of each shirt (by name)
+     * @param int  $start
+     * @param int  $limit
      *
      * @return \Entity\Item[]
      */
-    public function getQueue($preview = false)
+    public function getQueue($preview = false, $start = 0, $limit = 100)
     {
-        $sql = $this->sqlRootSelect;
-        $sql .= ' WHERE DisplayDate >= :FutureDate';
-        $sql .= ($preview ? ' GROUP BY Items.Name' : '');
-        $sql .= ' ORDER BY DisplayDate DESC, Gender ASC';
+
+        if ($preview) {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, MAX(Items.Gender) AS Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate >= :FutureDate
+  GROUP BY Items.Name
+  ORDER BY ItemsCommon.DisplayDate DESC
+  LIMIT :Start, :Amount
+SQL;
+        } else {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate >= :FutureDate
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC 
+  LIMIT :Start, :Amount
+SQL;
+        }
 
         $statement = $this->database->prepare($sql);
 
-        list($pastDate, $futureDate) = $this->getDates();
+        $futureDate = $this->settings->getFeaturedDates()[3];
 
-        $statement->bindValue('FutureDate', $futureDate);
+        $statement->bindValue('FutureDate', $futureDate->format('Y-m-d'));
+        $statement->bindValue('Start', $start, PDO::PARAM_INT);
+        $statement->bindValue('Amount', $limit, PDO::PARAM_INT);
+
         $statement->execute();
 
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
@@ -128,17 +177,47 @@ class Item implements Mapper
      */
     public function getFeatured($preview = false)
     {
-        $sql = $this->sqlRootSelect;
-        $sql .= ' WHERE DisplayDate > :PastDate AND DisplayDate < :FutureDate';
-        $sql .= ($preview ? ' GROUP BY Items.Name' : '');
-        $sql .= ' ORDER BY DisplayDate DESC, Gender ASC';
+
+        if ($preview) {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, MAX(Items.Gender) AS Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate > :PastDate 
+    AND DisplayDate < :FutureDate
+  GROUP BY Items.Name
+  ORDER BY ItemsCommon.DisplayDate DESC
+SQL;
+        } else {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate > :PastDate 
+    AND DisplayDate < :FutureDate
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC
+SQL;
+        }
 
         $statement = $this->database->prepare($sql);
 
-        list($pastDate, $futureDate) = $this->getDates();
+        $dates = $this->settings->getFeaturedDates();
 
-        $statement->bindValue('PastDate', $pastDate);
-        $statement->bindValue('FutureDate', $futureDate);
+        $pastDate   = $dates[0];
+        $futureDate = $dates[3];
+
+
+        $statement->bindValue('PastDate', $pastDate->format('Y-m-d'));
+        $statement->bindValue('FutureDate', $futureDate->format('Y-m-d'));
+
         $statement->execute();
 
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
@@ -159,19 +238,46 @@ class Item implements Mapper
      */
     public function getStore($preview = false, $start = 0, $limit = 50)
     {
-        $sql = $this->sqlRootSelect;
-        $sql .= ' WHERE DisplayDate >= :PastDate';
-        $sql .= ($preview ? ' GROUP BY Items.Name' : '');
-        $sql .= ' ORDER BY DisplayDate DESC, Gender ASC';
-        $sql .= ' LIMIT :Limit OFFSET :Start';
+
+        if ($preview) {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, MAX(Items.Gender) AS Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate <= :PastDate
+    AND ItemsSold.TotalSold < ItemsCommon.SalesLimit
+  GROUP BY Items.Name
+  ORDER BY ItemsCommon.DisplayDate DESC
+  LIMIT :Start, :Amount
+SQL;
+        } else {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate <= :PastDate
+    AND ItemsSold.TotalSold < ItemsCommon.SalesLimit
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC
+  LIMIT :Start, :Amount
+SQL;
+        }
 
         $statement = $this->database->prepare($sql);
 
-        list($pastDate, $futureDate) = $this->getDates();
+        $pastDate = $this->settings->getFeaturedDates()[0];
 
-        $statement->bindValue('PastDate', $pastDate, PDO::PARAM_STR);
+        $statement->bindValue('PastDate', $pastDate->format('Y-m-d'), PDO::PARAM_STR);
         $statement->bindValue('Start', $start, PDO::PARAM_INT);
-        $statement->bindValue('Limit', $limit, PDO::PARAM_INT);
+        $statement->bindValue('Amount', $limit, PDO::PARAM_INT);
+
         $statement->execute();
 
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
@@ -192,18 +298,41 @@ class Item implements Mapper
      */
     public function getVault($preview = false, $start = 0, $limit = 50)
     {
-        $sql = $this->sqlRootSelect;
-        $sql .= ' LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name';
-        $sql .= ' WHERE TotalSold >= SalesLimit';
-        $sql .= ($preview ? ' GROUP BY Items.Name' : '');
-        $sql .= ' ORDER BY DisplayDate DESC, Gender ASC';
-        $sql .= ' LIMIT :Limit OFFSET :Start';
 
+        if ($preview) {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, MAX(Items.Gender) AS Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE ItemsSold.TotalSold >= ItemsCommon.SalesLimit
+  GROUP BY Items.Name
+  ORDER BY ItemsCommon.DisplayDate DESC
+  LIMIT :Start, :Amount
+SQL;
+        } else {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE ItemsSold.TotalSold >= ItemsCommon.SalesLimit
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC
+  LIMIT :Start, :Amount
+SQL;
+        }
 
         $statement = $this->database->prepare($sql);
 
         $statement->bindValue('Start', $start, PDO::PARAM_INT);
-        $statement->bindValue('Limit', $limit, PDO::PARAM_INT);
+        $statement->bindValue('Amount', $limit, PDO::PARAM_INT);
+
         $statement->execute();
 
         foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
@@ -223,12 +352,24 @@ class Item implements Mapper
      */
     public function getItemByNameGender($name, $gender)
     {
-        $sql = $this->sqlRootSelect;
-        $sql .= 'WHERE Items.Name = :Name AND Items.Gender = :Gender LIMIT 1';
+
+        $sql
+            = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE Items.Name = :Name AND Items.Gender = :Gender
+  LIMIT 1
+SQL;
 
         $statement = $this->database->prepare($sql);
+
         $statement->bindValue(':Name', $name, PDO::PARAM_STR);
         $statement->bindValue(':Gender', strtolower($gender), PDO::PARAM_STR);
+
         $statement->execute();
 
         return $this->createEntity($statement->fetch(PDO::FETCH_ASSOC));
@@ -243,8 +384,12 @@ class Item implements Mapper
      */
     public function getItemsCommonByName($name)
     {
-        $statement = $this->database->prepare('SELECT DisplayDate, SalesLimit, Votes FROM ItemsCommon WHERE Name=:Name LIMIT 1');
+        $sql = 'SELECT DisplayDate, SalesLimit, Votes FROM ItemsCommon WHERE Name=:Name LIMIT 1';
+
+        $statement = $this->database->prepare($sql);
+
         $statement->bindValue(':Name', $name, PDO::PARAM_STR);
+
         $statement->execute();
 
         $row = $statement->fetch(PDO::FETCH_ASSOC);
@@ -263,7 +408,9 @@ class Item implements Mapper
      */
     public function getLastDate()
     {
-        $statement = $this->database->query('SELECT MAX(DisplayDate) FROM ItemsCommon');
+        $sql = 'SELECT MAX(DisplayDate) FROM ItemsCommon';
+
+        $statement = $this->database->query($sql);
 
         $result = $statement->fetch(PDO::FETCH_NUM)[0];
 
@@ -458,26 +605,11 @@ SQL
             $entity->setLastUpdated(DateTime::createFromFormat('Y-m-d H:i:s', $data['LastUpdated']));
             $entity->setNumberSold($data['Sold']);
             $entity->setVotes($data['Votes']);
+            $entity->setTotalSold($data['TotalSold']);
+            $entity->setCategory($this->settings->getItemCategory($entity));
         }
 
         return $entity;
-    }
-
-    /**
-     * This function returns the Past and future dates for the featured tees.
-     *
-     * @return string[]
-     */
-    private function getDates()
-    {
-        //This math was worse than pulling teeth to figure out, I don't think i could do it again...
-
-        $daysApart   = $this->settings->getDaysApart();
-        $currentDate = DateTime::createFromFormat('U', time())->modify('-' . $daysApart * 3 . ' days');
-        $pastDate    = $currentDate->format('Y-m-d');
-        $futureDate  = $currentDate->modify('+' . $daysApart * 5 . ' days')->modify('+1 day')->format('Y-m-d');
-
-        return [$pastDate, $futureDate];
     }
 
     /**

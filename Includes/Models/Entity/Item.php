@@ -42,6 +42,10 @@ class Item implements Entity
     private $numberSold;
     /** @var int */
     private $votes;
+    /** @var int */
+    private $totalSold;
+    /** @var string */
+    public $category;
 
 
     public function __construct($ID = null)
@@ -327,28 +331,6 @@ class Item implements Entity
     }
 
     /**
-     * Gets the Current price for this shirt
-     *
-     * @return string
-     */
-    public function getCurrentPrice()
-    {
-        //TODO: Modify this to be the real current price!
-
-        return $this->getRetail();
-    }
-
-    /**
-     * Gets the nicely formatted price in the format of "$##.##"
-     *
-     * @return string
-     */
-    public function getNicePrice()
-    {
-        return '$' . (string)number_format($this->getCurrentPrice(), 2);
-    }
-
-    /**
      * Returns the Design Image with the given parameters
      *
      * @param        $x
@@ -374,5 +356,25 @@ class Item implements Entity
     public function getFormattedProductImage($x, $y, $format = 'png')
     {
         return $this->getProductImage() . ",width=$x,height=$y,mediaType=$format";
+    }
+
+    public function setTotalSold($totalSold)
+    {
+        $this->totalSold = $totalSold;
+    }
+
+    public function getTotalSold()
+    {
+        return $this->totalSold;
+    }
+
+    public function setCategory($category)
+    {
+        $this->category = $category;
+    }
+
+    public function getCategory()
+    {
+        return $this->category;
     }
 }
