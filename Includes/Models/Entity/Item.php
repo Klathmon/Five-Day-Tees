@@ -325,4 +325,54 @@ class Item implements Entity
             return $votes;
         }
     }
+
+    /**
+     * Gets the Current price for this shirt
+     *
+     * @return string
+     */
+    public function getCurrentPrice()
+    {
+        //TODO: Modify this to be the real current price!
+
+        return $this->getRetail();
+    }
+
+    /**
+     * Gets the nicely formatted price in the format of "$##.##"
+     *
+     * @return string
+     */
+    public function getNicePrice()
+    {
+        return '$' . (string)number_format($this->getCurrentPrice(), 2);
+    }
+
+    /**
+     * Returns the Design Image with the given parameters
+     *
+     * @param        $x
+     * @param        $y
+     * @param string $format
+     *
+     * @return string
+     */
+    public function getFormattedDesignImage($x, $y, $format = 'png')
+    {
+        return $this->getDesignImage() . ",width=$x,height=$y,mediaType=$format";
+    }
+
+    /**
+     * Returns the Product Image with the given parameters
+     *
+     * @param        $x
+     * @param        $y
+     * @param string $format
+     *
+     * @return string
+     */
+    public function getFormattedProductImage($x, $y, $format = 'png')
+    {
+        return $this->getProductImage() . ",width=$x,height=$y,mediaType=$format";
+    }
 }

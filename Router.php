@@ -11,12 +11,18 @@ switch ($query->get(0)) {
     case 'test':
         $controller = 'Test';
         break;
+    case 'admin':
+        $controller = 'Admin';
+        break;
     case '':
     case 'featured':
         $controller = 'Featured';
         break;
-    case 'admin':
-        $controller = 'Admin';
+    case 'store':
+        $controller = 'Store';
+        break;
+    case 'vault':
+        $controller = 'Vault';
         break;
     default:
         $controller = '404';

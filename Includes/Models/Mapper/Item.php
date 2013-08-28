@@ -28,6 +28,8 @@ class Item implements Mapper
      */
     private $settings;
 
+    private $sqlRootSelect = 'SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes FROM Items LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)';
+
     /**
      * Pass the $database connection in at construction.
      *
@@ -50,13 +52,8 @@ class Item implements Mapper
      */
     public function getByID($ID)
     {
-        $sql
-                   = <<<SQL
-SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes
-  FROM Items 
-    LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
-  WHERE Items.`ID` = :ID
-SQL;
+        $sql = $this->sqlRootSelect;
+        $sql .= ' WHERE Items.`ID` = :ID LIMIT 1';
         $statement = $this->database->prepare($sql);
 
         $statement->bindValue(':ID', $ID, PDO::PARAM_INT);
@@ -72,20 +69,14 @@ SQL;
      * @param int $start
      * @param int $stop
      *
-     * @return array
+     * @return \Entity\Item[]
      */
     public function listAll($start = 0, $stop = null)
     {
         $maxNumber = (is_null($stop) ? 1000 : $stop - $start);
 
-        $sql
-            = <<<SQL
-SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes
-  FROM Items 
-    LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
-  ORDER BY DisplayDate DESC, Gender ASC
-  LIMIT :start, :number
-SQL;
+        $sql = $this->sqlRootSelect;
+        $sql .= ' ORDER BY DisplayDate DESC, Gender ASC LIMIT :start, :number';
 
         $statement = $this->database->prepare($sql);
         $statement->bindValue(':start', $start, PDO::PARAM_INT);
@@ -100,24 +91,127 @@ SQL;
         return $array;
     }
 
-
-    public function getFeatured()
+    /**
+     * Gets the shirts that are queue'd up to be shown at a later date
+     *
+     * @param bool $preview If true, it will only return one of each shirt (by name)
+     *
+     * @return \Entity\Item[]
+     */
+    public function getQueue($preview = false)
     {
-        $statement = $this->database->prepare(
-            <<<SQL
-            SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes
-  FROM Items 
-    LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
-  WHERE DisplayDate >= :StartDate
-    AND DisplayDate <= :EndDate
-  ORDER BY DisplayDate DESC, Gender ASC
-SQL
-        );
+        $sql = $this->sqlRootSelect;
+        $sql .= ' WHERE DisplayDate >= :FutureDate';
+        $sql .= ($preview ? ' GROUP BY Items.Name' : '');
+        $sql .= ' ORDER BY DisplayDate DESC, Gender ASC';
 
-        //TODO: Start here! get start and end dates (days apart * 2 minus and plus todays date) and return the values
-        //TODO: Also add a thing to the function to allow me to select a "Preview" of only one item of each name, or a FULLDATA of each item
+        $statement = $this->database->prepare($sql);
+
+        list($pastDate, $futureDate) = $this->getDates();
+
+        $statement->bindValue('FutureDate', $futureDate);
+        $statement->execute();
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
+        }
+
+        return $array;
     }
 
+    /**
+     * Gets the shirts that should appear on the Featured page
+     *
+     * @param bool $preview If true, it will only return one of each shirt (by name)
+     *
+     * @return \Entity\Item[]
+     */
+    public function getFeatured($preview = false)
+    {
+        $sql = $this->sqlRootSelect;
+        $sql .= ' WHERE DisplayDate > :PastDate AND DisplayDate < :FutureDate';
+        $sql .= ($preview ? ' GROUP BY Items.Name' : '');
+        $sql .= ' ORDER BY DisplayDate DESC, Gender ASC';
+
+        $statement = $this->database->prepare($sql);
+
+        list($pastDate, $futureDate) = $this->getDates();
+
+        $statement->bindValue('PastDate', $pastDate);
+        $statement->bindValue('FutureDate', $futureDate);
+        $statement->execute();
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
+        }
+
+        return $array;
+    }
+
+    /**
+     * Gets the shirts that are in the "Store"
+     *
+     * @param bool $preview If true, it will only return one of each shirt (by name)
+     * @param int  $start   The shirt to start with (for pagination)
+     * @param int  $limit   The max amount to return (for pagination)
+     *
+     * @return \Entity\Item[]
+     */
+    public function getStore($preview = false, $start = 0, $limit = 50)
+    {
+        $sql = $this->sqlRootSelect;
+        $sql .= ' WHERE DisplayDate >= :PastDate';
+        $sql .= ($preview ? ' GROUP BY Items.Name' : '');
+        $sql .= ' ORDER BY DisplayDate DESC, Gender ASC';
+        $sql .= ' LIMIT :Limit OFFSET :Start';
+
+        $statement = $this->database->prepare($sql);
+
+        list($pastDate, $futureDate) = $this->getDates();
+
+        $statement->bindValue('PastDate', $pastDate, PDO::PARAM_STR);
+        $statement->bindValue('Start', $start, PDO::PARAM_INT);
+        $statement->bindValue('Limit', $limit, PDO::PARAM_INT);
+        $statement->execute();
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
+        }
+
+        return $array;
+    }
+
+    /**
+     * Gets the shirts that are in the "Vault"
+     *
+     * @param bool $preview If true, it will only return one of each shirt (by name)
+     * @param int  $start   The shirt to start with (for pagination)
+     * @param int  $limit   The max amount to return (for pagination)
+     *
+     * @return \Entity\Item[]
+     */
+    public function getVault($preview = false, $start = 0, $limit = 50)
+    {
+        $sql = $this->sqlRootSelect;
+        $sql .= ' LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name';
+        $sql .= ' WHERE TotalSold >= SalesLimit';
+        $sql .= ($preview ? ' GROUP BY Items.Name' : '');
+        $sql .= ' ORDER BY DisplayDate DESC, Gender ASC';
+        $sql .= ' LIMIT :Limit OFFSET :Start';
+
+
+        $statement = $this->database->prepare($sql);
+
+        $statement->bindValue('Start', $start, PDO::PARAM_INT);
+        $statement->bindValue('Limit', $limit, PDO::PARAM_INT);
+        $statement->execute();
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
+        }
+
+        return $array;
+    }
 
     /**
      * Returns an item based on it's name and gender
@@ -129,14 +223,10 @@ SQL
      */
     public function getItemByNameGender($name, $gender)
     {
-        $statement = $this->database->prepare(
-            <<<SQL
-            SELECT Items.*, ItemsCommon.DisplayDate, ItemsCommon.SalesLimit, ItemsCommon.Votes
-  FROM Items 
-    LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
-  WHERE Items.Name = :Name AND Items.Gender = :Gender
-SQL
-        );
+        $sql = $this->sqlRootSelect;
+        $sql .= 'WHERE Items.Name = :Name AND Items.Gender = :Gender LIMIT 1';
+
+        $statement = $this->database->prepare($sql);
         $statement->bindValue(':Name', $name, PDO::PARAM_STR);
         $statement->bindValue(':Gender', strtolower($gender), PDO::PARAM_STR);
         $statement->execute();
@@ -371,6 +461,23 @@ SQL
         }
 
         return $entity;
+    }
+
+    /**
+     * This function returns the Past and future dates for the featured tees.
+     *
+     * @return string[]
+     */
+    private function getDates()
+    {
+        //This math was worse than pulling teeth to figure out, I don't think i could do it again...
+
+        $daysApart   = $this->settings->getDaysApart();
+        $currentDate = DateTime::createFromFormat('U', time())->modify('-' . $daysApart * 3 . ' days');
+        $pastDate    = $currentDate->format('Y-m-d');
+        $futureDate  = $currentDate->modify('+' . $daysApart * 5 . ' days')->modify('+1 day')->format('Y-m-d');
+
+        return [$pastDate, $futureDate];
     }
 
     /**
