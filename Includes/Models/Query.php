@@ -10,7 +10,7 @@ class Query
 
     public function __construct()
     {
-        $requestURI  = strtolower($_SERVER['REQUEST_URI']); //Make it lowercase
+        $requestURI  = $_SERVER['REQUEST_URI'];
         $queryString = ltrim(str_replace('/index.php', '', $requestURI), '/'); //Remove index.php if it's present (and trim the '/' at the start)
         $this->query = explode('/', $queryString);
     }
@@ -20,7 +20,7 @@ class Query
         if ($position === null) {
             return $this->query;
         } else {
-            return $this->query[$position];
+            return (array_key_exists($position, $this->query) ? $this->query[$position] : null);
         }
     }
 }

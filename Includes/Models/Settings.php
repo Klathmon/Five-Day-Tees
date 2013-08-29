@@ -246,4 +246,9 @@ SQL
 
         return [$oldestDate, $olderDate, $newerDate, $newestDate];
     }
+
+    public function decodeName($nameEncoded)
+    {
+        return urldecode(str_replace('_', ' ', $nameEncoded));
+    }
 }

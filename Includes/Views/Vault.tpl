@@ -2,7 +2,7 @@
 
     <img src="{$config->getStaticURL()}Images/Layout/Topper.png" id="TopperTop"/>
 
-    <div id="viewport">
+    <div id="Viewport">
         {* Load the Current shirt here via ajax... *}
     </div>
     <img src="{$config->getStaticURL()}Images/Layout/Topper.png" id="TopperBottom"/>

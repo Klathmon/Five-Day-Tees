@@ -380,7 +380,7 @@ class Item implements Entity
 
     public function getURL()
     {
-        return urlencode(str_replace(' ', '-', $this->getName()));
+        return urlencode(str_replace(' ', '_', $this->getName()));
     }
 
     public function getPermalink()

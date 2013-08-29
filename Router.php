@@ -9,24 +9,19 @@ require('Config/Bootstrapper.php');
 
 
 switch ($query->get(0)) {
-    case 'test':
+    case 'Test':
         $controller = 'Test';
         break;
-    case 'admin':
-        $controller = 'Admin';
+    case 'Admin':
+    case 'Featured':
+    case 'Store':
+    case 'Vault':
+    case 'Viewport':
+    case 'Item':
+        $controller = $query->get(0);
         break;
     case '':
-    case 'featured':
         $controller = 'Featured';
-        break;
-    case 'store':
-        $controller = 'Store';
-        break;
-    case 'vault':
-        $controller = 'Vault';
-        break;
-    case 'viewport':
-        $controller = 'Viewport';
         break;
     default:
         $controller = '404';

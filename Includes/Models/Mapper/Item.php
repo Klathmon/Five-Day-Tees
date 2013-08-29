@@ -73,6 +73,42 @@ SQL;
     }
 
     /**
+     * Returns items by their Name
+     *
+     * @param string $name
+     *
+     * @return \Entity\Item[]
+     */
+    public function getByName($name)
+    {
+        $sql
+            = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE Items.Name = :Name
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC
+SQL;
+
+        $statement = $this->database->prepare($sql);
+
+        $statement->bindValue(':Name', $name, PDO::PARAM_STR);
+
+        $statement->execute();
+
+        $array = false;
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
+        }
+
+        return $array;
+    }
+
+    /**
      * Returns an array of all Items in the table
      *
      * @param int $start
@@ -80,7 +116,7 @@ SQL;
      *
      * @return \Entity\Item[]
      */
-    public function listAll($start = 0, $limit = null)
+    public function listAll($start = 0, $limit = 500)
     {
 
         $sql

@@ -2,7 +2,7 @@
 
     <img src="{$config->getStaticURL()}Images/Layout/Topper.png" id="TopperTop"/>
 
-    <div id="viewport">
+    <div id="Viewport">
         {* Load the Current shirt here via ajax... *}
     </div>
     <img src="{$config->getStaticURL()}Images/Layout/Topper.png" id="TopperBottom"/>
@@ -11,7 +11,7 @@
 
     <div class="ItemsContainer">
         {foreach $items as $item}
-            <div class="Item {if $item@iteration == 3}Selected{/if}">
+            <div class="Item {if $item@iteration == 3}Selected{/if}" data-linkname="{$item->getURL()}">
                 <img class="Preview" src="{$item->getFormattedDesignImage(150, 150, 'jpg')}" alt="{$item->getName()} - {$item->getDescription()}"/>
 
                 <h3 class="Name">{$item->getName()}</h3>
@@ -21,3 +21,8 @@
         {/foreach}
     </div>
 </div>
+<script>
+    $.get('/Viewport/' + $('.Item.Selected').data('linkname'), function(data){
+        $('#Viewport').html(data);
+    });
+</script>

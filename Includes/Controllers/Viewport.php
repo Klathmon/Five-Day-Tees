@@ -7,16 +7,27 @@
 $settings    = new Settings($database, $config);
 $itemsMapper = new \Mapper\Item($database, $config);
 
-$item = $itemsMapper->getByID(Sanitize::cleanInteger($query->get(1)));
+$items = $itemsMapper->getByName($settings->decodeName($query->get(1)));
 
-if ($item !== false && $item->getCategory() != 'Queue') {
-    //We are good! shirt is okay to display!
+if ($items !== false && $items[0]->getCategory() != 'Queue') {
+    //We are good! shirts are okay to display!
     $template = new FDTSmarty($config, 'Viewport.tpl');
 
     $template->assign('settings', $settings);
-    $template->assign('item', $item);
+
+    /* If there is no default ID set, set it to the first shirt's ID */
+    $defaultID = (!is_null($query->get(2)) ? Sanitize::cleanInteger($query->get(2)) : $items[0]->getID());
+
+    foreach ($items as $item) {
+        if ($item->getID() == $defaultID) {
+            $template->assign('primaryItem', $item);
+        } else {
+            $template->assign('secondaryItem', $item);
+        }
+    }
 
     $template->output();
+
 } else {
-    die('asshat...');
+    die('error.');
 }

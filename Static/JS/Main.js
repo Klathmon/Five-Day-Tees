@@ -13,10 +13,10 @@
     });
 
     function attachHandlers(){
-        $('#Admin.Page')
-            .find('#SaveGlobalSettings').on('click', saveGlobalSettings)
-            .find('#SaveItem').on('click', saveItem)
-            .find('#DeleteItem').on('click', deleteItem);
+        var $adminPage = $('#Admin.Page');
+        $adminPage.find('#SaveGlobalSettings').on('click', saveGlobalSettings);
+        $adminPage.find('.SaveItem').click(saveItem);
+        $adminPage.find('.DeleteItem').on('click', deleteItem);
     }
 
     /** Admin Page Functions **/

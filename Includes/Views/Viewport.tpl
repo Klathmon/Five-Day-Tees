@@ -1,27 +1,34 @@
-<h2 class="Name">{$item->getName()}</h2>
-<p class="Description">{$item->getDescription()}</p>
+<div id="InnerViewport" data-primaryid="{$primaryItem->getID()}" data-secondaryid="{$secondaryItem->getID()}">
+    <h2 class="Name">{$primaryItem->getName()}</h2>
 
-<div class="FullImages">
-    <img src="{$item->getFormattedProductImage(400,450,'png')}" alt="{$item->getName()} - {$item->getDescription()}"/>
+    <p class="Description">{$primaryItem->getDescription()}</p>
+
+    <div class="FullImages">
+        <img src="{$primaryItem->getFormattedProductImage(400,450,'png')}" alt="{$primaryItem->getName()} - {$primaryItem->getDescription()}"
+             class="Primary"/>
+        <img src="{$secondaryItem->getFormattedProductImage(400,450,'png')}" alt="{$secondaryItem->getName()} - {$secondaryItem->getDescription()}"
+             class="Secondary"/>
+    </div>
+
+    <p class="Price"><span class="Number">${number_format($settings->getItemCurrentPrice($primaryItem), 2)}</span> + Shipping</p>
+
+    <div class="Genders">
+        <input type="radio" name="gender" value="male" id="male" {if $primaryItem->getGender() == 'male'}checked="checked"{/if}/><label for="male">Male</label>
+        <input type="radio" name="gender" value="female" id="female" {if $primaryItem->getGender() == 'female'}checked="checked"{/if}/><label
+                for="female">Female</label>
+    </div>
+
+    <div class="Sizes">
+        {foreach $primaryItem->getSizesAvailable() as $size}
+            <input type="radio" name="size" value="{$size}" id="{$size}"/>
+            <label for="{$size}">{$size}</label>
+        {/foreach}
+    </div>
+
+    <button id="AddToCart">Add To Cart</button>
+
+    <div class="Social">
+        <div class="GPlus" data-href="{$primaryItem->getPermalink()}" data-callback="plusone" data-annotation="inline" data-width="300"></div>
+        <div class="Facebook" data-href="{$primaryItem->getPermalink()}" data-send="false" data-width="300" data-show-faces="true"></div>
+    </div>
 </div>
-
-<p class="Price">${number_format($settings->getItemCurrentPrice($item), 2)}</p>
-
-<div class="Genders">
-    <input type="radio" name="gender" value="male" {if $item->getGender() == 'male'}checked{/if}>
-    <input type="radio" name="gender" value="female" {if $item->getGender() == 'female'}checked{/if}>
-</div>
-
-<div class="Sizes">
-    {foreach $item->getSizesAvailable() as $size}
-        <label><input type="radio" name="size" value="{$size}"/>{$size}</label>
-    {/foreach}
-</div>
-
-<button id="AddToCart">Add To Cart</button>
-
-<div class="Social">
-    <div class="GPlus" data-href="{$item->getPermalink()}" data-callback="plusone" data-annotation="inline" data-width="300"></div>
-    <div class="Facebook" data-href="{$item->getPermalink()}" data-send="false" data-width="300" data-show-faces="true"></div>
-</div>
-
