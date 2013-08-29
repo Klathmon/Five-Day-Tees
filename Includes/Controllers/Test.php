@@ -7,19 +7,7 @@
 use Entity\Item;
 
 echo 'Test Page!';
-$spreadshirtItems = new SpreadshirtItems($database, $config);
-$spreadshirtItems->getNewItems();
+//$spreadshirtItems = new SpreadshirtItems($database, $config);
+//$spreadshirtItems->getNewItems();
 
-echo "IT WORKED!";
-
-$itemsMapper = new \Mapper\Item($database, $config);
-
-$items = $itemsMapper->getQueue(true);
-
-foreach ($items as $item) {
-    $name   = $item->getName();
-    $gender = $item->getGender();
-    $date   = $item->getDisplayDate()->format('Y-m-d');
-
-    Debug::dump($name, $gender, $date);
-}
+Debug::dump($_SERVER);

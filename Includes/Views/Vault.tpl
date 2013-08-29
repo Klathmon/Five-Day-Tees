@@ -1,7 +1,12 @@
 <div class="Page" id="Vault">
+
+    <img src="{$config->getStaticURL()}Images/Layout/Topper.png" id="TopperTop"/>
+
     <div id="viewport">
         {* Load the Current shirt here via ajax... *}
     </div>
+    <img src="{$config->getStaticURL()}Images/Layout/Topper.png" id="TopperBottom"/>
+
     <h2>Vault:</h2>
 
     <div class="ItemsContainer">

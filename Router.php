@@ -7,6 +7,7 @@
 /** Setup Bootstrapper */
 require('Config/Bootstrapper.php');
 
+
 switch ($query->get(0)) {
     case 'test':
         $controller = 'Test';
@@ -23,6 +24,9 @@ switch ($query->get(0)) {
         break;
     case 'vault':
         $controller = 'Vault';
+        break;
+    case 'viewport':
+        $controller = 'Viewport';
         break;
     default:
         $controller = '404';

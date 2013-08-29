@@ -177,6 +177,7 @@ SQL
                 break;
             case 'Vault':
             case 'Default':
+            case 'Queue':
             default:
                 $currentPrice = '999.99';
                 break;
@@ -188,7 +189,8 @@ SQL
     /**
      * This will return the item's "Category"
      * Return Values can be:
-     * Disabled In the queue and/or not to be sold yet
+     * Queue    In the queue. (Treat items in this category as non-existent to the user)
+     * Disabled Items not ready to be sold yet, but can be viewed by the user
      * Level1   The current day's/time's featured item
      * Level2   In the current featured period, but not the featured item
      * Level3   In the store, the highest price items
@@ -218,6 +220,8 @@ SQL
             $category = 'Level1';
         } elseif ($displayDate <= $newerDate && $displayDate < $newestDate) {
             $category = 'Level2';
+        } elseif ($displayDate >= $newestDate) {
+            $category = 'Queue';
         }
 
         return $category;

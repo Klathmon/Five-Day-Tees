@@ -377,4 +377,14 @@ class Item implements Entity
     {
         return $this->category;
     }
+
+    public function getURL()
+    {
+        return urlencode(str_replace(' ', '-', $this->getName()));
+    }
+
+    public function getPermalink()
+    {
+        return "//" . $_SERVER['HTTP_HOST'] . '/Item/' . $this->getURL();
+    }
 }
