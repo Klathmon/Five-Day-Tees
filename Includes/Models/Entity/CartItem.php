@@ -13,9 +13,6 @@ class CartItem implements Entity
     /** @var Item */
     public $item;
 
-    /** @var Settings */
-    private $settings;
-
     /** @var string */
     private $size;
 
@@ -25,14 +22,13 @@ class CartItem implements Entity
     /** @var int */
     private $quantity;
 
-    public function __construct(Settings $settings, Item $item, $size)
+    public function __construct(Item $item, $size, $currentPricePerItem)
     {
-        $this->settings = $settings;
         $this->item     = $item;
         $this->size     = $size;
         $this->quantity = 1;
 
-        $this->currentPrice = $this->settings->getItemCurrentPrice($this->item);
+        $this->currentPrice = $currentPricePerItem;
     }
 
     public function getID()

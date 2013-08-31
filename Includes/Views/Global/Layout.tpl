@@ -5,9 +5,9 @@
 
     <nav id="SubNav">
         <ul>
-            <li id="Cart"><img src="{$config->getStaticURL()}Images/Header/Cart.png"/>Cart</li>
-            <li id="FAQ"><a href="/FAQ">FAQ</a></li>
-            <li id="Contact"><a href="/Contact">Contact</a></li>
+            <li id="CartButton"><img src="{$config->getStaticURL()}Images/Header/Cart.png"/>Cart</li>
+            <li><a href="/FAQ">FAQ</a></li>
+            <li><a href="/Contact">Contact</a></li>
         </ul>
     </nav>
 

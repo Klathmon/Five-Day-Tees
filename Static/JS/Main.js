@@ -20,7 +20,17 @@
         $adminPage.find('.DeleteItem').on('click', deleteItem);
 
         $('.ItemsContainer').on('click', '.Item:not(.Selected)', itemClicked);
-        $('#Viewport').on('click', '.Genders INPUT[type=radio]', genderClicked);
+
+        $('#Viewport').on('click', '.Genders INPUT[type=radio]', genderClicked)
+            .on('click', '#AddToCart', addToCart);
+
+        $('#CartButton').on('click', showCart);
+
+
+        $('body')
+            .on('click', '#Cart #EmptyCart', emptyCart)
+            .on('click', '#Cart Button.Update', updateItem)
+            .on('click', '#Cart Button.Remove', removeItem);
     }
 
     /* Admin Page Functions */
@@ -69,7 +79,7 @@
     }
 
 
-    /* Viewport Stuff */
+    /* Viewport Functions */
     function itemClicked(event){
         var $this = $(event.target).closest('.Item');
 
@@ -108,6 +118,98 @@
         });
     }
 
+    function addToCart(event){
+        var $this = $(event.target).closest('#InnerViewport');
+
+        var gender = $this.find('.Genders').find('Input[type=radio]:checked').attr('ID').toLowerCase();
+
+        var data = {
+            'Command': 'AddItem',
+            'ID':      $this.data(gender + 'id'),
+            'Size':    $this.find('.Sizes').find('Input[type=radio]:checked').val()
+        };
+
+        if(data['Size'] == undefined){
+            alert('You need to select a size!');
+        }else{
+            $.post('/Cart', data, loadCart)
+        }
+    }
+
+
+    /* Cart Functions */
+    function emptyCart(){
+
+        $('#Cart').find('TR:not(:first-child)').fadeOut(200, function(){
+            $(this).remove();
+        });
+
+        $.post('/Cart', {'Command': 'EmptyCart'});
+    }
+
+    function updateItem(event){
+        var $this = $(event.target).closest('TR');
+
+        var data = {
+            'Command':  'UpdateItem',
+            'ID':       $this.data('id'),
+            'Size':     $this.data('size'),
+            'Quantity': $this.find('.Quantity').val()
+        };
+
+        $.post('/Cart', data);
+    }
+
+    function removeItem(event){
+        var $this = $(event.target).closest('TR');
+
+        var data = {
+            'Command': 'RemoveItem',
+            'ID':      $this.data('id'),
+            'Size':    $this.data('size')
+        };
+
+
+        $.post('/Cart', data, function(data){
+            $this.fadeOut(200, function(){
+                $this.remove();
+            });
+        });
+    }
+
+    function showCart(){
+        $.get('/Cart', loadCart);
+    }
+
+    function hideCart(skipAnimation){
+        var $cartContainer = $('#CartContainer');
+        if(skipAnimation === true){
+            $cartContainer.remove();
+        }else{
+            $cartContainer.fadeOut(200, function(){
+                $(this).remove();
+            });
+        }
+    }
+
+    function loadCart(data){
+
+        /* Hide any other carts that may have gotten their way in here before showing this one */
+        hideCart(true);
+
+        /* Create the container in memory, add everything to it, and then fade it in */
+        $('<div>')
+            .attr('id', 'CartContainer')
+            .html(data)
+            .append(
+                $('<div>')
+                    .attr('id', 'CartBackdrop')
+                    .on('click', hideCart)
+            )
+            .hide()
+            .appendTo($('body'))
+            .fadeIn(500);
+    }
 
     /* Helper Functions */
     function sendCommand(url, command, data){

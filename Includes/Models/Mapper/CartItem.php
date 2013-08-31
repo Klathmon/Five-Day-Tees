@@ -23,6 +23,10 @@ class CartItem implements Mapper
 
         $this->settings = $settings;
         $this->subtotal = 0;
+
+        if (!array_key_exists('entities', $_SESSION)) {
+            $_SESSION['entities'] = [];
+        }
     }
 
     /**

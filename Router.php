@@ -7,7 +7,6 @@
 /** Setup Bootstrapper */
 require('Config/Bootstrapper.php');
 
-
 switch ($query->get(0)) {
     case 'Test':
         $controller = 'Test';

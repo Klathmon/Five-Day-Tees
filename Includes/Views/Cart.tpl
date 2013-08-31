@@ -10,11 +10,11 @@
             <th></th>
         </tr>
         {foreach $cartItems as $cartItem}
-            <tr data-name="{$cartItem->getName()}">
-                <td>{$cartItem->getName()}</td>
-                <td>{$cartItem->getGender()}</td>
+            <tr data-id="{$cartItem->item->getID()}" data-size="{$cartItem->getSize()}">
+                <td>{$cartItem->item->getName()}</td>
+                <td>{$cartItem->item->getGender()}</td>
                 <td>{$cartItem->getSize()}</td>
-                <td>{$cartItem->getPrice()}</td>
+                <td>${number_format($cartItem->getCurrentPrice(), 2)}</td>
                 <td><input class="Quantity" type="number" min="0" step="1" value="{$cartItem->getQuantity()}"></td>
                 <td>
                     <button class="Update" title="Click to update the quantity of this item">Update</button>

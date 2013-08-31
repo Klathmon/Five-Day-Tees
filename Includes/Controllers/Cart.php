@@ -11,31 +11,52 @@ $itemMapper     = new \Mapper\Item($database, $config);
 $cartItemMapper = new \Mapper\CartItem($settings);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    $ID       = (!empty($_POST['ID']) ? Sanitize::cleanInteger($_POST['ID']) : null);
-    $size     = (!empty($_POST['size']) ? Sanitize::preserveGivenCharacters($_POST['Size'], $sizeSanitizeCharacters) : null);
-    $cartItem = (!empty($_POST['ID']) && !empty($_POST['size']) ? $cartItemMapper->getByID($ID . $size) : null);
+
     switch ($_POST['Command']) {
         case 'AddItem':
+            $ID       = Sanitize::cleanInteger($_POST['ID']);
+            $size     = Sanitize::preserveGivenCharacters($_POST['Size'], $sizeSanitizeCharacters);
+            $cartItem = $cartItemMapper->getByID($ID . $size);
+
             if ($cartItem === false) {
                 //There are none of these in the cart yet, so create and add one now...
-                $item     = $itemMapper->getByID($ID);
-                $cartItem = new \Entity\CartItem($settings, $item, $size);
+                $item         = $itemMapper->getByID($ID);
+                $currentPrice = $settings->getItemCurrentPrice($item);
+                $cartItem     = new \Entity\CartItem($item, $size, $currentPrice);
             } else {
                 //There is one of these in the cart already, add one to the Quantity...
                 $cartItem->addOneItem();
             }
+
             $cartItemMapper->persist($cartItem);
             break;
-        case 'DeleteItem':
+        case 'RemoveItem':
+            $ID       = Sanitize::cleanInteger($_POST['ID']);
+            $size     = Sanitize::preserveGivenCharacters($_POST['Size'], $sizeSanitizeCharacters);
+            $cartItem = $cartItemMapper->getByID($ID . $size);
+
             $cartItemMapper->delete($cartItem);
+            die(); //Don't do anything else...
             break;
         case 'UpdateItem':
-            $newSize = Sanitize::preserveGivenCharacters($_POST['NewSize'], $sizeSanitizeCharacters);
-            $cartItem->setSize($newSize);
-            $cartItemMapper->persist($cartItem);
+            $ID       = Sanitize::cleanInteger($_POST['ID']);
+            $size     = Sanitize::preserveGivenCharacters($_POST['Size'], $sizeSanitizeCharacters);
+            $quantity = Sanitize::cleanInteger($_POST['Quantity']);
+            $cartItem = $cartItemMapper->getByID($ID . $size);
+
+            if ($quantity == 0) {
+                //Set to 0, so delete the item from the cart
+                $cartItemMapper->delete($cartItem);
+            } else {
+                //Update the item
+                $cartItem->setQuantity($quantity);
+                $cartItemMapper->persist($cartItem);
+            }
+            die(); //Don't do anything else...
             break;
         case 'EmptyCart':
             $cartItemMapper->emptyCart();
+            die(); //Don't do anything else...
             break;
     }
 }
@@ -45,5 +66,6 @@ $template = new FDTSmarty($config, 'Cart.tpl');
 $template->assign('cartItems', $cartItemMapper->listAll());
 $template->assign('subTotal', '$' . (string)number_format($cartItemMapper->getSubtotal(), 2));
 $template->assign('callOutBoxText', $settings->getCartCallout());
+$template->assign('disableCoupon', false);
 
 $template->output();
