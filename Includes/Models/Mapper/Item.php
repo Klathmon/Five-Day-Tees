@@ -508,7 +508,7 @@ SQL
             /* This will INSERT the Item's Common info into the database if it does not exist, and will UPDATE it if it does */
             $itemsCommon = $this->database->prepare(
                 <<<SQL
-                INSERT INTO ItemsCommon
+INSERT INTO ItemsCommon
   SET
     Name=:Name,
     SalesLimit=:SalesLimit,
@@ -524,7 +524,7 @@ SQL
             /* This will INSERT the item into the database if it does not exist, and will UPDATE it if it does */
             $items = $this->database->prepare(
                 <<<SQL
-                INSERT INTO Items
+INSERT INTO Items
   SET
     `ID`=:ID,
     Name=:Name,

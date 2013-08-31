@@ -13,11 +13,14 @@
 
     <nav id="MainNav">
         <ul>
-            <li><a {if $title == 'Featured'}class="active"{/if} href="/Featured" title="Featured"><img
-                            src="{$config->getStaticURL()}Images/Header/Featured.png"/></a></li>
-            <li><a {if $title == 'Store'}class="active"{/if} href="/Store" title="Store"><img src="{$config->getStaticURL()}Images/Header/Store.png"/></a>
+            <li {if $title == 'Featured'}class="Active"{/if}>
+                <a href="/Featured" title="Featured"><img src="{$config->getStaticURL()}Images/Header/Featured.png"/></a>
             </li>
-            <li><a {if $title == 'Vault'}class="active"{/if} href="/Vault" title="Vault"><img src="{$config->getStaticURL()}Images/Header/Vault.png"/></a>
+            <li {if $title == 'Store'}class="Active"{/if}>
+                <a href="/Store" title="Store"><img src="{$config->getStaticURL()}Images/Header/Store.png"/></a>
+            </li>
+            <li {if $title == 'Vault'}class="Active"{/if}>
+                <a href="/Vault" title="Vault"><img src="{$config->getStaticURL()}Images/Header/Vault.png"/></a>
             </li>
         </ul>
         <h1 id="TagLine">A new limited run design every 5 days</h1>

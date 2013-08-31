@@ -4,12 +4,13 @@
  * Time: 7:36 PM
  */
 (function(){
-    /**
-     * DOM Loaded
-     */
+    /* DOM Loaded */
     $(function(){
         //Attach All Handlers
         attachHandlers();
+
+        //Load the first element
+        loadViewport($('.Item.Selected').data('linkname'));
     });
 
     function attachHandlers(){
@@ -17,10 +18,12 @@
         $adminPage.find('#SaveGlobalSettings').on('click', saveGlobalSettings);
         $adminPage.find('.SaveItem').click(saveItem);
         $adminPage.find('.DeleteItem').on('click', deleteItem);
+
+        $('.ItemsContainer').on('click', '.Item:not(.Selected)', itemClicked);
+        $('#Viewport').on('click', '.Genders INPUT[type=radio]', genderClicked);
     }
 
-    /** Admin Page Functions **/
-
+    /* Admin Page Functions */
     function saveGlobalSettings(event){
         var $row = $(event.target).closest('TR');
 
@@ -66,8 +69,47 @@
     }
 
 
-    /** Helper Functions **/
+    /* Viewport Stuff */
+    function itemClicked(event){
+        var $this = $(event.target).closest('.Item');
 
+        /* Remove all .Selected classes in the ItemsContainer */
+        $this.parent().find('.Item').removeClass('Selected');
+
+        /* Add the selected class to the clicked element */
+        $this.addClass('Selected');
+
+        /* Load the viewport */
+        loadViewport($this.data('linkname'));
+    }
+
+    function genderClicked(event){
+        var $this = $(event.target);
+        var $innerViewport = $this.closest('#InnerViewport');
+
+        var gender = $this.attr('id');
+        var name = $innerViewport.data('url');
+        var id = $innerViewport.data(gender + 'id');
+
+        loadViewport(name, id);
+    }
+
+    function loadViewport(name, id){
+        id = id || 0;
+
+        var url = '/Viewport/' + name;
+
+        if(id != 0){
+            url += '/' + id;
+        }
+
+        $.get(url, function(data){
+            $('#Viewport').html(data);
+        });
+    }
+
+
+    /* Helper Functions */
     function sendCommand(url, command, data){
 
         data['Command'] = command;

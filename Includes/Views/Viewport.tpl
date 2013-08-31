@@ -1,4 +1,18 @@
-<div id="InnerViewport" data-primaryid="{$primaryItem->getID()}" data-secondaryid="{$secondaryItem->getID()}">
+<div
+        id="InnerViewport"
+        {if $primaryItem->getGender() == 'male'}
+            data-maleid="{$primaryItem->getID()}"
+        {else}
+            data-femaleid="{$primaryItem->getID()}"
+        {/if}
+        {if $secondaryItem->getGender() == 'male'}
+            data-maleid="{$secondaryItem->getID()}"
+        {else}
+            data-femaleid="{$secondaryItem->getID()}"
+        {/if}
+
+        data-url="{$primaryItem->getURL()}"
+        >
     <h2 class="Name">{$primaryItem->getName()}</h2>
 
     <p class="Description">{$primaryItem->getDescription()}</p>
@@ -13,9 +27,22 @@
     <p class="Price"><span class="Number">${number_format($settings->getItemCurrentPrice($primaryItem), 2)}</span> + Shipping</p>
 
     <div class="Genders">
-        <input type="radio" name="gender" value="male" id="male" {if $primaryItem->getGender() == 'male'}checked="checked"{/if}/><label for="male">Male</label>
-        <input type="radio" name="gender" value="female" id="female" {if $primaryItem->getGender() == 'female'}checked="checked"{/if}/><label
-                for="female">Female</label>
+        <input
+                type="radio"
+                name="gender"
+                value="male"
+                id="male"
+                {if $primaryItem->getGender() == 'male'}checked{/if}
+                />
+        <label for="male">Male</label>
+        <input
+                type="radio"
+                name="gender"
+                value="female"
+                id="female"
+                {if $primaryItem->getGender() == 'female'}checked{/if}
+                />
+        <label for="female">Female</label>
     </div>
 
     <div class="Sizes">

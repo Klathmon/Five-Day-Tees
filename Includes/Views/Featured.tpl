@@ -21,8 +21,3 @@
         {/foreach}
     </div>
 </div>
-<script>
-    $.get('/Viewport/' + $('.Item.Selected').data('linkname'), function(data){
-        $('#Viewport').html(data);
-    });
-</script>

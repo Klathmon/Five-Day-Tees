@@ -18,6 +18,8 @@ switch ($query->get(0)) {
     case 'Vault':
     case 'Viewport':
     case 'Item':
+    case 'FAQ':
+    case 'Contact':
         $controller = $query->get(0);
         break;
     case '':

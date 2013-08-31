@@ -11,7 +11,7 @@
 
     <div class="ItemsContainer">
         {foreach $items as $item}
-            <div class="Item {if $item@iteration == 1}Selected{/if}">
+            <div class="Item {if $item@iteration == 1}Selected{/if}" data-linkname="{$item->getURL()}">
                 <img class="Preview" src="{$item->getFormattedDesignImage(150, 150, 'jpg')}" alt="{$item->getName()} - {$item->getDescription()}"/>
 
                 <h3 class="Name">{$item->getName()}</h3>
