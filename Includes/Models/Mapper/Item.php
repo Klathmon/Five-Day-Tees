@@ -6,7 +6,7 @@
 
 namespace Mapper;
 
-use PDO, \Exception, \DateTime, \ConfigParser, \Settings, \Entity\Entity;
+use \PDO, \Exception, \DateTime, \ConfigParser, \Settings, \Entity\Entity;
 
 /**
  * Class Item

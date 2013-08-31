@@ -10,8 +10,6 @@ use Entity\Entity, \Settings;
 
 class CartItem implements Mapper
 {
-    private $subtotal;
-
     /** @var Settings */
     private $settings;
 
@@ -47,34 +45,27 @@ class CartItem implements Mapper
     public function delete(Entity $entity)
     {
         unset($_SESSION['entities'][$entity->getID()]);
-
-        $this->recalculateSubtotal();
     }
 
     public function persist(Entity $entity)
     {
         $_SESSION['entities'][$entity->getID()] = $entity;
-
-        $this->recalculateSubtotal();
     }
 
     public function getSubtotal()
     {
-        return $this->subtotal;
+        $subtotal = 0;
+
+        foreach ((array)$_SESSION['entities'] as $entity) {
+            /** @var \Entity\CartItem $entity */
+            $subtotal += $this->settings->getItemCurrentPrice($entity->item) * $entity->getQuantity();
+        }
+
+        return $subtotal;
     }
 
     public function emptyCart()
     {
         $_SESSION['entities'] = array();
-    }
-
-    private function recalculateSubtotal()
-    {
-        $this->subtotal = 0;
-
-        foreach ($_SESSION['entities'] as $entity) {
-            /** @var \Entity\CartItem $entity */
-            $this->subtotal += $this->settings->getItemCurrentPrice($entity->item) * $entity->getQuantity();
-        }
     }
 }

@@ -30,7 +30,8 @@
         $('body')
             .on('click', '#Cart #EmptyCart', emptyCart)
             .on('click', '#Cart Button.Update', updateItem)
-            .on('click', '#Cart Button.Remove', removeItem);
+            .on('click', '#Cart Button.Remove', removeItem)
+            .on('click', '#Cart #CloseCart', hideCart);
     }
 
     /* Admin Page Functions */
@@ -45,6 +46,7 @@
         data['Level1'] = $row.find('#Level1').val();
         data['Level2'] = $row.find('#Level2').val();
         data['Level3'] = $row.find('#Level3').val();
+        data['CartCallout'] = $row.parent().find('#CartCallout').val();
 
         sendCommand('/Admin', 'SaveGlobals', data);
     }
@@ -132,7 +134,9 @@
         if(data['Size'] == undefined){
             alert('You need to select a size!');
         }else{
-            $.post('/Cart', data, loadCart)
+            $.post('/Cart', data, function(){
+                showCart();
+            })
         }
     }
 
@@ -144,7 +148,9 @@
             $(this).remove();
         });
 
-        $.post('/Cart', {'Command': 'EmptyCart'});
+        $.post('/Cart', {'Command': 'EmptyCart'}, function(data){
+            $('#Cart').find('#SubTotal').find('span').html(data);
+        });
     }
 
     function updateItem(event){
@@ -154,10 +160,12 @@
             'Command':  'UpdateItem',
             'ID':       $this.data('id'),
             'Size':     $this.data('size'),
-            'Quantity': $this.find('.Quantity').val()
+            'Quantity': $this.find('Input.Quantity').val()
         };
 
-        $.post('/Cart', data);
+        $.post('/Cart', data, function(data){
+            $this.closest('#Cart').find('#SubTotal').find('span').html(data);
+        });
     }
 
     function removeItem(event){
@@ -170,15 +178,34 @@
         };
 
 
+        $this.fadeOut(200, function(){
+            $this.remove();
+        });
+
         $.post('/Cart', data, function(data){
-            $this.fadeOut(200, function(){
-                $this.remove();
-            });
+            $this.closest('#Cart').find('#SubTotal').find('span').html(data);
         });
     }
 
     function showCart(){
-        $.get('/Cart', loadCart);
+
+        /* Hide any other carts that may have gotten their way in here before showing this one */
+        hideCart(true);
+
+        $.get('/Cart', function(data){
+            /* Create the container in memory, add everything to it, and then fade it in */
+            $('<div>')
+                .attr('id', 'CartContainer')
+                .html(data)
+                .append(
+                    $('<div>')
+                        .attr('id', 'CartBackdrop')
+                        .on('click', hideCart)
+                )
+                .hide()
+                .appendTo($('body'))
+                .fadeIn(200);
+        });
     }
 
     function hideCart(skipAnimation){
@@ -190,25 +217,6 @@
                 $(this).remove();
             });
         }
-    }
-
-    function loadCart(data){
-
-        /* Hide any other carts that may have gotten their way in here before showing this one */
-        hideCart(true);
-
-        /* Create the container in memory, add everything to it, and then fade it in */
-        $('<div>')
-            .attr('id', 'CartContainer')
-            .html(data)
-            .append(
-                $('<div>')
-                    .attr('id', 'CartBackdrop')
-                    .on('click', hideCart)
-            )
-            .hide()
-            .appendTo($('body'))
-            .fadeIn(500);
     }
 
     /* Helper Functions */

@@ -25,6 +25,9 @@
                 <button id="SaveGlobalSettings">Save</button>
             </td>
         </tr>
+        <tr>
+            <td colspan=7><textarea id="CartCallout">{$cartCallout}</textarea></td>
+        </tr>
     </table>
 
     <h3>All Items:</h3>

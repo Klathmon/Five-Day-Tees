@@ -63,6 +63,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $layout->assign('level1', $settings->getLevel1());
     $layout->assign('level2', $settings->getLevel2());
     $layout->assign('level3', $settings->getLevel3());
+    $layout->assign('cartCallout', $settings->getCartCallout());
 
     $layout->assign('items', $itemsMapper->listAll());
 

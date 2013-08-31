@@ -72,17 +72,7 @@ NAV#MainNav {
     overflow: hidden;
 }
 
-#MainNav UL {
-    float: left;
-    margin: 0px;
-    padding: 0px;
-}
-
-#MainNav LI:first-child {
-    margin-left: 35px;
-}
-
-#MainNav LI:hover {
+#MainNav LI.Active {
     /*+opacity:75%;*/
     filter: alpha(opacity=75);
     -ms-filter: progid
@@ -104,6 +94,50 @@ Opacity
 opacity:
 
 0.75
+;
+    }
+
+#MainNav UL {
+    float: left;
+    margin: 0px;
+    padding: 0px;
+}
+
+#MainNav LI:first-child {
+    margin-left: 35px;
+}
+
+#MainNav LI:hover {
+    /*+opacity:60%;*/
+    filter: alpha(opacity=60);
+    -ms-filter: progid
+
+:DXImageTransform.Microsoft.
+
+Alpha
+(
+Opacity
+
+=
+60
+)
+;
+-moz-opacity:
+
+0.6
+;
+opacity:
+
+0.6
+;
+-ms-filter:progid :DXImageTransform.Microsoft. Alpha
+
+(
+Opacity
+
+=
+75
+)
 ;
 -ms-filter:progid :DXImageTransform.Microsoft. Alpha
 
@@ -180,7 +214,7 @@ Opacity
     margin-left: 11px;
 }
 
-.Item:hover {
+.Item:hover, .Item.Selected {
     padding: 7px;
     cursor: pointer;
     border: thin solid #000;
@@ -267,15 +301,36 @@ Opacity
     position: absolute;
     top: -20px;
     right: 332px;
-    z-index: 1;
+    z-index: 0;
 }
 
 #Viewport IMG.Secondary {
     position: absolute;
     top: -30px;
     right: 272px;
-    z-index: -1;
-}
+    z-index: -1; /*+opacity:40%;*/
+    filter: alpha(opacity=40);
+    -ms-filter: progid
+
+:DXImageTransform.Microsoft.
+
+Alpha
+(
+Opacity
+
+=
+40
+)
+;
+-moz-opacity:
+
+0.4
+;
+opacity:
+
+0.4
+;
+    }
 
 #Viewport .Price {
     font-size: 25px;
@@ -359,4 +414,177 @@ Opacity
 #Viewport #AddToCart:active {
     background-color: #D1D2D2;
     color: #4C4C4C;
+}
+
+/*Cart*/
+#CartContainer #CartBackdrop {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 5; /*+opacity:75%;*/
+    filter: alpha(opacity=75);
+    -ms-filter: progid
+
+:DXImageTransform.Microsoft.
+
+Alpha
+(
+Opacity
+
+=
+75
+)
+;
+-moz-opacity:
+
+0.75
+;
+opacity:
+
+0.75
+;
+background-color:#000000
+
+;
+    }
+
+#CartContainer #Cart {
+    position: absolute;
+    width: 850px;
+    top: 100px;
+    left: 50%;
+    margin-left: -425px;
+    z-index: 50;
+    background-color: #F3F3F3;
+    border: 5px solid #000; /*+border-radius:4px;*/
+    -moz-border-radius: 4px;
+    -webkit-border-radius: 4px;
+    -khtml-border-radius: 4px;
+    border-radius: 4px;
+    padding-bottom: 85px;
+}
+
+#Cart #CartHeader {
+    border: 1px solid #000;
+    background-color: #666;
+    color: #FFF;
+    font-weight: bold;
+    padding: 5px;
+    margin: 0px;
+    overflow: hidden;
+}
+
+#CartHeader H4 {
+    margin: 0px;
+    float: left;
+    padding: 0px;
+}
+
+#CartHeader #CloseCart {
+    border: 4px solid #000;
+    font-size: 25px;
+    line-height: 0.8;
+    background-color: #000;
+    color: #FFF;
+    padding: 3px;
+    position: absolute;
+    right: -16px;
+    top: -15px;
+    cursor: pointer;
+}
+
+#Cart BUTTON {
+    background-color: #858585;
+    border: none;
+    padding: 3px 7px 5px;
+    font-weight: bold;
+    color: #FFF;
+    font-size: 13px;
+    font-family: verdana; /*+box-shadow:3px 3px 4px #787878;*/
+    -moz-box-shadow: 3px 3px 4px #787878;
+    -webkit-box-shadow: 3px 3px 4px #787878;
+    -o-box-shadow: 3px 3px 4px #787878;
+    box-shadow: 3px 3px 4px #787878;
+    margin-bottom: 5px;
+}
+
+#Cart BUTTON:active {
+    color: #383838;
+}
+
+#Cart #ItemsTable {
+    text-align: center;
+    border: 2px solid #000;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 4px;
+}
+
+#ItemsTable TR {
+    border: 1px solid #000;
+    height: 35px;
+}
+
+#ItemsTable .Name {
+    width: 300px;
+    font-weight: bold;
+}
+
+#ItemsTable .Gender {
+    width: 100px;
+}
+
+#ItemsTable .Size {
+    width: 50px;
+}
+
+#ItemsTable .Price {
+    width: 125px;
+}
+
+#ItemsTable .Quantity {
+    width: 65px;
+}
+
+#ItemsTable .Buttons {
+    width: 185px;
+}
+
+#Cart #CallOutBox {
+    width: 336px;
+    border: 3px solid #000;
+    text-align: center;
+    position: absolute;
+    bottom: 20px;
+    left: 25px;
+    font-weight: bold;
+    color: #DC282D;
+}
+
+#Cart #CouponsContainer {
+    width: 300px;
+    float: right;
+    margin-top: 5px;
+    margin-right: 5px;
+}
+
+#Cart #SubTotal {
+    position: absolute;
+    bottom: 40px;
+    right: 30px;
+    font-weight: bold;
+}
+
+#Cart #EmptyCart {
+    position: absolute;
+    bottom: 10px;
+    right: 210px;
+}
+
+#Cart #PayPal {
+    position: absolute;
+    bottom: 10px;
+    right: 30px;
 }

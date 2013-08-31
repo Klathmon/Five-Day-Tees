@@ -36,7 +36,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $cartItem = $cartItemMapper->getByID($ID . $size);
 
             $cartItemMapper->delete($cartItem);
-            die(); //Don't do anything else...
             break;
         case 'UpdateItem':
             $ID       = Sanitize::cleanInteger($_POST['ID']);
@@ -52,20 +51,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $cartItem->setQuantity($quantity);
                 $cartItemMapper->persist($cartItem);
             }
-            die(); //Don't do anything else...
             break;
         case 'EmptyCart':
             $cartItemMapper->emptyCart();
-            die(); //Don't do anything else...
             break;
     }
+
+    echo '$' . number_format($cartItemMapper->getSubtotal(), 2);
+} else {
+    $template = new FDTSmarty($config, 'Cart.tpl');
+
+    $template->assign('cartItems', $cartItemMapper->listAll());
+    $template->assign('subTotal', '$' . (string)number_format($cartItemMapper->getSubtotal(), 2));
+    $template->assign('callOutBoxText', $settings->getCartCallout());
+    $template->assign('disableCoupon', false);
+
+    $template->output();
 }
-
-$template = new FDTSmarty($config, 'Cart.tpl');
-
-$template->assign('cartItems', $cartItemMapper->listAll());
-$template->assign('subTotal', '$' . (string)number_format($cartItemMapper->getSubtotal(), 2));
-$template->assign('callOutBoxText', $settings->getCartCallout());
-$template->assign('disableCoupon', false);
-
-$template->output();
