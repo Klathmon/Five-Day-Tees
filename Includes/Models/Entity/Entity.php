@@ -13,10 +13,5 @@ namespace Entity;
  */
 interface Entity
 {
-    /**
-     * The constructor is called blank for "new" objects, and called with an $ID to setup an object from the database
-     *
-     * @param int $ID The id of the new object
-     */
-    public function __construct($ID = null);
+    public function getID();
 }

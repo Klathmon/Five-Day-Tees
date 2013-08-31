@@ -4,9 +4,7 @@
  * Date: 8/22/13
  */
 ob_start();
-if (session_id() == '') {
-    session_start();
-}
+
 
 /** Set the current working directory to the public root */
 chdir(__DIR__ . '/../');

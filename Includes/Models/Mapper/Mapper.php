@@ -6,7 +6,8 @@
 
 namespace Mapper;
 
-use PDO;
+
+use Entity\Entity;
 
 interface Mapper
 {
@@ -14,7 +15,7 @@ interface Mapper
 
     public function listAll($start = 0, $stop = null);
 
-    public function delete($entity);
+    public function delete(Entity $entity);
 
-    public function persist($entity);
+    public function persist(Entity $entity);
 }

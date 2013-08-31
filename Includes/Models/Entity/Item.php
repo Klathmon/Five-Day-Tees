@@ -11,41 +11,41 @@ use DateTime;
 class Item implements Entity
 {
     /** @var int */
-    private $ID;
+    protected $ID;
     /** @var string */
-    private $name;
+    protected $name;
     /** @var string */
-    private $gender;
+    protected $gender;
     /** @var string */
-    private $articleID;
+    protected $articleID;
     /** @var string */
-    private $designID;
+    protected $designID;
     /** @var string */
-    private $description;
+    protected $description;
     /** @var int */
-    private $salesLimit;
+    protected $salesLimit;
     /** @var DateTime */
-    private $displayDate;
+    protected $displayDate;
     /** @var string */
-    private $cost;
+    protected $cost;
     /** @var string */
-    private $retail;
+    protected $retail;
     /** @var string */
-    private $productImage;
+    protected $productImage;
     /** @var string */
-    private $designImage;
+    protected $designImage;
     /** @var string[] */
-    private $sizesAvailable;
+    protected $sizesAvailable;
     /** @var DateTime */
-    private $lastUpdated;
+    protected $lastUpdated;
     /** @var int */
-    private $numberSold;
+    protected $numberSold;
     /** @var int */
-    private $votes;
+    protected $votes;
     /** @var int */
-    private $totalSold;
+    protected $totalSold;
     /** @var string */
-    public $category;
+    protected $category;
 
 
     public function __construct($ID = null)

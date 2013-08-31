@@ -115,7 +115,7 @@
         data['Command'] = command;
 
         $.post(url, data, function(returnData){
-            obj = $.parseJSON(returnData);
+            var obj = $.parseJSON(returnData);
             if(obj['status'] == 'OK'){
                 alert(obj['message']);
             }else if(obj['status'] == 'ERROR'){

@@ -6,7 +6,7 @@
 
 namespace Mapper;
 
-use PDO, \Exception, \DateTime, \ConfigParser, \Settings;
+use PDO, \Exception, \DateTime, \ConfigParser, \Settings, \Entity\Entity;
 
 /**
  * Class Item
@@ -465,7 +465,7 @@ SQL;
      *
      * @throws \Exception
      */
-    public function delete($entity)
+    public function delete(Entity $entity)
     {
         if (empty($entity)) {
             //Whoops, forgot the $entity
@@ -491,7 +491,7 @@ SQL;
      *
      * @throws \Exception
      */
-    public function persist($entity)
+    public function persist(Entity $entity)
     {
         try{
 

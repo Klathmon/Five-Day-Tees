@@ -56,7 +56,8 @@ class Settings
     DaysApart=:DaysApart,
     Level1=:Level1,
     Level2=:Level2,
-    Level3=:Level3
+    Level3=:Level3,
+    CartCallout=:CartCallout
   WHERE 
     Mode=:Mode
   LIMIT 1
@@ -71,6 +72,7 @@ SQL
         $statement->bindValue(':Level1', $this->getLevel1(), PDO::PARAM_STR);
         $statement->bindValue(':Level2', $this->getLevel2(), PDO::PARAM_STR);
         $statement->bindValue(':Level3', $this->getLevel3(), PDO::PARAM_STR);
+        $statement->bindValue(':CartCallout', $this->getCartCallout(), PDO::PARAM_STR);
         $statement->execute();
     }
 
@@ -159,7 +161,7 @@ SQL
      *
      * @param \Entity\Item $item
      *
-     * @return string
+     * @return double
      */
     public function getItemCurrentPrice($item)
     {
@@ -250,5 +252,15 @@ SQL
     public function decodeName($nameEncoded)
     {
         return urldecode(str_replace('_', ' ', $nameEncoded));
+    }
+
+    public function getCartCallout()
+    {
+        return $this->data['CartCallout'];
+    }
+
+    public function setCartCallout($cartCallout)
+    {
+        $this->data['CartCallout'] = $cartCallout;
     }
 }
