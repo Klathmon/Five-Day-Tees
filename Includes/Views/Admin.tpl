@@ -30,6 +30,38 @@
         </tr>
     </table>
 
+    <h3>Coupons:</h3>
+    <table id="Coupons">
+        <tr>
+            <th class="Code">Code</th>
+            <th class="IsPercent">Is Percent?</th>
+            <th class="Amount">Amount Off</th>
+            <th class="UsesRemaining">Uses Remaining</th>
+            <th class="Buttons"></th>
+        </tr>
+        {foreach $coupons as $coupon}
+            <tr data-code="{$coupon->getCode()}">
+                <th class="Code">{$coupon->getCode()}</th>
+                <th class="IsPercent"><input type="checkbox" {if $coupon->isPercent()}checked{/if}/></th>
+                <th class="Amount"><input type="number" step=1 value="{$coupon->getAmount()}"/></th>
+                <th class="UsesRemaining"><input type="number" step=1 value="{$coupon->getUsesRemaining()}"/></th>
+                <th class="Buttons">
+                    <button class="Save">Save</button>
+                    <button class="Delete">Delete</button>
+                </th>
+            </tr>
+        {/foreach}
+        <tr>
+            <th class="Code"><input type="text"/></th>
+            <th class="IsPercent"><input type="checkbox" checked/></th>
+            <th class="Amount"><input type="number" step=1/></th>
+            <th class="UsesRemaining"><input type="number" step=1/></th>
+            <th class="Buttons">
+                <button class="Add">Add New Coupon</button>
+            </th>
+        </tr>
+    </table>
+
     <h3>All Items:</h3>
     <table class="ItemsTable" id="Items">
         <tr>

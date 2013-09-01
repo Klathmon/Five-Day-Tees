@@ -6,7 +6,6 @@
 
 namespace Entity;
 
-use \Settings;
 
 class CartItem implements Entity
 {

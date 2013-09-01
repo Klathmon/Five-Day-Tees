@@ -6,24 +6,34 @@
 
 namespace Mapper;
 
-use Entity\Entity, \Settings;
+use Entity\Entity, \Settings, \PDO;
 
 class CartItem implements Mapper
 {
     /** @var Settings */
     private $settings;
 
-    public function __construct(Settings $settings)
+    private $couponManager;
+
+    /** @var \Entity\Coupon */
+    private $coupon = null;
+
+    public function __construct(Settings $settings, PDO $database)
     {
         if (session_id() == '') {
             session_start();
         }
 
-        $this->settings = $settings;
-        $this->subtotal = 0;
+        $this->couponManager = new Coupon($database);
+        $this->settings      = $settings;
+        $this->subtotal      = 0;
 
         if (!array_key_exists('entities', $_SESSION)) {
             $_SESSION['entities'] = [];
+        }
+
+        if (array_key_exists('coupon', $_SESSION)) {
+            $this->coupon = $_SESSION['coupon'];
         }
     }
 
@@ -61,11 +71,50 @@ class CartItem implements Mapper
             $subtotal += $this->settings->getItemCurrentPrice($entity->item) * $entity->getQuantity();
         }
 
+        if (!is_null($this->coupon)) {
+            $coupon = $this->coupon;
+            if ($coupon->isPercent()) {
+                $amount = $coupon->getAmount() / 100;
+
+                $subtotal = $subtotal - ($subtotal * $amount);
+            } else {
+                $amount = $coupon->getAmount();
+
+                $subtotal = $subtotal - $amount;
+            }
+        }
+
         return $subtotal;
     }
 
     public function emptyCart()
     {
         $_SESSION['entities'] = array();
+        unset($_SESSION['coupon']);
+    }
+
+    public function addCoupon($couponCode)
+    {
+        $coupon = $this->couponManager->getByCode($couponCode);
+
+
+        if ($coupon->getUsesRemaining() > 0) {
+            $this->coupon       = $coupon;
+            $_SESSION['coupon'] = $coupon;
+        }
+    }
+
+    /**
+     * @return \Entity\Coupon
+     */
+    public function getCoupon()
+    {
+        return $this->coupon;
+    }
+
+    public function deleteCoupon()
+    {
+        $this->coupon = null;
+        unset($_SESSION['coupon']);
     }
 }

@@ -16,8 +16,13 @@
     function attachHandlers(){
         var $adminPage = $('#Admin.Page');
         $adminPage.find('#SaveGlobalSettings').on('click', saveGlobalSettings);
-        $adminPage.find('.SaveItem').click(saveItem);
-        $adminPage.find('.DeleteItem').on('click', deleteItem);
+        $adminPage.find('.ItemsTable')
+            .on('click', '.SaveItem', saveItem)
+            .on('click', '.DeleteItem', deleteItem);
+        $adminPage.find('table#Coupons')
+            .on('click', '.Add', addCoupon)
+            .on('click', '.Save', updateCoupon)
+            .on('click', '.Delete', deleteCoupon);
 
         $('.ItemsContainer').on('click', '.Item:not(.Selected)', itemClicked);
 
@@ -31,7 +36,14 @@
             .on('click', '#Cart #EmptyCart', emptyCart)
             .on('click', '#Cart Button.Update', updateItem)
             .on('click', '#Cart Button.Remove', removeItem)
-            .on('click', '#Cart #CloseCart', hideCart);
+            .on('click', '#Cart #CloseCart', hideCart)
+            .on('click', '#Cart #RemoveCoupon', removeCouponFromCart)
+            .on('click', '#Cart #SubmitCoupon', addCouponToCart)
+            .on('keyup', '#Cart #CouponsContainer #CouponCode', function(event){
+                if(event.keyCode == 13){
+                    addCouponToCart(event)
+                }
+            });
     }
 
     /* Admin Page Functions */
@@ -78,6 +90,42 @@
         if(okay){
             sendCommand('/Admin', 'DeleteItem', data);
         }
+    }
+
+    function addCoupon(event){
+        var $this = $(event.target).closest('TR');
+
+        var data = {
+            'Code':          $this.find('.Code').find('input').val(),
+            'IsPercent':     $this.find('.IsPercent').find('input[type=checkbox]:checked').attr('type') == 'checkbox',
+            'Amount':        $this.find('.Amount').find('input').val(),
+            'UsesRemaining': $this.find('.UsesRemaining').find('input').val()
+        };
+
+        sendCommand('/Admin', 'AddCoupon', data);
+    }
+
+    function updateCoupon(event){
+        var $this = $(event.target).closest('TR');
+
+        var data = {
+            'Code':          $this.data('code'),
+            'IsPercent':     $this.find('.IsPercent').find('input[type=checkbox]:checked').attr('type') == 'checkbox',
+            'Amount':        $this.find('.Amount').find('input').val(),
+            'UsesRemaining': $this.find('.UsesRemaining').find('input').val()
+        };
+
+        sendCommand('/Admin', 'UpdateCoupon', data);
+    }
+
+    function deleteCoupon(event){
+        var $this = $(event.target).closest('TR');
+
+        var data = {
+            'Code': $this.data('code')
+        };
+
+        sendCommand('/Admin', 'DeleteCoupon', data);
     }
 
 
@@ -187,6 +235,21 @@
         });
     }
 
+    function addCouponToCart(event){
+        var $this = $(event.target).closest('#CouponsContainer');
+
+        var data = {
+            'Command': 'AddCouponToCart',
+            'Code':    $this.find('#CouponCode').val()
+        };
+
+        $.post('/Cart', data, showCart);
+    }
+
+    function removeCouponFromCart(event){
+        $.post('/Cart', {'Command': 'RemoveCouponFromCart'}, showCart);
+    }
+
     function showCart(){
 
         /* Hide any other carts that may have gotten their way in here before showing this one */
@@ -226,7 +289,9 @@
 
         $.post(url, data, function(returnData){
             var obj = $.parseJSON(returnData);
-            if(obj['status'] == 'OK'){
+            if(obj['command'] == 'refreshPage'){
+                location.reload();
+            }else if(obj['status'] == 'OK'){
                 alert(obj['message']);
             }else if(obj['status'] == 'ERROR'){
                 alert('ERROR! ' + obj['message']);

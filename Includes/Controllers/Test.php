@@ -5,11 +5,10 @@
  */
 
 echo 'Test Page!';
+
+$database->query('DELETE FROM Items');
+$database->query('DELETE FROM ItemsCommon');
+
 $spreadshirtItems = new SpreadshirtItems($database, $config);
 $spreadshirtItems->getNewItems();
-
-$couponsMapper = new \Mapper\Coupon($database);
-
-$coupon = $couponsMapper->getByCode('IDIOT');
-
-Debug::dump($coupon);
+echo "DONE!";

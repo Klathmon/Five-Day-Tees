@@ -30,16 +30,33 @@
                 <td colspan="100">You don't have anything in your cart</td>
             </tr>
         {/foreach}
+        {if $disableCoupon == true}
+            <tr id="CouponLine">
+                <td colspan=3>Coupon Code: {$couponCode}</td>
+                <td colspan=2>
+                    {if $isPercent == true}
+                        {if $Amount > 0}+{/if}{number_format($Amount, 0)}%
+                    {else}
+                        {if $Amount > 0}+{/if}${number_format($Amount, 2)}
+                    {/if}
+                </td>
+                <td>
+                    <button id="RemoveCoupon">Remove Coupon</button>
+                </td>
+            </tr>
+        {/if}
     </table>
     {if !empty($callOutBoxText) && $callOutBoxText != ''}
         <div id="CallOutBox">
             <p>{$callOutBoxText}</p>
         </div>
     {/if}
-    <div id="CouponsContainer" {if $disableCoupon == true}class="Disabled"{/if}>
-        <input type="text" id="CuponCode" placeholder="Coupon Code" {if $disableCoupon == true}disabled{/if}/>
-        <button id="SubmitCoupon" title="Click to add a coupon" {if $disableCoupon == true}disabled{/if}>Enter Coupon</button>
-    </div>
+    {if $disableCoupon == false}
+        <div id="CouponsContainer">
+            <input type="text" id="CouponCode" placeholder="Coupon Code"/>
+            <button id="SubmitCoupon" title="Click to add a coupon">Enter Coupon</button>
+        </div>
+    {/if}
     <p id="SubTotal">Subtotal - <span>{$subTotal|default:'$0.00'}</span></p>
     <button id="EmptyCart" title="Click to empty your cart of all items">Empty Cart</button>
     <button id="PayPal">Buy With PayPal!?</button>

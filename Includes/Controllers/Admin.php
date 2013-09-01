@@ -4,8 +4,9 @@
  * Date: 8/25/13
  */
 
-$settings    = new Settings($database, $config);
-$itemsMapper = new \Mapper\Item($database, $config);
+$settings      = new Settings($database, $config);
+$itemsMapper   = new \Mapper\Item($database, $config);
+$couponsMapper = new \Mapper\Coupon($database);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     switch ($_POST['Command']) {
@@ -17,6 +18,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $settings->setLevel1(Sanitize::preserveGivenCharacters($_POST['Level1'], '1234567890.'));
             $settings->setLevel2(Sanitize::preserveGivenCharacters($_POST['Level2'], '1234567890.'));
             $settings->setLevel3(Sanitize::preserveGivenCharacters($_POST['Level3'], '1234567890.'));
+            $settings->setCartCallout($_POST['CartCallout']);
             $settings->persistSelf();
             $response['status']  = 'OK';
             $response['message'] = 'Saved!';
@@ -47,6 +49,56 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['status']  = 'OK';
             $response['command'] = 'refreshPage';
             break;
+        case 'AddCoupon':
+            $code          = Sanitize::cleanAlphaNumeric($_POST['Code']);
+            $isPercent     = ($_POST['IsPercent'] == 'true' ? true : false);
+            $amount        = Sanitize::preserveGivenCharacters($_POST['Amount'], '1234567890.-');
+            $usesRemaining = Sanitize::cleanInteger($_POST['UsesRemaining']);
+
+            $coupon = new \Entity\Coupon($code);
+            if ($isPercent) {
+                $coupon->makePercent();
+            } else {
+                $coupon->makeFlatAmount();
+            }
+            $coupon->setAmount($amount);
+            $coupon->setUsesRemaining($usesRemaining);
+
+            $couponsMapper->persist($coupon);
+
+            $response['status']  = 'OK';
+            $response['command'] = 'refreshPage';
+            break;
+        case 'UpdateCoupon':
+            $code          = Sanitize::cleanAlphaNumeric($_POST['Code']);
+            $isPercent     = ($_POST['IsPercent'] == 'true' ? true : false);
+            $amount        = Sanitize::preserveGivenCharacters($_POST['Amount'], '1234567890.-');
+            $usesRemaining = Sanitize::cleanInteger($_POST['UsesRemaining']);
+
+            $coupon = $couponsMapper->getByCode($code);
+            if ($isPercent) {
+                $coupon->makePercent();
+            } else {
+                $coupon->makeFlatAmount();
+            }
+            $coupon->setAmount($amount);
+            $coupon->setUsesRemaining($usesRemaining);
+
+            $couponsMapper->persist($coupon);
+
+            $response['status']  = 'OK';
+            $response['message'] = 'Coupon Saved!';
+            break;
+        case 'DeleteCoupon':
+            $code = Sanitize::cleanAlphaNumeric($_POST['Code']);
+
+            $coupon = $couponsMapper->getByCode($code);
+
+            $couponsMapper->delete($coupon);
+
+            $response['status']  = 'OK';
+            $response['command'] = 'refreshPage';
+            break;
         default:
             $response['status']  = 'ERROR';
             $response['message'] = 'Unknown Command.';
@@ -64,6 +116,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $layout->assign('level2', $settings->getLevel2());
     $layout->assign('level3', $settings->getLevel3());
     $layout->assign('cartCallout', $settings->getCartCallout());
+    $layout->assign('coupons', $couponsMapper->listAll());
+
 
     $layout->assign('items', $itemsMapper->listAll());
 

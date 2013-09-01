@@ -8,7 +8,7 @@ $sizeSanitizeCharacters = 'ALMNSX';
 
 $settings       = new Settings($database, $config);
 $itemMapper     = new \Mapper\Item($database, $config);
-$cartItemMapper = new \Mapper\CartItem($settings);
+$cartItemMapper = new \Mapper\CartItem($settings, $database);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -55,6 +55,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'EmptyCart':
             $cartItemMapper->emptyCart();
             break;
+        case 'AddCouponToCart':
+            $cartItemMapper->addCoupon(Sanitize::cleanAlphaNumeric($_POST['Code']));
+            break;
+        case 'RemoveCouponFromCart':
+            $cartItemMapper->deleteCoupon();
+            break;
     }
 
     echo '$' . number_format($cartItemMapper->getSubtotal(), 2);
@@ -64,7 +70,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $template->assign('cartItems', $cartItemMapper->listAll());
     $template->assign('subTotal', '$' . (string)number_format($cartItemMapper->getSubtotal(), 2));
     $template->assign('callOutBoxText', $settings->getCartCallout());
-    $template->assign('disableCoupon', false);
+    $template->assign('disableCoupon', (is_null($cartItemMapper->getCoupon()) ? false : true));
+
+    $coupon = $cartItemMapper->getCoupon();
+    if (!is_null($coupon)) {
+        $template->assign('couponCode', $coupon->getCode());
+        $template->assign('isPercent', $coupon->isPercent());
+        $template->assign('Amount', (double)$coupon->getAmount() * -1);
+    }
 
     $template->output();
+
+    Debug::dump($cartItemMapper);
 }
