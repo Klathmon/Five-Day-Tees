@@ -59,5 +59,5 @@
     {/if}
     <p id="SubTotal">Subtotal - <span>{$subTotal|default:'$0.00'}</span></p>
     <button id="EmptyCart" title="Click to empty your cart of all items">Empty Cart</button>
-    <button id="PayPal">Buy With PayPal!?</button>
+    <a id="PayPal" href="/Checkout" title="Checkout with PayPal"><img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif"/></a>
 </div>

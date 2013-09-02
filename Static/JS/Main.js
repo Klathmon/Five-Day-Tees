@@ -1,10 +1,9 @@
 /**
  * Created By: Gregory Benner
  * Date: 8/25/13
- * Time: 7:36 PM
  */
 (function(){
-    /* DOM Loaded */
+    // DOM Loaded //
     $(function(){
         //Attach All Handlers
         attachHandlers();
@@ -46,7 +45,7 @@
             });
     }
 
-    /* Admin Page Functions */
+    // Admin Page Functions //
     function saveGlobalSettings(event){
         var $row = $(event.target).closest('TR');
 
@@ -129,7 +128,7 @@
     }
 
 
-    /* Viewport Functions */
+    // Viewport Functions //
     function itemClicked(event){
         var $this = $(event.target).closest('.Item');
 
@@ -189,7 +188,7 @@
     }
 
 
-    /* Cart Functions */
+    // Cart Functions //
     function emptyCart(){
 
         $('#Cart').find('TR:not(:first-child)').fadeOut(200, function(){
@@ -282,7 +281,8 @@
         }
     }
 
-    /* Helper Functions */
+
+    // Helper Functions //
     function sendCommand(url, command, data){
 
         data['Command'] = command;

@@ -20,6 +20,7 @@ switch ($query->get(0)) {
     case 'FAQ':
     case 'Contact':
     case 'Cart':
+    case 'Checkout':
         $controller = $query->get(0);
         break;
     case '':

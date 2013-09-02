@@ -29,13 +29,6 @@ class ConfigParser
         }
     }
 
-    public function __call($funcName, $arguments)
-    {
-        $varName = strtoupper(substr($funcName, 4));
-
-        return $this->configVariables[$varName];
-    }
-
     public function getMode()
     {
         return $this->configVariables['MODE'];
@@ -89,5 +82,30 @@ class ConfigParser
     public function getGoogleAnalytics()
     {
         return $this->configVariables['GOOGLE_ANALYTICS'];
+    }
+
+    public function getPayPalAPIVersion()
+    {
+        return $this->configVariables['PAYPAL_API_VERSION'];
+    }
+
+    public function getPayPalAPIUsername()
+    {
+        return $this->configVariables['PAYPAL_USERNAME'];
+    }
+
+    public function getPayPalAPIPassword()
+    {
+        return $this->configVariables['PAYPAL_PASSWORD'];
+    }
+
+    public function getPayPalAPISignature()
+    {
+        return $this->configVariables['PAYPAL_SIGNATURE'];
+    }
+
+    public function getPayPalAPIEndpoint()
+    {
+        return $this->configVariables['PAYPAL_ENDPOINT'];
     }
 }
