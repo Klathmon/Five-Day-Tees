@@ -3,6 +3,8 @@
  * Created by: Gregory Benner.
  * Date: 8/22/13
  */
+
+/** Start Output Buffering */
 ob_start();
 
 
@@ -13,10 +15,10 @@ set_include_path('Includes/');
 
 /** Include and construct the ConfigParser */
 require('ConfigParser.php');
-$config = new ConfigParser('Config/development.ini');
+$config = new ConfigParser('Config/config.ini');
 
 /** Include Debug.php if we are in development */
-if ($config->getMode() == 'DEV') {
+if ($config->debugModeOn()) {
     include('Library/Debug.php');
 }
 
@@ -24,7 +26,7 @@ if ($config->getMode() == 'DEV') {
 date_default_timezone_set('America/New_York');
 include('Autoloader.php');
 spl_autoload_register('Autoloader');
-if ($config->getMode() == 'DEV') {
+if ($config->showErrors()) {
     error_reporting(E_ALL);
     Debug::setEmail('greg@fivedaytees.com');
 } else {
@@ -37,5 +39,3 @@ $database = new PDO(
 );
 $database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
-/** @var Query $query Parse the URL into it's parts */
-$query = new Query();

@@ -5,10 +5,9 @@
  */
 
 echo 'Test Page!';
-
-$database->query('DELETE FROM Items');
-$database->query('DELETE FROM ItemsCommon');
-
 $spreadshirtItems = new SpreadshirtItems($database, $config);
 $spreadshirtItems->getNewItems();
-echo "DONE!";
+
+Debug::dump($_SERVER);
+
+echo $request->getQueryString();

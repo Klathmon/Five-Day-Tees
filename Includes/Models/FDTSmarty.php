@@ -33,7 +33,7 @@ class FDTSmarty extends Smarty
 
         parent::__construct();
 
-        if ($this->config->getMode() == 'DEV') {
+        if ($this->config->debugModeOn()) {
             $this->force_compile = true;
             //$this->debugging     = true;
         } else {

@@ -7,7 +7,10 @@
 /** Setup Bootstrapper */
 require('Config/Bootstrapper.php');
 
-switch ($query->get(0)) {
+/** @var RequestParser $request Parse the URL into it's parts */
+$request = new RequestParser($_SERVER['REQUEST_URI']);
+
+switch ($request->get(0)) {
     case 'Test':
         $controller = 'Test';
         break;
@@ -21,7 +24,7 @@ switch ($query->get(0)) {
     case 'Contact':
     case 'Cart':
     case 'Checkout':
-        $controller = $query->get(0);
+        $controller = $request->get(0);
         break;
     case '':
         $controller = 'Featured';

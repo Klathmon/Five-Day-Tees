@@ -6,26 +6,38 @@
 
 namespace PayPal;
 
-use ConfigParser, Settings, Exception;
+use ConfigParser, Exception, cURL;
 
 class ExpressCheckout
 {
     private $config;
 
-    private $settings;
+    private $curl;
 
     private $parameters = [];
 
+    private $response;
 
-    public function __construct(ConfigParser $config, Settings $settings)
+
+    public function __construct(ConfigParser $config)
     {
-        $this->config   = $config;
-        $this->settings = $settings;
+        $this->config = $config;
 
-        $this->parameters['VERSION']   = $this->config->getPayPalAPIVersion();
-        $this->parameters['USER']      = $this->config->getPayPalAPIUsername();
-        $this->parameters['PWD']       = $this->config->getPayPalAPIPassword();
-        $this->parameters['SIGNATURE'] = $this->config->getPayPalAPISignature();
+        try{
+            $this->curl = new cURL($this->config->getPayPalAPIEndpoint());
+            $this->curl->setOption(CURLOPT_VERBOSE, 1);
+            $this->curl->setOption(CURLOPT_SSL_VERIFYPEER, 2);
+            $this->curl->setOption(CURLOPT_CAINFO, $this->config->getBaseDirectory() . 'Config/cacert.pem'); //CA Cert File
+            $this->curl->setOption(CURLOPT_RETURNTRANSFER, 1);
+            $this->curl->setOption(CURLOPT_POST, 1);
+        } catch(Exception $e){
+            throw new Exception('Error starting cURL');
+        }
+
+        $this->addParameter('VERSION', $this->config->getPayPalAPIVersion());
+        $this->addParameter('USER', $this->config->getPayPalAPIUsername());
+        $this->addParameter('PWD', $this->config->getPayPalAPIPassword());
+        $this->addParameter('SIGNATURE', $this->config->getPayPalAPISignature());
     }
 
     public function addParameter($name, $value)
@@ -33,34 +45,42 @@ class ExpressCheckout
         $this->parameters[$name] = $value;
     }
 
-    public function executeRequest()
+    public function getUserCheckoutURL()
     {
-        $curl = curl_init();
+        $this->response = $this->executeRequest();
 
-        $payload = http_build_query($this->parameters);
+        if (is_array($this->response) && $this->response['ACK'] == 'Success') {
 
-        $curlOptions = [
-            CURLOPT_URL            => $this->config->getPayPalAPIEndpoint(),
-            CURLOPT_VERBOSE        => 1,
-            CURLOPT_SSL_VERIFYPEER => true,
-            CURLOPT_SSL_VERIFYHOST => 2,
-            CURLOPT_CAINFO         => $this->config->getBaseDirectory() . 'Config/cacert.pem', //CA cert file
-            CURLOPT_RETURNTRANSFER => 1,
-            CURLOPT_POST           => 1,
-            CURLOPT_POSTFIELDS     => $payload
-        ];
+            $parameters = ['cmd' => '_express-checkout', 'token' => $this->response['TOKEN']];
 
-        curl_setopt_array($curl, $curlOptions);
+            $url = $this->config->getPayPalExpressCheckoutURL() . '?' . http_build_query($parameters);
 
-        $response = curl_exec($curl);
-
-        if (curl_errno($curl)) {
-            $error = curl_error($curl);
-            curl_close($curl);
-            throw new Exception($error);
+        } else {
+            throw new Exception('Error Forwarding to PayPal!');
         }
 
-        curl_close($curl);
+        return $url;
+    }
+
+    public function getLastResponse()
+    {
+        return $this->response;
+    }
+
+    public function __destruct()
+    {
+        $this->curl->close();
+    }
+
+    private function executeRequest()
+    {
+        try{
+            $this->curl->setOption(CURLOPT_POSTFIELDS, http_build_query($this->parameters));
+
+            $response = $this->curl->execute();
+        } catch(Exception $e){
+            throw new Exception('Error executing cURL');
+        }
 
         $responseArray = [];
 

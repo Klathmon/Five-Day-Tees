@@ -34,6 +34,15 @@ class ConfigParser
         return $this->configVariables['MODE'];
     }
 
+    public function getProtocol()
+    {
+        if (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off' || $_SERVER['SERVER_PORT'] == 443) {
+            return 'https:';
+        } else {
+            return 'http:';
+        }
+    }
+
     public function getDatabaseHost()
     {
         return $this->configVariables['DATABASE_HOST'];
@@ -107,5 +116,28 @@ class ConfigParser
     public function getPayPalAPIEndpoint()
     {
         return $this->configVariables['PAYPAL_ENDPOINT'];
+    }
+
+    public function getPayPalExpressCheckoutURL()
+    {
+        return $this->configVariables['PAYPAL_EXPRESS_CHECKOUT_URL'];
+    }
+
+    public function showErrors()
+    {
+        if (strtoupper($this->configVariables['SHOW_ERRORS']) == 'TRUE') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function debugModeOn()
+    {
+        if (strtoupper($this->configVariables['DEBUG_MODE']) == 'TRUE') {
+            return true;
+        } else {
+            return false;
+        }
     }
 }

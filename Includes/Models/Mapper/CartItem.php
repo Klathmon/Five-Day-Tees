@@ -64,25 +64,9 @@ class CartItem implements Mapper
 
     public function getSubtotal()
     {
-        $subtotal = 0;
+        $subtotal = $this->getSubtotalNoCoupon();
 
-        foreach ((array)$_SESSION['entities'] as $entity) {
-            /** @var \Entity\CartItem $entity */
-            $subtotal += $this->settings->getItemCurrentPrice($entity->item) * $entity->getQuantity();
-        }
-
-        if (!is_null($this->coupon)) {
-            $coupon = $this->coupon;
-            if ($coupon->isPercent()) {
-                $amount = $coupon->getAmount() / 100;
-
-                $subtotal = $subtotal - ($subtotal * $amount);
-            } else {
-                $amount = $coupon->getAmount();
-
-                $subtotal = $subtotal - $amount;
-            }
-        }
+        $subtotal += $this->getCouponDiscount();
 
         return $subtotal;
     }
@@ -116,5 +100,39 @@ class CartItem implements Mapper
     {
         $this->coupon = null;
         unset($_SESSION['coupon']);
+    }
+
+    public function getCouponDiscount()
+    {
+        $subtotal = $this->getSubtotalNoCoupon();
+
+        if (!is_null($this->coupon)) {
+            $coupon = $this->coupon;
+            if ($coupon->isPercent()) {
+                $amount = $coupon->getAmount() / 100;
+
+                $discount = ($subtotal * $amount) * -1;
+            } else {
+                $amount = $coupon->getAmount();
+
+                $discount = $amount * -1;
+            }
+        } else {
+            $discount = 0;
+        }
+
+        return $discount;
+    }
+
+    private function getSubtotalNoCoupon()
+    {
+        $subtotal = 0;
+
+        foreach ((array)$_SESSION['entities'] as $entity) {
+            /** @var \Entity\CartItem $entity */
+            $subtotal += $this->settings->getItemCurrentPrice($entity->item) * $entity->getQuantity();
+        }
+
+        return $subtotal;
     }
 }

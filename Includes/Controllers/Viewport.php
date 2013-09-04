@@ -7,7 +7,7 @@
 $settings    = new Settings($database, $config);
 $itemsMapper = new \Mapper\Item($database, $config);
 
-$items = $itemsMapper->getByName($settings->decodeName($query->get(1)));
+$items = $itemsMapper->getByName($settings->decodeName($request->get(1)));
 
 if ($items !== false && $items[0]->getCategory() != 'Queue') {
     //We are good! shirts are okay to display!
@@ -16,7 +16,7 @@ if ($items !== false && $items[0]->getCategory() != 'Queue') {
     $template->assign('settings', $settings);
 
     /* If there is no default ID set, set it to the first shirt's ID */
-    $defaultID = (!is_null($query->get(2)) ? Sanitize::cleanInteger($query->get(2)) : $items[0]->getID());
+    $defaultID = (!is_null($request->get(2)) ? Sanitize::cleanInteger($request->get(2)) : $items[0]->getID());
 
     foreach ($items as $item) {
         if ($item->getID() == $defaultID) {

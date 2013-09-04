@@ -56,7 +56,7 @@ class SpreadshirtItems
 
         $url = "{$spreadURL}shops/{$shopID}/articles?";
 
-        /* Setup the Query data */
+        /* Setup the RequestParser data */
         $query = [
             'fullData'  => 'true',
             'sortField' => 'created',
@@ -221,7 +221,7 @@ class SpreadshirtItems
             $DOMDocument = $this->XMLDocumentCache[$url];
         } else {
             $DOMDocument               = new DOMDocument('1.0', 'UTF-8');
-            $DOMDocument->formatOutput = ($this->config->getMode() == 'DEV' ? true : false);
+            $DOMDocument->formatOutput = ($this->config->debugModeOn() ? true : false);
             $DOMDocument->load($url);
 
             $this->XMLDocumentCache[$url] = $DOMDocument;

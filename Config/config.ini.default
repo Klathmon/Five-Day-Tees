@@ -1,0 +1,41 @@
+##############################################################################
+##############################################################################
+################                                              ################
+################ Five Day Tees Development Configuration File ################
+################                                              ################
+##############################################################################
+##############################################################################
+
+MODE = DEV
+SHOW_ERRORS = TRUE
+DEBUG_MODE = TRUE
+
+SITE_NAME = Five Day Tees
+
+BASE_DIR = /path/to/root/
+
+STATIC_URL = Static/
+
+DATABASE_NAME = 
+DATABASE_USERNAME = 
+DATABASE_PASSWORD = 
+DATABASE_HOST = 
+
+SPREAD_API_URL = 
+SPREAD_API_SECURE_URL = 
+SPREAD_USERNAME = 
+SPREAD_PASSWORD = 
+SPREAD_API_KEY = 
+SPREAD_API_SECRET_KEY = 
+SPREAD_SHOP_ID = 
+SPREAD_PARTNER_ID = 
+
+GOOGLE_ANALYTICS = 
+
+PAYPAL_SERVER_TYPE = 
+PAYPAL_API_VERSION = 
+PAYPAL_USERNAME = 
+PAYPAL_PASSWORD = 
+PAYPAL_SIGNATURE = 
+PAYPAL_ENDPOINT = 
+PAYPAL_EXPRESS_CHECKOUT_URL = 
