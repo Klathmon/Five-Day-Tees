@@ -6,7 +6,7 @@
 
 $settings        = new Settings($database, $config);
 $itemMapper      = new \Mapper\Item($database, $config);
-$cartItemMapper  = new \Mapper\CartItem($settings, $database);
+$shoppingCart    = new ShoppingCart($settings);
 $expressCheckout = new \PayPal\ExpressCheckout($config);
 
 
@@ -31,8 +31,7 @@ switch ($request->get(1)) {
         $expressCheckout->addParameter('CANCELURL', $baseURL . '/Checkout/Cancel');
 
         $index = 0;
-        foreach ($cartItemMapper->listAll() as $cartItem) {
-            /** @var \Entity\CartItem $cartItem */
+        foreach ($shoppingCart->getCartItems() as $cartItem) {
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NAME' . $index, $cartItem->item->getName());
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_DESC' . $index, $cartItem->item->getDescription());
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_QTY' . $index, $cartItem->getQuantity());
@@ -40,17 +39,17 @@ switch ($request->get(1)) {
             $index++;
         }
 
-        $coupon = $cartItemMapper->getCoupon();
-
-        if (!is_null($coupon)) {
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NAME' . $index, $coupon->getCode());
+        try{
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NAME' . $index, $shoppingCart->getCoupon()->getCode());
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_DESC' . $index, '');
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_QTY' . $index, 1);
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_AMT' . $index, number_format($cartItemMapper->getCouponDiscount(), 2));
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_AMT' . $index, number_format($shoppingCart->getCouponDiscount(), 2));
+        } catch(Exception $e){
+            //Silently skip if there is no coupon
         }
 
-        $expressCheckout->addParameter('PAYMENTREQUEST_0_AMT', number_format($cartItemMapper->getSubtotal(), 2));
-        $expressCheckout->addParameter('PAYMENTREQUEST_0_ITEMAMT', number_format($cartItemMapper->getSubtotal(), 2));
+        $expressCheckout->addParameter('PAYMENTREQUEST_0_AMT', number_format($shoppingCart->getFinalTotal(), 2));
+        $expressCheckout->addParameter('PAYMENTREQUEST_0_ITEMAMT', number_format($shoppingCart->getFinalTotal(), 2));
 
         try{
             header('Location: ' . $expressCheckout->getUserCheckoutURL());

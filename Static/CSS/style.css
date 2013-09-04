@@ -80,7 +80,6 @@ NAV#MainNav {
 :DXImageTransform.Microsoft.
 
 Alpha
-
 (
 Opacity
 
@@ -95,6 +94,15 @@ Opacity
 opacity:
 
 0.75
+;
+-ms-filter:progid :DXImageTransform.Microsoft. Alpha
+
+(
+Opacity
+
+=
+75
+)
 ;
     }
 
@@ -116,7 +124,6 @@ opacity:
 :DXImageTransform.Microsoft.
 
 Alpha
-
 (
 Opacity
 
@@ -131,6 +138,15 @@ Opacity
 opacity:
 
 0.6
+;
+-ms-filter:progid :DXImageTransform.Microsoft. Alpha
+
+(
+Opacity
+
+=
+60
+)
 ;
 -ms-filter:progid :DXImageTransform.Microsoft. Alpha
 
@@ -200,6 +216,31 @@ Opacity
 
 #Admin.Page #Items TD, #Admin.Page #Items TD INPUT, #Admin.Page #Items TD TEXTAREA {
     width: 91px;
+}
+
+/*FAQ*/
+#FAQ IMG.left {
+    float: left;
+    padding-right: 20px;
+    padding-bottom: 5px;
+}
+
+#FAQ H3 {
+    border-bottom: 1px solid #000;
+    padding-bottom: 5px;
+}
+
+#FAQ TABLE {
+    width: 800px;
+    border: 1px solid #000;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#FAQ TH, #FAQ TD {
+    border: 1px solid #000;
+    text-align: center;
+    padding: 5px;
 }
 
 /*Item Pages*/
@@ -317,7 +358,6 @@ Opacity
 :DXImageTransform.Microsoft.
 
 Alpha
-
 (
 Opacity
 
@@ -332,6 +372,15 @@ Opacity
 opacity:
 
 0.4
+;
+-ms-filter:progid :DXImageTransform.Microsoft. Alpha
+
+(
+Opacity
+
+=
+40
+)
 ;
     }
 
@@ -433,7 +482,6 @@ opacity:
 :DXImageTransform.Microsoft.
 
 Alpha
-
 (
 Opacity
 
@@ -448,6 +496,15 @@ Opacity
 opacity:
 
 0.75
+;
+-ms-filter:progid :DXImageTransform.Microsoft. Alpha
+
+(
+Opacity
+
+=
+75
+)
 ;
 background-color:#000000
 
