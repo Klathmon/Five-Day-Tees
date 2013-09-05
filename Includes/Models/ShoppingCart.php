@@ -7,6 +7,7 @@
 
 use \Entity\CartItem;
 use \Entity\Coupon;
+use \Entity\ShippingMethod;
 
 class ShoppingCart
 {
@@ -93,7 +94,7 @@ class ShoppingCart
      */
     public function emptyCart()
     {
-        $this->sessionArray = ['CartItems' => [], 'Coupon' => null];
+        $this->sessionArray = ['CartItems' => [], 'Coupon' => null, 'ShippingMethod' => null];
     }
 
     /**
@@ -168,6 +169,46 @@ class ShoppingCart
     }
 
     /**
+     * Set the shipping method
+     *
+     * @param ShippingMethod $shippingMethod
+     */
+    public function setShippingMethod(ShippingMethod $shippingMethod)
+    {
+        $this->sessionArray['ShippingMethod'] = $shippingMethod;
+    }
+
+    /**
+     * Returns the Shipping Method selected
+     *
+     * @return \Entity\ShippingMethod
+     *
+     * @throws Exception
+     */
+    public function getShippingMethod()
+    {
+        if (array_key_exists('ShippingMethod', $this->sessionArray)) {
+            $shippingMethod = $this->sessionArray['ShippingMethod'];
+            if (!is_null($shippingMethod)) {
+                return $shippingMethod;
+            } else {
+                throw new Exception('No Shipping Method found', 1);
+            }
+        } else {
+            throw new Exception('No Shipping Method found', 1);
+        }
+    }
+
+    /**
+     * Removes the current shipping method from the cart
+     */
+    public function deleteShippingMethod()
+    {
+        $this->sessionArray['ShippingMethod'] = null;
+        unset($this->sessionArray['ShippingMethod']);
+    }
+
+    /**
      * Returns the SubTotal.
      * The SubTotal is the sum of the cart items and nothing else (no coupons or shipping stuff)
      *
@@ -188,13 +229,35 @@ class ShoppingCart
     }
 
     /**
+     * Returns the SubTotal (before shipping is calculated)
+     *
+     * @return float|int
+     */
+    public function getPreShippingTotal()
+    {
+        return $this->getSubtotal() + $this->getCouponDiscount();
+    }
+
+    /**
      * Returns the full total for the cart, shipping, coupons, and items all included
      *
      * @return float|int
      */
     public function getFinalTotal()
     {
-        return $this->getSubtotal() + $this->getCouponDiscount();
+        $subtotal = $this->getPreShippingTotal();
+
+        try{
+            $shipping = $this->getShippingMethod()->calculateShippingPrice($subtotal);
+        } catch(Exception $e){
+            if ($e->getCode() == 2) {
+                throw new Exception('Total Price Too High!');
+            } else {
+                $shipping = 0;
+            }
+        }
+
+        return $subtotal + $shipping;
     }
 
     /**

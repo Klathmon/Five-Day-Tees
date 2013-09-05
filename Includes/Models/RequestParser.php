@@ -8,7 +8,8 @@ class RequestParser
 {
     private $requestURI;
     private $queryString;
-    private $array = [];
+    private $pathArray = [];
+    private $queryArray = [];
 
     public function __construct($requestURI)
     {
@@ -20,10 +21,11 @@ class RequestParser
         ); //Remove index.php if it's present (and trim the '/' at the start)
         $URIArray         = explode('?', $this->requestURI);
 
-        $this->array = explode('/', $URIArray[0]);
+        $this->pathArray = explode('/', $URIArray[0]);
 
         if (array_key_exists(1, $URIArray)) {
             $this->queryString = $URIArray[1];
+            parse_str($this->queryString, $this->queryArray);
         } else {
             $this->queryString = null;
         }
@@ -32,9 +34,9 @@ class RequestParser
     public function get($position = null)
     {
         if ($position === null) {
-            return $this->array;
+            return $this->pathArray;
         } else {
-            return (array_key_exists($position, $this->array) ? $this->array[$position] : null);
+            return (array_key_exists($position, $this->pathArray) ? $this->pathArray[$position] : null);
         }
     }
 
@@ -46,5 +48,10 @@ class RequestParser
     public function getQueryString()
     {
         return $this->queryString;
+    }
+
+    public function getQueryArray()
+    {
+        return $this->queryArray;
     }
 }

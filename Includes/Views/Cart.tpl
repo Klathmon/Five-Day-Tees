@@ -11,7 +11,7 @@
             <th class="Size">Size</th>
             <th class="Price">Price</th>
             <th class="Quantity">Quantity</th>
-            <th class="Buttons"></th>
+            <th class="Buttons">&nbsp;</th>
         </tr>
         {foreach $cartItems as $cartItem}
             <tr data-id="{$cartItem->item->getID()}" data-size="{$cartItem->getSize()}">
@@ -51,13 +51,34 @@
             <p>{$callOutBoxText}</p>
         </div>
     {/if}
+    <div id="Shipping">
+        <h5>Pick your Shipping Method:</h5>
+        {foreach $shippingMethods as $shippingMethod}
+            <label class="ShippingMethod">
+                <input
+                        type="radio"
+                        name="Shipping"
+                        data-id="{$shippingMethod->getID()}"
+                        {if $chosenShippingMethodID == $shippingMethod->getID()}checked{/if}/>
+                {$shippingMethod->getName()} - (${number_format($shippingMethod->calculateShippingPrice($preShippingTotal), 2)})
+            </label>
+        {/foreach}
+    </div>
     {if $disableCoupon == false}
         <div id="CouponsContainer">
             <input type="text" id="CouponCode" placeholder="Coupon Code"/>
             <button id="SubmitCoupon" title="Click to add a coupon">Enter Coupon</button>
         </div>
     {/if}
-    <p id="SubTotal">Subtotal - <span>{$subTotal|default:'$0.00'}</span></p>
+    <p id="Total">Total - <span>{$total|default:'$0.00'}</span></p>
     <button id="EmptyCart" title="Click to empty your cart of all items">Empty Cart</button>
-    <a id="PayPal" href="/Checkout" title="Checkout with PayPal"><img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif"/></a>
+    {if $chosenShippingMethodID == -1}
+        <a id="PayPal" title="Please choose a shipping method" class="Disabled">
+            <img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif"/>
+        </a>
+    {else}
+        <a id="PayPal" href="/Checkout" title="Checkout with PayPal">
+            <img src="https://www.paypal.com/en_US/i/btn/btn_xpressCheckout.gif"/>
+        </a>
+    {/if}
 </div>

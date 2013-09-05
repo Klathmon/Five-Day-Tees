@@ -38,6 +38,7 @@
             .on('click', '#Cart #CloseCart', hideCart)
             .on('click', '#Cart #RemoveCoupon', removeCouponFromCart)
             .on('click', '#Cart #SubmitCoupon', addCouponToCart)
+            .on('click', '#Cart #Shipping input[type=radio]', setShipping)
             .on('keyup', '#Cart #CouponsContainer #CouponCode', function(event){
                 if(event.keyCode == 13){
                     addCouponToCart(event)
@@ -181,9 +182,7 @@
         if(data['Size'] == undefined){
             alert('You need to select a size!');
         }else{
-            $.post('/Cart', data, function(){
-                showCart();
-            })
+            $.post('/Cart', data, showCart);
         }
     }
 
@@ -191,13 +190,20 @@
     // Cart Functions //
     function emptyCart(){
 
-        $('#Cart').find('TR:not(:first-child)').fadeOut(200, function(){
-            $(this).remove();
-        });
+        $.post('/Cart', {'Command': 'EmptyCart'}, replaceCart);
+    }
 
-        $.post('/Cart', {'Command': 'EmptyCart'}, function(data){
-            $('#Cart').find('#SubTotal').find('span').html(data);
-        });
+    function setShipping(event){
+        var $this = $(event.target).closest('#Shipping').find('Input[type=radio]:checked');
+
+        var data = {
+            "Command": 'SetShipping',
+            "ID":      $this.data('id')
+        };
+
+        console.log(data);
+
+        $.post('/Cart', data, replaceCart);
     }
 
     function updateItem(event){
@@ -210,9 +216,7 @@
             'Quantity': $this.find('Input.Quantity').val()
         };
 
-        $.post('/Cart', data, function(data){
-            $this.closest('#Cart').find('#SubTotal').find('span').html(data);
-        });
+        $.post('/Cart', data, replaceCart);
     }
 
     function removeItem(event){
@@ -224,14 +228,7 @@
             'Size':    $this.data('size')
         };
 
-
-        $this.fadeOut(200, function(){
-            $this.remove();
-        });
-
-        $.post('/Cart', data, function(data){
-            $this.closest('#Cart').find('#SubTotal').find('span').html(data);
-        });
+        $.post('/Cart', data, replaceCart);
     }
 
     function addCouponToCart(event){
@@ -242,19 +239,20 @@
             'Code':    $this.find('#CouponCode').val()
         };
 
-        $.post('/Cart', data, showCart);
+        $.post('/Cart', data, replaceCart);
     }
 
     function removeCouponFromCart(event){
-        $.post('/Cart', {'Command': 'RemoveCouponFromCart'}, showCart);
+        $.post('/Cart', {'Command': 'RemoveCouponFromCart'}, replaceCart);
     }
 
     function showCart(){
 
-        /* Hide any other carts that may have gotten their way in here before showing this one */
-        hideCart(true);
-
         $.get('/Cart', function(data){
+
+            /* Hide any other carts that may have gotten their way in here before showing this one */
+            hideCart(true);
+
             /* Create the container in memory, add everything to it, and then fade it in */
             $('<div>')
                 .attr('id', 'CartContainer')
@@ -279,6 +277,14 @@
                 $(this).remove();
             });
         }
+    }
+
+    function replaceCart(data){
+        var $container = $('#CartContainer');
+
+        $container.find('#Cart').remove();
+
+        $container.append(data);
     }
 
 

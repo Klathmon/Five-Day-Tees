@@ -47,6 +47,8 @@ class ExpressCheckout
 
     public function getUserCheckoutURL()
     {
+        $this->addParameter('METHOD', 'SetExpressCheckout');
+
         $this->response = $this->executeRequest();
 
         if (is_array($this->response) && $this->response['ACK'] == 'Success') {
@@ -60,6 +62,26 @@ class ExpressCheckout
         }
 
         return $url;
+    }
+
+    public function getCheckoutDetails()
+    {
+
+        $this->addParameter('METHOD', 'GetExpressCheckoutDetails');
+
+        $this->response = $this->executeRequest();
+
+        return $this->response;
+    }
+
+    public function finalizeOrder()
+    {
+
+        $this->addParameter('METHOD', 'DoExpressCheckoutPayment');
+
+        $this->response = $this->executeRequest();
+
+        return $this->response;
     }
 
     public function getLastResponse()

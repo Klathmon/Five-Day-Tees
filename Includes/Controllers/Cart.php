@@ -6,10 +6,11 @@
 
 $sizeSanitizeCharacters = 'ALMNSX';
 
-$settings     = new Settings($database, $config);
-$itemMapper   = new \Mapper\Item($database, $config);
-$couponMapper = new \Mapper\Coupon($database);
-$shoppingCart = new ShoppingCart($settings);
+$settings             = new Settings($database, $config);
+$itemMapper           = new \Mapper\Item($database, $config);
+$couponMapper         = new \Mapper\Coupon($database);
+$shoppingCart         = new ShoppingCart($settings);
+$shippingMethodMapper = new \Mapper\ShippingMethod($database);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 
@@ -76,25 +77,45 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'RemoveCouponFromCart':
             $shoppingCart->deleteCoupon();
             break;
+        case 'SetShipping':
+            $ID = Sanitize::cleanInteger($_POST['ID']);
+            try{
+                $shippingMethod = $shippingMethodMapper->getByID($ID);
+                $shoppingCart->setShippingMethod($shippingMethod);
+            } catch(Exception $e){
+                //Silently skip if someone tries to add a shipping method that doesn't exist
+            }
+            break;
     }
-    //Echo the total, Javascript uses this to update the total after we do stuff here
-    echo '$' . number_format($shoppingCart->getFinalTotal(), 2);
-} else {
-    $template = new FDTSmarty($config, 'Cart.tpl');
-
-    $template->assign('cartItems', $shoppingCart->getCartItems());
-    $template->assign('subTotal', '$' . (string)number_format($shoppingCart->getFinalTotal(), 2));
-    $template->assign('callOutBoxText', $settings->getCartCallout());
-
-    try{
-        $coupon = $shoppingCart->getCoupon();
-        $template->assign('disableCoupon', true);
-        $template->assign('couponCode', $coupon->getCode());
-        $template->assign('isPercent', $coupon->isPercent());
-        $template->assign('Amount', (double)$coupon->getAmount() * -1);
-    } catch(Exception $e){
-        $template->assign('disableCoupon', false);
-    }
-
-    $template->output();
 }
+
+if ($shoppingCart->getPreShippingTotal() >= 150) {
+    $shoppingCart->emptyCart();
+    echo "<script>alert('The you have too many items in your cart! For orders over $150 please contact us directly!');</script>";
+}
+
+$template = new FDTSmarty($config, 'Cart.tpl');
+
+$template->assign('cartItems', $shoppingCart->getCartItems());
+$template->assign('shippingMethods', $shippingMethodMapper->listAllEnabled());
+$template->assign('preShippingTotal', $shoppingCart->getPreShippingTotal());
+$template->assign('total', '$' . (string)number_format($shoppingCart->getFinalTotal(), 2));
+$template->assign('callOutBoxText', $settings->getCartCallout());
+
+try{
+    $template->assign('chosenShippingMethodID', $shoppingCart->getShippingMethod()->getID());
+} catch(Exception $e){
+    $template->assign('chosenShippingMethodID', -1); //This will make it so none of them are selected
+}
+
+try{
+    $coupon = $shoppingCart->getCoupon();
+    $template->assign('disableCoupon', true);
+    $template->assign('couponCode', $coupon->getCode());
+    $template->assign('isPercent', $coupon->isPercent());
+    $template->assign('Amount', (double)$coupon->getAmount() * -1);
+} catch(Exception $e){
+    $template->assign('disableCoupon', false);
+}
+
+$template->output();

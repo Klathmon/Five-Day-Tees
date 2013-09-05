@@ -4,6 +4,8 @@
  * Date: 8/21/13
  */
 
+$timerStart = microtime(true);
+
 /** Setup Bootstrapper */
 require('Config/Bootstrapper.php');
 
@@ -35,5 +37,9 @@ switch ($request->get(0)) {
 
 
 require("Controllers/$controller.php");
+
+if ($config->debugModeOn()) {
+    echo '*DEBUG* Script took ' . (microtime(true) - $timerStart) . ' Seconds to run *DEBUG*';
+}
 
 die(); //Farewell cruel world!
