@@ -73,7 +73,7 @@ class ConfigParser
 
     public function getBaseDirectory()
     {
-        return getcwd();
+        return getcwd() . '/';
     }
 
     public function getSiteName()

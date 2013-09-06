@@ -101,7 +101,7 @@ switch ($request->get(1)) {
             header('Location: ' . $expressCheckout->getUserCheckoutURL());
         } catch(Exception $e){
             //Something went wrong, show the user an error...
-            header('Location: /500');
+            //header('Location: /500');
         }
         break;
 }

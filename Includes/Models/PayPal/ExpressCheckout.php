@@ -51,6 +51,7 @@ class ExpressCheckout
 
         $this->response = $this->executeRequest();
 
+
         if (is_array($this->response) && $this->response['ACK'] == 'Success') {
 
             $parameters = ['cmd' => '_express-checkout', 'token' => $this->response['TOKEN']];
