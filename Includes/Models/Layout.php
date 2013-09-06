@@ -22,9 +22,9 @@ class Layout
      * @param string       $template
      * @param string       $title
      */
-    public function __construct($config, $template, $title)
+    public function __construct($config, $template, $title, $cacheID = null)
     {
-        $this->page = new FDTSmarty($config, 'Global/Layout.tpl', $title);
+        $this->page = new FDTSmarty($config, 'Global/Layout.tpl', $title, $cacheID);
 
         $this->page->addCss('normalize.css');
         $this->page->addCss('style.css');
@@ -42,5 +42,10 @@ class Layout
     public function assign($tpl_var, $value = null, $nocache = false)
     {
         $this->page->assign($tpl_var, $value, $nocache);
+    }
+
+    public function isPageCached()
+    {
+        return $this->page->isPageCached();
     }
 }

@@ -9,6 +9,7 @@ $timerStart = microtime(true);
 /** Setup Bootstrapper */
 require('Config/Bootstrapper.php');
 
+
 /** @var RequestParser $request Parse the URL into it's parts */
 $request = new RequestParser($_SERVER['REQUEST_URI']);
 
@@ -34,7 +35,6 @@ switch ($request->get(0)) {
     default:
         $controller = '404';
 }
-
 
 require("Controllers/$controller.php");
 

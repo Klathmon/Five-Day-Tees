@@ -30,6 +30,10 @@
         </tr>
     </table>
 
+    {if $config->getMode() == 'DEV'}
+        <button onclick="$.post('/Admin', { 'Command': 'ReloadAllItems' }, function(data) { location.reload(); } )">Clear Out Shirts</button>
+    {/if}
+
     <h3>Coupons:</h3>
     <table id="Coupons">
         <tr>

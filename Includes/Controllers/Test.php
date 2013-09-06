@@ -5,9 +5,5 @@
  */
 
 echo 'Test Page!';
-$spreadshirtItems = new SpreadshirtItems($database, $config);
-$spreadshirtItems->getNewItems();
 
-Debug::dump($_SERVER);
-
-echo $request->getQueryString();
+var_dump(str_replace(['http:', 'https:'], '', 'http://image.spreadshirt.com'));

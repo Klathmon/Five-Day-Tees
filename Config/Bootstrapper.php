@@ -13,6 +13,7 @@ chdir(__DIR__ . '/../');
 
 set_include_path('Includes/');
 
+
 /** Include and construct the ConfigParser */
 require('ConfigParser.php');
 $config = new ConfigParser('Config/config.ini');
@@ -20,6 +21,7 @@ $config = new ConfigParser('Config/config.ini');
 /** Include Debug.php if we are in development */
 if ($config->debugModeOn()) {
     include('Library/Debug.php');
+    Debug::setEmail('greg@fivedaytees.com');
 }
 
 /** Setup Timezone, Autoloader, and Error Reporting */
@@ -28,14 +30,13 @@ include('Autoloader.php');
 spl_autoload_register('Autoloader');
 if ($config->showErrors()) {
     error_reporting(E_ALL);
-    Debug::setEmail('greg@fivedaytees.com');
 } else {
     error_reporting(0);
 }
+
 
 $database = new PDO(
     "mysql:host={$config->getDatabaseHost()};dbname={$config->getDatabaseName()}",
     $config->getDatabaseUsername(), $config->getDatabasePassword()
 );
 $database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
-

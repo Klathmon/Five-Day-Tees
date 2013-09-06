@@ -4,14 +4,16 @@
  * Date: 8/28/13
  */
 
-$settings    = new Settings($database, $config);
-$itemsMapper = new \Mapper\Item($database, $config);
+$template = new FDTSmarty($config, 'Viewport.tpl', 'Viewport', $request->getFullURI());
 
-$items = $itemsMapper->getByName($settings->decodeName($request->get(1)));
 
-if ($items !== false && $items[0]->getCategory() != 'Queue') {
+if (!$template->isPageCached()) {
+    $settings    = new Settings($database, $config);
+    $itemsMapper = new \Mapper\Item($database, $config);
+
+    $items = $itemsMapper->getByName($settings->decodeName($request->get(1)));
+
     //We are good! shirts are okay to display!
-    $template = new FDTSmarty($config, 'Viewport.tpl');
 
     $template->assign('settings', $settings);
 
@@ -26,8 +28,9 @@ if ($items !== false && $items[0]->getCategory() != 'Queue') {
         }
     }
 
-    $template->output();
-
+    if ($items !== false && $items[0]->getCategory() != 'Queue') {
+        $template->output();
+    }
 } else {
-    die('error.');
+    $template->output();
 }

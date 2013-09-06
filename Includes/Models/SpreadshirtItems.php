@@ -151,10 +151,14 @@ class SpreadshirtItems
 
         foreach ($resources as $resource) {
             /** @var DOMElement $resource */
+
+            //Remove the http: or https: from the url so it's cross compatible with https/http on my server
+            $imageHref = str_replace(['http:', 'https:'], '', $resource->getAttributeNS($this->namespaces['xlink'], 'href'));
+
             if ($resource->getAttribute('type') == 'product') {
-                $productImage = $resource->getAttributeNS($this->namespaces['xlink'], 'href');
+                $productImage = $imageHref;
             } elseif ($resource->getAttribute('type') == 'composition') {
-                $designImage = $resource->getAttributeNS($this->namespaces['xlink'], 'href');
+                $designImage = $imageHref;
             }
         }
 

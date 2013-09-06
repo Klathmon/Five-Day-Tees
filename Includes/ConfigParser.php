@@ -11,19 +11,17 @@ class ConfigParser
     public function __construct($configFile)
     {
         if (is_file($configFile)) {
-            $handle = fopen($configFile, 'r');
+            $array = file($configFile, FILE_SKIP_EMPTY_LINES);
 
-            while (!feof($handle)) {
-                $line = trim(fgets($handle));
+            foreach ($array as $line) {
+                if ($line[0] != '#') {
+                    list($name, $value) = explode('=', $line, 2);
 
-                if ($line[0] != '#' && $line != '') {
-                    list($name, $value) = explode('=', $line);
-
-                    $this->configVariables[strtoupper(trim($name))] = trim($value);
+                    $temp[strtoupper(trim($name))] = trim($value);
                 }
             }
 
-            fclose($handle);
+            $this->configVariables = $temp;
         } else {
             throw new Exception('Config file not found!');
         }
@@ -75,12 +73,7 @@ class ConfigParser
 
     public function getBaseDirectory()
     {
-        return $this->configVariables['BASE_DIR'];
-    }
-
-    public function getStaticURL()
-    {
-        return $this->configVariables['STATIC_URL'];
+        return getcwd();
     }
 
     public function getSiteName()
@@ -134,10 +127,29 @@ class ConfigParser
 
     public function debugModeOn()
     {
-        if (strtoupper($this->configVariables['DEBUG_MODE']) == 'TRUE') {
+        if (strtoupper($this->configVariables['DEBUGGING']) == 'TRUE') {
             return true;
         } else {
             return false;
         }
     }
+
+    public function useStaticCaching()
+    {
+        if (strtoupper($this->configVariables['STATIC_CACHING']) == 'TRUE') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
+    public function forceRecompile()
+    {
+        if (strtoupper($this->configVariables['FORCE_RECOMPILE']) == 'TRUE') {
+            return true;
+        } else {
+            return false;
+        }
+    }
+
 }

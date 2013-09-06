@@ -99,6 +99,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['status']  = 'OK';
             $response['command'] = 'refreshPage';
             break;
+        case 'ReloadAllItems':
+            if ($config->getMode() == 'DEV') {
+                $database->query('DELETE FROM Items');
+                $database->query('DELETE FROM ItemsCommon');
+
+                $spreadshirtItems = new SpreadshirtItems($database, $config);
+                $spreadshirtItems->getNewItems();
+            }
+            break;
         default:
             $response['status']  = 'ERROR';
             $response['message'] = 'Unknown Command.';
