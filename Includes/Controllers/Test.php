@@ -7,10 +7,13 @@
 echo 'Test Page!';
 
 
-$product = new \Object\Product(['ID' => 1, 'cost' => '12.45', 'type' => 'male', 'sizesAvailable' => ['S', 'M', 'L', 'XL']]);
+$articleMapper = new \Mapper\Article($database);
 
-Debug::dump($product);
+$article = $articleMapper->create(1, 1, 1, DateTime::createFromFormat('U', time()), 'Stuff and things', '//image.spreadshirt.com/artimg', 12);
 
+$ID = $articleMapper->persist($article);
+
+var_dump($ID);
 
 /*
 $statement = $database->prepare(

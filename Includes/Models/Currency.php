@@ -22,6 +22,6 @@ class Currency
     
     public function getDecimal()
     {
-        return ($this->cents / 100);
+        return (string)($this->cents / 100);
     }
 }

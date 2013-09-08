@@ -9,7 +9,7 @@ namespace Object;
 use \DateTime;
 
 
-class Design extends ObjectBase
+class Design implements ObjectInterface
 {
     /** @var int */
     protected $ID;

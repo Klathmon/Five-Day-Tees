@@ -6,7 +6,7 @@
 
 namespace Object;
 
-class Item extends ObjectBase
+class Item implements ObjectInterface
 {
     /** @var Design */
     protected $design;
@@ -14,6 +14,11 @@ class Item extends ObjectBase
     protected $articles;
     /** @var Product[] */
     protected $products;
+
+    public function getID()
+    {
+        // TODO: Implement getID() method.
+    }
 
     /**
      * @return \Object\Design
@@ -58,6 +63,6 @@ class Item extends ObjectBase
     {
         return $this->products[$ID];
     }
-    
-    
+
+
 }

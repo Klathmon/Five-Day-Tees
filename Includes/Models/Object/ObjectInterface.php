@@ -8,5 +8,5 @@ namespace Object;
 
 interface ObjectInterface
 {
-    public function __construct($array);
+    public function getID();
 }

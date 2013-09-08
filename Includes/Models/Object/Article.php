@@ -8,7 +8,7 @@ namespace Object;
 
 use \DateTime;
 
-class Article extends ObjectBase
+class Article implements ObjectInterface
 {
     /** @var int */
     protected $ID;

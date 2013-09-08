@@ -8,7 +8,7 @@ namespace Object;
 
 use \Currency;
 
-class Product extends ObjectBase
+class Product implements ObjectInterface
 {
     /** @var int */
     protected $ID;
