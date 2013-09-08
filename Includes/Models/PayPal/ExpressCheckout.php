@@ -59,7 +59,7 @@ class ExpressCheckout
             $url = $this->config->getPayPalExpressCheckoutURL() . '?' . http_build_query($parameters);
 
         } else {
-            throw new Exception('Error Forwarding to PayPal!');
+            throw new Exception('Error Forwarding to PayPal!  ' . $this->response['L_LONGMESSAGE0']);
         }
 
         return $url;

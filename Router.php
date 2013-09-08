@@ -32,14 +32,19 @@ switch ($request->get(0)) {
     case '':
         $controller = 'Featured';
         break;
+    case 'robots.txt':
+        $controller = 'Robotstxt';
+        break;
     default:
         $controller = '404';
 }
 
 require("Controllers/$controller.php");
 
+
 if ($config->debugModeOn()) {
-    echo '*DEBUG* Script took ' . (microtime(true) - $timerStart) . ' Seconds to run *DEBUG*';
+    echo '// Script took ' . (microtime(true) - $timerStart) . ' Seconds to run //<br/>'.
+    (memory_get_peak_usage() / 1048576) . " MB of memory used";
 }
 
 die(); //Farewell cruel world!

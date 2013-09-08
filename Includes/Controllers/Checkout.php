@@ -17,10 +17,27 @@ switch ($request->get(1)) {
         $orderDetails->addParameter('METHOD', 'GetExpressCheckoutDetails');
         $orderDetails->addParameter('TOKEN', $query['token']);
         $orderDetails->addParameter('PAYERID', $query['PayerID']);
-        $orderDetails->getCheckoutDetails();
+        $response = $orderDetails->getCheckoutDetails();
 
-        Debug::dump($orderDetails);
-        //TODO: Enter all the information from GetExpressCheckoutDetails into the database as a "NEW" order.
+        Debug::dump($response);//TODO Remove this!
+        
+        $addressMapper = new \Mapper\Address($database);
+
+        $address = new \Entity\Address();
+        $address->setLastName($response['LASTNAME']);
+        $address->setFirstName($response['FIRSTNAME']);
+        $address->setCompany('');
+        $address->setPhone('');
+        $address->setAddress1($response['PAYMENTREQUEST_0_SHIPTOSTREET']);
+        $address->setAddress2('');
+        $address->setCity($response['PAYMENTREQUEST_0_SHIPTOCITY']);
+        $address->setStateCode($response['PAYMENTREQUEST_0_SHIPTOSTATE']);
+        $address->setZip($response['PAYMENTREQUEST_0_SHIPTOZIP']);
+        $address->setCountry($response['PAYMENTREQUEST_0_SHIPTOCOUNTRYNAME']);
+        
+        $addressMapper->addNewAddress($address);
+        
+        var_dump($address);
 
         die();
 
@@ -94,14 +111,15 @@ switch ($request->get(1)) {
 
 
         $expressCheckout->addParameter('PAYMENTREQUEST_0_ITEMAMT', number_format($subtotal, 2));
-        $expressCheckout->addParameter('PAYMENTREQUEST_0_SHIPPINGAMT', number_format($shippingAmount));
+        $expressCheckout->addParameter('PAYMENTREQUEST_0_SHIPPINGAMT', number_format($shippingAmount, 2));
         $expressCheckout->addParameter('PAYMENTREQUEST_0_AMT', number_format($shoppingCart->getFinalTotal(), 2));
 
         try{
             header('Location: ' . $expressCheckout->getUserCheckoutURL());
         } catch(Exception $e){
             //Something went wrong, show the user an error...
-            //header('Location: /500');
+            //Debug::dump($e);
+            header('Location: /500');
         }
         break;
 }

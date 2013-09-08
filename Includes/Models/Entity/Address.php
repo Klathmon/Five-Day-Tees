@@ -31,7 +31,7 @@ class Address implements Entity
     /** @var string */
     private $country;
 
-    public function __construct($ID)
+    public function __construct($ID = null)
     {
         $this->ID = $ID;
     }
@@ -39,6 +39,11 @@ class Address implements Entity
     public function getID()
     {
         return $this->ID;
+    }
+    
+    public function setID($ID)
+    {
+        $this->ID = $ID;
     }
 
     public function getFullName()
