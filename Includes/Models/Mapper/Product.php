@@ -33,7 +33,7 @@ class Product extends MapperBase implements MapperInterface
         return parent::convertArrayToObject('\Object\Product', $array);
     }
 
-    protected function convertObjectToArray($object)
+    public function convertObjectToArray($object)
     {
         $array = parent::convertObjectToArray($object);
 
@@ -45,7 +45,7 @@ class Product extends MapperBase implements MapperInterface
         return $array;
     }
 
-    protected function convertArrayToObject($array)
+    public function convertArrayToObject($array)
     {
         $array['cost']           = new Currency($array['cost']);
         $array['sizesAvailable'] = explode(',', $array['sizesAvailable']);

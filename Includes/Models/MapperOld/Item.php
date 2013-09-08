@@ -4,7 +4,7 @@
  * Date: 8/21/13
  */
 
-namespace Mapper;
+namespace MapperOLD;
 
 use \PDO, \Exception, \DateTime, \ConfigParser, \Settings, \Entity\Entity;
 

@@ -6,6 +6,7 @@
 
 namespace Object;
 
+use Currency;
 use \DateTime;
 
 class Article implements ObjectInterface
@@ -24,6 +25,8 @@ class Article implements ObjectInterface
     protected $articleImageURL;
     /** @var int */
     protected $numberSold;
+    /** @var Currency */
+    protected $baseRetail;
 
     /**
      * @return int
@@ -82,6 +85,14 @@ class Article implements ObjectInterface
     }
 
     /**
+     * @return Currency
+     */
+    public function getBaseRetail()
+    {
+        return $this->baseRetail;
+    }
+
+    /**
      * @param string $description
      */
     public function setDescription($description)
@@ -103,5 +114,13 @@ class Article implements ObjectInterface
     public function setNumberSold($numberSold)
     {
         $this->numberSold = $numberSold;
+    }
+
+    /**
+     * @param Currency $baseRetail
+     */
+    public function setBaseRetail($baseRetail)
+    {
+        $this->baseRetail = $baseRetail;
     }
 }

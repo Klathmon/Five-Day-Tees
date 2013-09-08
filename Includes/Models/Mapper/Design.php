@@ -37,7 +37,7 @@ class Design extends MapperBase implements MapperInterface
         return parent::convertArrayToObject($array);
     }
 
-    protected function convertObjectToArray($object)
+    public function convertObjectToArray($object)
     {
         $array = parent::convertObjectToArray($object);
         
@@ -48,7 +48,7 @@ class Design extends MapperBase implements MapperInterface
         return $array;
     }
 
-    protected function convertArrayToObject($array)
+    public function convertArrayToObject($array)
     {
         $array['displayDate'] = DateTime::createFromFormat('Y-m-d', $array['displayDate']);
         

@@ -31,7 +31,8 @@ class Article extends MapperBase implements MapperInterface
         $lastUpdated = null,
         $description = null,
         $articleImageURL = null,
-        $numberSold = null
+        $numberSold = null,
+        $baseRetail = null
     ){
         $array = [
             'ID' => $ID,
@@ -40,13 +41,14 @@ class Article extends MapperBase implements MapperInterface
             'lastUpdated' => $lastUpdated,
             'description' => $description,
             'articleImageURL' => $articleImageURL,
-            'numberSold' => $numberSold
+            'numberSold' => $numberSold,
+            'baseRetail' => $baseRetail
         ];
         
         return parent::convertArrayToObject($array);
     }
 
-    protected function convertObjectToArray($object)
+    public function convertObjectToArray($object)
     {
         $array = parent::convertObjectToArray($object);
         
@@ -57,7 +59,7 @@ class Article extends MapperBase implements MapperInterface
         return $array;
     }
 
-    protected function convertArrayToObject($array)
+    public function convertArrayToObject($array)
     {
         $array['lastUpdated'] = DateTime::createFromFormat('Y-m-d H:i:s', $array['lastUpdated']);
         

@@ -7,13 +7,13 @@
 echo 'Test Page!';
 
 
-$articleMapper = new \Mapper\Article($database);
+$itemMapper = new \Mapper\Item($database, $config);
 
-$article = $articleMapper->create(1, 1, 1, DateTime::createFromFormat('U', time()), 'Stuff and things', '//image.spreadshirt.com/artimg', 12);
+$item = $itemMapper->getByName('First Shirt');
 
-$ID = $articleMapper->persist($article);
+$itemMapper->persist($item);
 
-var_dump($ID);
+var_dump($item);
 
 /*
 $statement = $database->prepare(
