@@ -6,6 +6,13 @@
 
 echo 'Test Page!';
 
+
+$product = new \Object\Product(['ID' => 1, 'cost' => '12.45', 'type' => 'male', 'sizesAvailable' => ['S', 'M', 'L', 'XL']]);
+
+Debug::dump($product);
+
+
+/*
 $statement = $database->prepare(
     <<<SQL
     SELECT TestArticles.*, TestDesigns.*, TestProducts.*
@@ -38,3 +45,4 @@ foreach ($array as $row) {
 }
 
 \Debug::dump($array, $designs);
+*/
