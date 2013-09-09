@@ -67,7 +67,9 @@
         var $row = $(event.target).closest('TR');
 
         var data = {};
-        data['ID'] = $row.data('id');
+        data['designID'] = $row.data('designid');
+        data['articleID'] = $row.data('articleid');
+        data['productID'] = $row.data('productsid');
         data['Name'] = $row.find('#Name').val();
         data['Description'] = $row.find('#Description').val();
         data['Retail'] = $row.find('#Retail').val();
@@ -242,7 +244,7 @@
         $.post('/Cart', data, replaceCart);
     }
 
-    function removeCouponFromCart(event){
+    function removeCouponFromCart(){
         $.post('/Cart', {'Command': 'RemoveCouponFromCart'}, replaceCart);
     }
 
