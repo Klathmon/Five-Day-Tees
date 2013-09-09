@@ -95,7 +95,10 @@ SQL;
 
         return $this->convertArrayToObject(reset($array));
     }
-
+    
+    /**
+     * @return \Object\Item
+     */
     public function getAll()
     {
         $parsedArray = $this->parseResults($this->database->query($this->queryStart)->fetchAll(PDO::FETCH_ASSOC));
@@ -107,6 +110,12 @@ SQL;
         return $items;
     }
 
+    /**
+     * @param int $start
+     * @param int $limit
+     *
+     * @return \Object\Item
+     */
     public function getQueue($start = 0, $limit = 100)
     {
         $statement = $this->database->prepare($this->queryStart . 'WHERE Design.displayDate >= :FutureDate Limit :Start, :Amount');
@@ -126,6 +135,9 @@ SQL;
         return $items;
     }
 
+    /**
+     * @return \Object\Item
+     */
     public function getFeatured()
     {
         $statement = $this->database->prepare($this->queryStart . 'WHERE Design.displayDate > :PastDate AND Design.displayDate < :FutureDate');
@@ -148,6 +160,12 @@ SQL;
         return $items;
     }
 
+    /**
+     * @param int $start
+     * @param int $limit
+     *
+     * @return \Object\Item
+     */
     public function getStore($start = 0, $limit = 50)
     {
         $query     = $this->queryStart . $this->itemCountJoin
@@ -169,6 +187,12 @@ SQL;
         return $items;
     }
 
+    /**
+     * @param int $start
+     * @param int $limit
+     *
+     * @return \Object\Item
+     */
     public function getVault($start = 0, $limit = 50)
     {
         $query     = $this->queryStart . $this->itemCountJoin
