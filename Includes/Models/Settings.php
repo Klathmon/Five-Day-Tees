@@ -216,7 +216,7 @@ SQL
      * @param Currency $baseRetail
      * @param string $category
      *
-     * @return double
+     * @return Currency
      */
     public function getItemCurrentPrice($baseRetail, $category)
     {
