@@ -92,7 +92,6 @@ class SpreadshirtItems
      */
     private function processArticle($articleElement)
     {
-        //TODO: Unit test this entire function and everything it relies on.
         $articleID = $articleElement->getAttribute('id');
 
         /* Try to get this Article */
