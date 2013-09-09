@@ -29,4 +29,14 @@ class Currency
     {
         return number_format($this->getDecimal(), 2);
     }
+    
+    public function add($cents)
+    {
+        $this->cents += $cents;
+    }
+    
+    public function subtract($cents)
+    {
+        $this->cents -= $cents;
+    }
 }
