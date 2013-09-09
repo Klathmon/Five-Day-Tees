@@ -33,6 +33,7 @@
     {if $config->getMode() == 'DEV'}
         <button onclick="$.post('/Admin', { 'Command': 'ReloadAllItems' }, function() { location.reload(); } )">Clear Out Shirts</button>
     {/if}
+    <button id="GetNewArticles">Get new articles from SpreadShirt</button>
 
     <h3>Coupons:</h3>
     <table id="Coupons">

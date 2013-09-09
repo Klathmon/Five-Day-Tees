@@ -14,6 +14,7 @@
 
     function attachHandlers(){
         var $adminPage = $('#Admin.Page');
+        $adminPage.find('#GetNewArticles').on('click', getNewArticles);
         $adminPage.find('#SaveGlobalSettings').on('click', saveGlobalSettings);
         $adminPage.find('.ItemsTable')
             .on('click', '.SaveItem', saveItem)
@@ -47,6 +48,10 @@
     }
 
     // Admin Page Functions //
+    function getNewArticles(){
+        sendCommand('/Admin', 'GetNewItems', {'DOIT': 'yes'});
+    }
+    
     function saveGlobalSettings(event){
         var $row = $(event.target).closest('TR');
 
@@ -70,13 +75,13 @@
         data['designID'] = $row.data('designid');
         data['articleID'] = $row.data('articleid');
         data['productID'] = $row.data('productsid');
-        data['Name'] = $row.find('#Name').val();
-        data['Description'] = $row.find('#Description').val();
-        data['Retail'] = $row.find('#Retail').val();
-        data['DisplayDate'] = $row.find('#DisplayDate').val();
-        data['Votes'] = $row.find('#Votes').val();
-        data['Sold'] = $row.find('#Sold').val();
-        data['SalesLimit'] = $row.find('#SalesLimit').val();
+        data['name'] = $row.find('#Name').val();
+        data['description'] = $row.find('#Description').val();
+        data['baseRetail'] = $row.find('#Retail').val();
+        data['displayDate'] = $row.find('#DisplayDate').val();
+        data['votes'] = $row.find('#Votes').val();
+        data['numberSold'] = $row.find('#Sold').val();
+        data['salesLimit'] = $row.find('#SalesLimit').val();
 
         sendCommand('/Admin', 'SaveItem', data);
     }
@@ -84,7 +89,7 @@
     function deleteItem(event){
         var $row = $(event.target).closest('TR');
 
-        var data = {'ID': $row.data('id')};
+        var data = {'articleID': $row.data('articleid')};
         var name = $row.find('#Name').val();
 
         var okay = confirm('Are you sure you want to delete ' + name + '?');

@@ -4,9 +4,13 @@
  * Date: 8/25/13
  */
 
-$settings      = new Settings($database, $config);
-$itemsFactory  = new \Factory\Item($database, $settings);
-$couponsMapper = new \Mapper\Coupon($database);
+$settings       = new Settings($database, $config);
+$itemsFactory   = new \Factory\Item($database, $settings);
+$designFactory  = new \Factory\Design($database);
+$articleFactory = new \Factory\Article($database);
+$productFactory = new \Factory\Product($database);
+$couponsMapper  = new \Mapper\Coupon($database);
+
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     switch ($_POST['Command']) {
@@ -24,28 +28,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'Saved!';
             break;
         case 'SaveItem':
-            $item = $itemsMapper->getByID(Sanitize::cleanInteger($_POST['ID']));
-            $item->setName($_POST['Name']);
-            $item->setDescription($_POST['Description']);
-            $item->setRetail(Sanitize::preserveGivenCharacters($_POST['Retail'], '1234567890.'));
-            $item->setDisplayDate(DateTime::createFromFormat('Y-m-d', $_POST['DisplayDate']));
-            $item->setVotes(Sanitize::cleanInteger($_POST['Votes']));
-            $item->setNumberSold(Sanitize::cleanInteger($_POST['Sold']));
-            $item->setSalesLimit(Sanitize::cleanInteger($_POST['SalesLimit']));
-            $itemsMapper->persist($item);
+            $design  = $designFactory->getByID(Sanitize::cleanInteger($_POST['designID']));
+            $article = $articleFactory->getByID(Sanitize::cleanInteger($_POST['articleID']));
+            
+            $design->setName($_POST['name']);
+            $article->setDescription($_POST['description']);
+            $article->setBaseRetail(new Currency(Sanitize::preserveGivenCharacters($_POST['baseRetail'], '1234567890.')));
+            $design->setDisplayDate(DateTime::createFromFormat('Y-m-d', $_POST['displayDate']));
+            $design->setVotes(Sanitize::cleanInteger($_POST['votes']));
+            $article->setNumberSold(Sanitize::cleanInteger($_POST['numberSold']));
+            $design->setSalesLimit(Sanitize::cleanInteger($_POST['salesLimit']));
+            
+            $designFactory->persist($design);
+            $articleFactory->persist($article);
+            
             $response['status']  = 'OK';
             $response['message'] = 'Item Saved!';
             break;
         case 'DeleteItem':
-            $item = $itemsMapper->getByID(Sanitize::cleanInteger($_POST['ID']));
-            $itemsMapper->delete($item);
+            $article = $articleFactory->getByID(Sanitize::cleanInteger($_POST['articleID']));
+            $articleFactory->delete($article);
+            
             $response['status']  = 'OK';
             $response['message'] = 'Item Deleted!';
             break;
         case 'GetNewItems':
             $spreadshirt = new SpreadshirtItems($database, $config);
             $spreadshirt->getNewItems();
-            unset($spreadshirt);
             $response['status']  = 'OK';
             $response['command'] = 'refreshPage';
             break;
@@ -101,8 +110,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
         case 'ReloadAllItems':
             if ($config->getMode() == 'DEV') {
-                $database->query('DELETE FROM Items');
-                $database->query('DELETE FROM ItemsCommon');
+                $database->query('DELETE FROM Article');
+                $database->query('DELETE FROM Design');
+                $database->query('DELETE FROM Product');
 
                 $spreadshirtItems = new SpreadshirtItems($database, $config);
                 $spreadshirtItems->getNewItems();
