@@ -64,5 +64,8 @@ class Item implements ObjectInterface
         return $this->products[$ID];
     }
 
-
+    public function getURL()
+    {
+        return urlencode(str_replace(' ', '_', $this->getDesign()->getName()));
+    }
 }
