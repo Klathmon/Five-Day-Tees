@@ -12,12 +12,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     switch ($_POST['Command']) {
         case 'SaveGlobals':
             $settings->setStartingDisplayDate(DateTime::createFromFormat('Y-m-d', $_POST['StartingDisplayDate']));
-            $settings->setRetail(Sanitize::preserveGivenCharacters($_POST['Retail'], '1234567890.'));
+            $settings->setRetail(new Currency(Sanitize::preserveGivenCharacters($_POST['Retail'], '1234567890.')));
             $settings->setSalesLimit(Sanitize::cleanInteger($_POST['SalesLimit']));
             $settings->setDaysApart(Sanitize::cleanInteger($_POST['DaysApart']));
-            $settings->setLevel1(Sanitize::preserveGivenCharacters($_POST['Level1'], '1234567890.'));
-            $settings->setLevel2(Sanitize::preserveGivenCharacters($_POST['Level2'], '1234567890.'));
-            $settings->setLevel3(Sanitize::preserveGivenCharacters($_POST['Level3'], '1234567890.'));
+            $settings->setLevel1(new Currency(Sanitize::preserveGivenCharacters($_POST['Level1'], '1234567890.')));
+            $settings->setLevel2(new Currency(Sanitize::preserveGivenCharacters($_POST['Level2'], '1234567890.')));
+            $settings->setLevel3(new Currency(Sanitize::preserveGivenCharacters($_POST['Level3'], '1234567890.')));
             $settings->setCartCallout($_POST['CartCallout']);
             $settings->persistSelf();
             $response['status']  = 'OK';
@@ -118,12 +118,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $layout = new Layout($config, 'Admin.tpl', 'Admin Section');
 
     $layout->assign('startingDisplayDate', $settings->getStartingDisplayDate());
-    $layout->assign('retail', $settings->getRetail());
+    $layout->assign('retail', $settings->getRetail()->getDecimal());
     $layout->assign('salesLimit', $settings->getSalesLimit());
     $layout->assign('daysApart', $settings->getDaysApart());
-    $layout->assign('level1', $settings->getLevel1());
-    $layout->assign('level2', $settings->getLevel2());
-    $layout->assign('level3', $settings->getLevel3());
+    $layout->assign('level1', $settings->getLevel1()->getDecimal());
+    $layout->assign('level2', $settings->getLevel2()->getDecimal());
+    $layout->assign('level3', $settings->getLevel3()->getDecimal());
     $layout->assign('cartCallout', $settings->getCartCallout());
     $layout->assign('coupons', $couponsMapper->listAll());
 

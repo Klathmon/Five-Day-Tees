@@ -96,64 +96,118 @@ SQL
         $this->data['StartingDisplayDate'] = $data->format('Y-m-d');;
     }
 
+    /**
+     * @return DateTime
+     */
+    public function getLastDate()
+    {
+        $sql = 'SELECT MAX(DisplayDate) FROM Design';
+
+        $statement = $this->database->query($sql);
+
+        $result = $statement->fetch(PDO::FETCH_NUM)[0];
+
+        if (is_null($result)) {
+            return $this->getStartingDisplayDate();
+        } else {
+            return DateTime::createFromFormat('Y-m-d', $result);
+        }
+    }
+
+    /**
+     * @return Currency
+     */
     public function getRetail()
     {
-        return $this->data['Retail'];
+        return new Currency($this->data['Retail']);
     }
 
+    /**
+     * @param Currency $retail
+     */
     public function setRetail($retail)
     {
-        $this->data['Retail'] = $retail;
+        $this->data['Retail'] = $retail->getDecimal();
     }
 
+    /**
+     * @return int
+     */
     public function getSalesLimit()
     {
         return $this->data['SalesLimit'];
     }
 
+    /**
+     * @param int $salesLimit
+     */
     public function setSalesLimit($salesLimit)
     {
         $this->data['SalesLimit'] = $salesLimit;
     }
 
+    /**
+     * @return int
+     */
     public function getDaysApart()
     {
         return $this->data['DaysApart'];
     }
 
+    /**
+     * @param int $daysApart
+     */
     public function setDaysApart($daysApart)
     {
         $this->data['DaysApart'] = $daysApart;
     }
 
+    /**
+     * @return Currency
+     */
     public function getLevel1()
     {
-        return $this->data['Level1'];
+        return new Currency($this->data['Level1']);
     }
 
+    /**
+     * @param Currency $amount
+     */
     public function setLevel1($amount)
     {
-        $this->data['Level1'] = $amount;
+        $this->data['Level1'] = $amount->getDecimal();
     }
 
+    /**
+     * @return Currency
+     */
     public function getLevel2()
     {
-        return $this->data['Level2'];
+        return new Currency($this->data['Level2']);
     }
 
+    /**
+     * @param Currency $amount
+     */
     public function setLevel2($amount)
     {
-        $this->data['Level2'] = $amount;
+        $this->data['Level2'] = $amount->getDecimal();
     }
 
+    /**
+     * @return Currency
+     */
     public function getLevel3()
     {
-        return $this->data['Level3'];
+        return new Currency($this->data['Level3']);
     }
 
+    /**
+     * @param Currency $amount
+     */
     public function setLevel3($amount)
     {
-        $this->data['Level3'] = $amount;
+        $this->data['Level3'] = $amount->getDecimal();
     }
 
     /**
@@ -249,17 +303,25 @@ SQL
         return [$oldestDate, $olderDate, $newerDate, $newestDate];
     }
 
-    public function decodeName($nameEncoded)
+    /**
+     * @param string $nameEncoded
+     *
+     * @return string
+     */public function decodeName($nameEncoded)
     {
         return urldecode(str_replace('_', ' ', $nameEncoded));
     }
 
-    public function getCartCallout()
+    /**
+     * @return string
+     */public function getCartCallout()
     {
         return $this->data['CartCallout'];
     }
 
-    public function setCartCallout($cartCallout)
+    /**
+     * @param string $cartCallout
+     */public function setCartCallout($cartCallout)
     {
         $this->data['CartCallout'] = $cartCallout;
     }

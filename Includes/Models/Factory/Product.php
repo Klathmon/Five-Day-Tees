@@ -30,7 +30,7 @@ class Product extends FactoryBase implements FactoryInterface
             'sizesAvailable' => $sizesAvailable
         ];
 
-        return parent::convertArrayToObject('\Object\Product', $array);
+        return parent::convertArrayToObject($array);
     }
 
     public function convertObjectToArray($object)

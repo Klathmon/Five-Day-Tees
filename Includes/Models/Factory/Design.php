@@ -7,6 +7,7 @@
 namespace Factory;
 
 use DateTime;
+use PDO;
 
 class Design extends FactoryBase implements FactoryInterface
 {
@@ -35,6 +36,29 @@ class Design extends FactoryBase implements FactoryInterface
         ];
 
         return parent::convertArrayToObject($array);
+    }
+
+    /**
+     * @param string $name
+     *
+     * @return \Object\Design
+     * @throws \Exception
+     */
+    public function getByName($name)
+    {
+        $statement = $this->database->prepare('SELECT * FROM Design WHERE name=:name LIMIT 1');
+        $statement->bindValue(':name', $name, PDO::PARAM_STR);
+        $statement->execute();
+
+        $array = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if ($array === false) {
+            throw new \Exception('No object with that ID exists in the database');
+        } else {
+            $design = $this->convertArrayToObject($array);
+        }
+        
+        return $design;
     }
 
     public function convertObjectToArray($object)

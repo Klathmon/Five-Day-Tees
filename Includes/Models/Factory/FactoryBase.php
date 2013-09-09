@@ -71,7 +71,6 @@ abstract class FactoryBase
 
     /**
      * Saves an object to the database in it's entirety, returns the entities ID for linking purposes
-     * *Note* this method should also unset() the entity so no further changes can be made
      *
      * @param object $object
      *
@@ -103,10 +102,13 @@ abstract class FactoryBase
 
         $ID = $object->getID();
         if ($ID === null) {
-            $ID = (int)$this->database->lastInsertID();
+            //Set the ID of the object to it's new value from the database
+            $ID         = (int)$this->database->lastInsertID();
+            $reflection = new \ReflectionClass($object);
+            $propertyID = $reflection->getProperty('ID');
+            $propertyID->setAccessible(true);
+            $propertyID->setValue($object, $ID);
         }
-
-        unset($object);
 
         return $ID;
     }

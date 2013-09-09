@@ -15,8 +15,12 @@ class SpreadshirtItems
     private $database;
     /** @var ConfigParser */
     private $config;
-    /** @var \Mapper\Item */
-    private $itemMapper;
+    /** @var \Factory\Design */
+    private $designFactory;
+    /** @var \Factory\Article */
+    private $articleFactory;
+    /** @var \Factory\Product */
+    private $productFactory;
     /** @var Settings */
     private $settings;
 
@@ -36,10 +40,12 @@ class SpreadshirtItems
      */
     public function __construct($database, $config)
     {
-        $this->database   = $database;
-        $this->config     = $config;
-        $this->itemMapper = new \Mapper\Item($database, $config);
-        $this->settings   = new Settings($database, $config);
+        $this->database       = $database;
+        $this->config         = $config;
+        $this->settings       = new Settings($database, $config);
+        $this->designFactory  = new \Factory\Design($database);
+        $this->articleFactory = new \Factory\Article($database);
+        $this->productFactory = new \Factory\Product($database);
     }
 
     /**
@@ -82,133 +88,139 @@ class SpreadshirtItems
     /**
      * Process through a single article.
      *
-     * @param DOMElement $article
+     * @param DOMElement $articleElement
      */
-    private function processArticle($article)
+    private function processArticle($articleElement)
     {
-        /* Fetch the ProductType document to be able to find the gender of the item */
-        $productTypeDocument = $this->getProductDocumentFromArticle($article);
-        $productName         = $productTypeDocument->getElementsByTagName('name')->item(0)->nodeValue;
+        //TODO: Unit test this entire function and everything it relies on.
+        $articleID = $articleElement->getAttribute('id');
 
-        /* Find the Name and Gender */
-        $name   = $article->getElementsByTagName('name')->item(0)->nodeValue;
-        $gender = (stripos($productName, 'Women') !== false ? 'female' : 'male');
+        /* Try to get this Article */
+        try{
+            $article = $this->articleFactory->getByID($articleID);
 
-        /* Fetch this shirt by it's name and gender */
-        $item = $this->itemMapper->getItemByNameGender($name, $gender);
-
-        if ($item === false) {
-            /* This item is not in our database. Create, fill, and persist the item */
-            $item = new \Entity\Item();
-
-            $this->fillItem($article, $item);
-
-            $this->itemMapper->persist($item);
-        } else {
-            /* This item is in our database, check if it needs to be updated */
-            $itemLastUpdated   = $item->getLastUpdated();
+            /* Check if the retrieved article needs to be updated */
+            $FDTLastUpdated    = $article->getLastUpdated();
             $spreadLastUpdated = DateTime::createFromFormat(
                 'Y-m-d\TH:i:s\Z',
-                $article->getElementsByTagName('modified')->item(0)->nodeValue,
+                $articleElement->getElementsByTagName('modified')->item(0)->nodeValue,
                 new DateTimeZone('UTC')
             );
 
             /* Check if the lastUpdated time in our database is older than the lastUpdated time from Spreadshirt */
-            if ($itemLastUpdated->format('U') < $spreadLastUpdated->format('U')) {
-                /*The Item was modified on Spreadshirt, so update the current item and persist it */
-                $this->fillItem($article, $item);
-
-                $this->itemMapper->persist($item);
+            if ($FDTLastUpdated->format('U') < $spreadLastUpdated->format('U')) {
+                throw new Exception('Article Needs to be updated!');
             }
+        } catch(Exception $e){
+            /* This Article doesn't exist, or needs to be updated. So create it from spreadshirt! */
+
+            /* First, get the associated product and design (creating them if necessary) */
+            $product = $this->getProduct($articleElement);
+            $design  = $this->getDesign($articleElement);
+
+            $designID    = $design->getID();
+            $productID   = $product->getID();
+            $lastUpdated = DateTime::createFromFormat('U', time());
+            $description = (isset($articleElement->getElementsByTagName('description')->item(0)->nodeValue) ? 
+                $articleElement->getElementsByTagName('description')->item(0)->nodeValue : '');
+            $numberSold  = 0;
+            $baseRetail  = ($product->getCost()->getCents() <= $this->settings->getRetail()->getCents() ? $this->settings->getRetail()
+                : $product->getCost());
+
+            //There is probably a better way to do this, but i don't really care at this point.
+            $resources = $articleElement->getElementsByTagName('resource');
+            foreach ($resources as $resource) {
+                /** @var DOMElement $resource */
+                if ($resource->getAttribute('type') == 'product') {
+                    //Remove the http: or https: from the url so it's cross compatible with https/http on my server
+                    $articleImageURL = str_replace(['http:', 'https:'], '', $resource->getAttributeNS($this->namespaces['xlink'], 'href'));
+                }
+            }
+            
+            $article = $this->articleFactory->create(
+                $articleID,
+                $designID,
+                $productID,
+                $lastUpdated,
+                $description,
+                $articleImageURL,
+                $numberSold,
+                $baseRetail
+            );
+            
+            $this->articleFactory->persist($article);
         }
     }
 
     /**
-     * Fills the given $item with all the data from the given $article
+     * @param DOMElement $articleElement
      *
-     * @param DOMElement   $article
-     * @param \Entity\Item $item
+     * @return \Object\Product
      */
-    private function fillItem($article, $item)
+    private function getProduct($articleElement)
     {
-        /** @var DOMElement $defaultDesignNode */
+        /* Fetch the Product Document and ProductID */
+        $productDocument = $this->getProductDocumentFromArticle($articleElement);
+        $productID       = $productDocument->documentElement->getAttribute('id');
 
-        $productTypeDocument = $this->getProductDocumentFromArticle($article);
-        $defaultDesignNode   = $article->getElementsByTagName('defaultDesign')->item(0);
-        $descriptionNode     = $article->getElementsByTagName('description')->item(0);
+        /* Try to get the product, if it throws an exception then create it */
+        try{
+            $product = $this->productFactory->getByID($productID);
+        } catch(Exception $e){
+            $productName = $productDocument->getElementsByTagName('name')->item(0)->nodeValue;
+            $sizesNode   = $productDocument->getElementsByTagName('sizes')->item(0);
 
-        /* Fetch the data from the XML */
-        $name        = $article->getElementsByTagName('name')->item(0)->nodeValue;
-        $gender      = (stripos($productTypeDocument->getElementsByTagName('name')->item(0)->nodeValue, 'Women') !== false ? 'female' : 'male');
-        $articleID   = $article->getAttribute('id');
-        $designID    = $defaultDesignNode->getAttribute('id');
-        $description = (isset($descriptionNode->nodeValue) ? $descriptionNode->nodeValue : '');
-        $cost        = $article->getElementsByTagName('vatIncluded')->item(0)->nodeValue;
-        $retail      = ($cost <= $this->settings->getRetail() ? $this->settings->getRetail() : $cost);
-        $resources   = $article->getElementsByTagName('resource');
-        $sizesNode   = $productTypeDocument->getElementsByTagName('sizes')->item(0);
-        $lastUpdated = DateTime::createFromFormat('U', time());
+            $type = (stripos($productName, 'Women') !== false ? 'female' : 'male');
+            $cost = new Currency($articleElement->getElementsByTagName('vatIncluded')->item(0)->nodeValue);
 
-        foreach ($resources as $resource) {
-            /** @var DOMElement $resource */
-
-            //Remove the http: or https: from the url so it's cross compatible with https/http on my server
-            $imageHref = str_replace(['http:', 'https:'], '', $resource->getAttributeNS($this->namespaces['xlink'], 'href'));
-
-            if ($resource->getAttribute('type') == 'product') {
-                $productImage = $imageHref;
-            } elseif ($resource->getAttribute('type') == 'composition') {
-                $designImage = $imageHref;
+            /** @var DOMElement $sizesNode */
+            foreach ($sizesNode->getElementsByTagName('size') as $sizeNode) {
+                /** @var DOMElement $sizeNode */
+                $sizesAvailable[] = $sizeNode->getElementsByTagName('name')->item(0)->nodeValue;
             }
+
+            $product = $this->productFactory->create($productID, $cost, $type, $sizesAvailable);
+            $this->productFactory->persist($product);
         }
 
-        /** @var DOMElement $sizesNode */
-        foreach ($sizesNode->getElementsByTagName('size') as $sizeNode) {
-            /** @var DOMElement $sizeNode */
-            $sizesAvailable[] = $sizeNode->getElementsByTagName('name')->item(0)->nodeValue;
-        }
-
-        /* Insert the data into the shirt item */
-        $item->setName($name);
-        $item->setGender($gender);
-        $item->setArticleID($articleID);
-        $item->setDesignID($designID);
-        $item->setDescription($description);
-        $item->setCost($cost);
-        $item->setRetail($retail);
-        $item->setProductImage($productImage);
-        $item->setDesignImage($designImage);
-        $item->setSizesAvailable($sizesAvailable);
-        $item->setLastUpdated($lastUpdated);
-
-        /* Set the Common data for the shirt */
-        $this->setCommonData($item);
+        return $product;
     }
 
     /**
-     * This sets the Common data for an item.
-     * If the item is new, it puts in defaults, otherwise it will use the information already in the database.
+     * @param DOMElement $articleElement
      *
-     * @param \Entity\Item $item
+     * @return \Object\Design
      */
-    private function setCommonData($item)
+    private function getDesign($articleElement)
     {
-        list($salesLimit, $displayDate, $votes) = $this->itemMapper->getItemsCommonByName($item->getName());
+        $name = $articleElement->getElementsByTagName('name')->item(0)->nodeValue;
 
-        if ($salesLimit === false || $displayDate === false || $votes === false) {
-            /* That name does not exist, use defaults for the data */
+        try{
+            $design = $this->designFactory->getByName($name);
+        } catch(Exception $e){
             $numberOfDays = $this->settings->getDaysApart();
 
-            $displayDate = $this->itemMapper->getLastDate()->modify("+$numberOfDays days");
+            $displayDate = $this->settings->getLastDate()->modify("+$numberOfDays days");
             $salesLimit  = $this->settings->getSalesLimit();
             $votes       = 0;
+
+            //There is probably a better way to do this, but i don't really care at this point.
+            $resources = $articleElement->getElementsByTagName('resource');
+            foreach ($resources as $resource) {
+                /** @var DOMElement $resource */
+                if ($resource->getAttribute('type') == 'composition') {
+                    //Remove the http: or https: from the url so it's cross compatible with https/http on my server
+                    $designImageURL = str_replace(['http:', 'https:'], '', $resource->getAttributeNS($this->namespaces['xlink'], 'href'));
+                }
+            }
+
+            $design = $this->designFactory->create(null, $name, $displayDate, $designImageURL, $salesLimit, $votes);
+            $this->designFactory->persist($design);
         }
 
-        /* Set the data to the item */
-        $item->setSalesLimit($salesLimit);
-        $item->setDisplayDate($displayDate);
-        $item->setVotes($votes);
+        return $design;
     }
+
 
     /**
      * Returns the XML DOMDocument at the specified URL
@@ -244,11 +256,11 @@ class SpreadshirtItems
      */
     private function getProductDocumentFromArticle($article)
     {
-        /** @var $productTypeElement DOMElement */
-        $productTypeElement  = $article->getElementsByTagName('productType')->item(0);
-        $productTypeURL      = $productTypeElement->getAttributeNS($this->namespaces['xlink'], 'href');
-        $productTypeDocument = $this->getXMLDocument($productTypeURL);
+        /** @var $productElement DOMElement */
+        $productElement  = $article->getElementsByTagName('productType')->item(0);
+        $productURL      = $productElement->getAttributeNS($this->namespaces['xlink'], 'href');
+        $productDocument = $this->getXMLDocument($productURL);
 
-        return $productTypeDocument;
+        return $productDocument;
     }
 }

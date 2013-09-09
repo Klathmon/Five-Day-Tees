@@ -6,21 +6,29 @@
 
 namespace Factory;
 
+use Currency;
 use DateTime;
 
+/**
+ * Class Article
+ *
+ * @method \Object\Article getByID($ID)
+ *
+ */
 class Article extends FactoryBase implements FactoryInterface
 {
 
     /**
      * Create a new object. This object will not exist in the database until persisted
      *
-     * @param int $ID
-     * @param int $designID
-     * @param int $productID
+     * @param int      $ID
+     * @param int      $designID
+     * @param int      $productID
      * @param DateTime $lastUpdated
-     * @param string $description
-     * @param string $articleImageURL
-     * @param int $numberSold
+     * @param string   $description
+     * @param string   $articleImageURL
+     * @param int      $numberSold
+     * @param null     $baseRetail
      *
      * @return \Object\Article
      */
@@ -35,34 +43,38 @@ class Article extends FactoryBase implements FactoryInterface
         $baseRetail = null
     ){
         $array = [
-            'ID' => $ID,
-            'designID' => $designID,
-            'productID' => $productID,
-            'lastUpdated' => $lastUpdated,
-            'description' => $description,
+            'ID'              => $ID,
+            'designID'        => $designID,
+            'productID'       => $productID,
+            'lastUpdated'     => $lastUpdated,
+            'description'     => $description,
             'articleImageURL' => $articleImageURL,
-            'numberSold' => $numberSold,
-            'baseRetail' => $baseRetail
+            'numberSold'      => $numberSold,
+            'baseRetail'      => $baseRetail
         ];
-        
+
         return parent::convertArrayToObject($array);
     }
 
     public function convertObjectToArray($object)
     {
         $array = parent::convertObjectToArray($object);
-        
+
         /** @var DateTime $lastUpdated */
         $lastUpdated = $array['lastUpdated'];
+        /** @var Currency $baseRetail */
+        $baseRetail = $array['baseRetail'];
+
         $array['lastUpdated'] = $lastUpdated->format('Y-m-d H:i:s');
-        
+        $array['baseRetail']  = $baseRetail->getDecimal();
+
         return $array;
     }
 
     public function convertArrayToObject($array)
     {
         $array['lastUpdated'] = DateTime::createFromFormat('Y-m-d H:i:s', $array['lastUpdated']);
-        
+
         return parent::convertArrayToObject($array);
     }
 

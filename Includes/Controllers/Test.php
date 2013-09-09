@@ -7,13 +7,9 @@
 echo 'Test Page!';
 
 
-$itemMapper = new \Mapper\Item($database, $config);
+$spreadshirt = new SpreadshirtItems($database, $config);
 
-$item = $itemMapper->getByName('First Shirt');
-
-$itemMapper->persist($item);
-
-var_dump($item);
+$spreadshirt->getNewItems(200);
 
 /*
 $statement = $database->prepare(
