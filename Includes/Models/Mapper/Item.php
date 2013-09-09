@@ -1,152 +1,666 @@
 <?php
 /**
  * Created by: Gregory Benner.
- * Date: 9/8/13
+ * Date: 8/21/13
  */
 
 namespace Mapper;
 
-use ConfigParser;
-use PDO;
-use \Mapper\Design;
-use \Mapper\Article;
-use \Mapper\Product;
+use \PDO, \Exception, \DateTime, \ConfigParser, \Settings, \Entity\Entity;
 
 /**
  * Class Item
  *
- * This class is a "Wrapper" for a few classes. It represents a distinct Design and all it's associated information (Articles and Products)
- * This is mainly used for displaying "previews" of all the shirts in our system (for example, the store page)
+ * This is the Mapper class for Items.
  */
-class Item extends MapperBase implements MapperInterface
+class Item implements Mapper
 {
-    /** @var ConfigParser */
-    protected $config;
-    /** @var Design */
-    protected $designMapper;
-    /** @var Article */
-    protected $articleMapper;
-    /** @var Product */
-    protected $productMapper;
+    /**
+     * @var PDO The database connection
+     */
+    private $database;
+    /**
+     * @var ConfigParser The Configuration Parser
+     */
+    private $config;
+    /**
+     * @var Settings The Settings Handler
+     */
+    private $settings;
 
-    private $queryStart
-        = <<<SQL
-SELECT 
-    Design.ID AS designID, Design.name, Design.displayDate, Design.designImageURL, Design.salesLimit, Design.votes,
-    Article.ID AS articleID, Article.lastUpdated, Article.description, Article.articleImageURL, Article.numberSold, Article.baseRetail,
-    Product.ID AS productID, Product.cost, Product.type, Product.sizesAvailable
-  FROM Design
-    RIGHT JOIN Article ON (designID = Article.designID)
-    LEFT JOIN Product ON (productID = Product.ID)
-SQL;
 
+    /**
+     * Pass the $database connection in at construction.
+     *
+     * @param PDO          $database
+     * @param ConfigParser $config
+     */
     public function __construct(PDO $database, ConfigParser $config)
     {
-        parent::__construct($database);
-        $this->config        = $config;
-        $this->designMapper  = new Design($database);
-        $this->articleMapper = new Article($database);
-        $this->productMapper = new Product($database);
+        $this->database = $database;
+        $this->config   = $config;
+        $this->settings = new Settings($database, $config);
     }
 
     /**
-     * @param int $designID
+     * Returns a single Item by it's ID
      *
-     * @return \Object\Item
+     * @param int $ID
+     *
+     * @return \Entity\Item
      */
-    public function getByID($designID)
+    public function getByID($ID)
     {
-        $sql = $this->queryStart . ' WHERE Design.ID=:ID';
+        $sql
+            = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE Items.ID = :ID
+  LIMIT 1
+SQL;
 
         $statement = $this->database->prepare($sql);
-        $statement->bindValue(':ID', $designID, PDO::PARAM_INT);
+
+        $statement->bindValue(':ID', $ID, PDO::PARAM_INT);
+
         $statement->execute();
 
-        $array = $this->parseResults($statement->fetchAll(PDO::FETCH_ASSOC));
-
-        return $this->convertArrayToObject($array);
-
+        return $this->createEntity($statement->fetch(PDO::FETCH_ASSOC));
     }
 
     /**
-     * @param $name
+     * Returns items by their Name
      *
-     * @return \Object\Item
+     * @param string $name
+     *
+     * @return \Entity\Item[]
      */
     public function getByName($name)
     {
-        $sql = $this->queryStart . ' WHERE Design.name = :name';
+        $sql
+            = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE Items.Name = :Name
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC
+SQL;
 
         $statement = $this->database->prepare($sql);
-        $statement->bindValue(':name', $name, PDO::PARAM_STR);
+
+        $statement->bindValue(':Name', $name, PDO::PARAM_STR);
+
         $statement->execute();
 
-        $array = $this->parseResults($statement->fetchAll(PDO::FETCH_ASSOC));
+        $array = false;
 
-        return $this->convertArrayToObject($array);
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
+        }
+
+        return $array;
     }
 
-    public function persist($object)
+    /**
+     * Returns an array of all Items in the table
+     *
+     * @param int $start
+     * @param int $limit
+     *
+     * @return \Entity\Item[]
+     */
+    public function listAll($start = 0, $limit = 500)
     {
-        $this->designMapper->persist($object->getDesign());
-        
-        foreach($object->getArticles() as $article){
-            $this->articleMapper->persist($article);
+
+        $sql
+            = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC 
+  LIMIT :Start, :Amount
+SQL;
+
+        $statement = $this->database->prepare($sql);
+
+        $statement->bindValue(':Start', $start, PDO::PARAM_INT);
+        $statement->bindValue(':Amount', $limit, PDO::PARAM_INT);
+
+        $statement->execute();
+
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
         }
-        
-        foreach($object->getProducts() as $product){
-            $this->productMapper->persist($product);
-        }
-        
-        unset($object);
+
+        return $array;
     }
 
-    /** Stub, don't use */
-    public function create(){ }
-    
-    /** Stub, don't use */
-    protected function convertObjectToArray($object){ }
-
-    protected function convertArrayToObject($array)
+    /**
+     * Gets the shirts that are queue'd up to be shown at a later date
+     *
+     * @param bool $preview If true, it will only return one of each shirt (by name)
+     * @param int  $start
+     * @param int  $limit
+     *
+     * @return \Entity\Item[]
+     */
+    public function getQueue($preview = false, $start = 0, $limit = 100)
     {
-        $design = $this->designMapper->convertArrayToObject($array['design']);
-        
-        foreach($array['articles'] as $articleArray){
-            $articles[$articleArray['ID']] = $this->articleMapper->convertArrayToObject($articleArray);
+
+        if ($preview) {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, MAX(Items.Gender) AS Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate >= :FutureDate
+  GROUP BY Items.Name
+  ORDER BY ItemsCommon.DisplayDate DESC
+  LIMIT :Start, :Amount
+SQL;
+        } else {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate >= :FutureDate
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC 
+  LIMIT :Start, :Amount
+SQL;
         }
-        
-        foreach($array['products'] as $productArray){
-            $products[$productArray['ID']] = $this->productMapper->convertArrayToObject($productArray);
+
+        $statement = $this->database->prepare($sql);
+
+        $futureDate = $this->settings->getFeaturedDates()[3];
+
+        $statement->bindValue('FutureDate', $futureDate->format('Y-m-d'));
+        $statement->bindValue('Start', $start, PDO::PARAM_INT);
+        $statement->bindValue('Amount', $limit, PDO::PARAM_INT);
+
+        $statement->execute();
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
         }
-        
-        return parent::convertArrayToObject(['design' => $design, 'articles' => $articles, 'products' => $products]);
+
+        return $array;
     }
 
-    private function parseResults($array)
+    /**
+     * Gets the shirts that should appear on the Featured page
+     *
+     * @param bool $preview If true, it will only return one of each shirt (by name)
+     *
+     * @return \Entity\Item[]
+     */
+    public function getFeatured($preview = false)
     {
-        $return = [];
 
-        foreach ($array as $row) {
-            $return['design']['ID']                                   = $row['designID'];
-            $return['design']['name']                                 = $row['name'];
-            $return['design']['displayDate']                          = $row['displayDate'];
-            $return['design']['designImageURL']                       = $row['designImageURL'];
-            $return['design']['salesLimit']                           = $row['salesLimit'];
-            $return['design']['votes']                                = $row['votes'];
-            $return['articles'][$row['articleID']]['ID']              = $row['articleID'];
-            $return['articles'][$row['articleID']]['designID']        = $row['designID'];
-            $return['articles'][$row['articleID']]['productID']       = $row['productID'];
-            $return['articles'][$row['articleID']]['lastUpdated']     = $row['lastUpdated'];
-            $return['articles'][$row['articleID']]['description']     = $row['description'];
-            $return['articles'][$row['articleID']]['articleImageURL'] = $row['articleImageURL'];
-            $return['articles'][$row['articleID']]['numberSold']      = $row['numberSold'];
-            $return['articles'][$row['articleID']]['baseRetail']      = $row['baseRetail'];
-            $return['products'][$row['productID']]['ID']              = $row['productID'];
-            $return['products'][$row['productID']]['cost']            = $row['cost'];
-            $return['products'][$row['productID']]['type']            = $row['type'];
-            $return['products'][$row['productID']]['sizesAvailable']  = $row['sizesAvailable'];
+        if ($preview) {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, MAX(Items.Gender) AS Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate > :PastDate 
+    AND DisplayDate < :FutureDate
+  GROUP BY Items.Name
+  ORDER BY ItemsCommon.DisplayDate DESC
+SQL;
+        } else {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate > :PastDate 
+    AND DisplayDate < :FutureDate
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC
+SQL;
         }
 
-        return $return;
+        $statement = $this->database->prepare($sql);
+
+        $dates = $this->settings->getFeaturedDates();
+
+        $pastDate   = $dates[0];
+        $futureDate = $dates[3];
+
+
+        $statement->bindValue('PastDate', $pastDate->format('Y-m-d'));
+        $statement->bindValue('FutureDate', $futureDate->format('Y-m-d'));
+
+        $statement->execute();
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
+        }
+
+        return $array;
+    }
+
+    /**
+     * Gets the shirts that are in the "Store"
+     *
+     * @param bool $preview If true, it will only return one of each shirt (by name)
+     * @param int  $start   The shirt to start with (for pagination)
+     * @param int  $limit   The max amount to return (for pagination)
+     *
+     * @return \Entity\Item[]
+     */
+    public function getStore($preview = false, $start = 0, $limit = 50)
+    {
+
+        if ($preview) {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, MAX(Items.Gender) AS Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate <= :PastDate
+    AND ItemsSold.TotalSold < ItemsCommon.SalesLimit
+  GROUP BY Items.Name
+  ORDER BY ItemsCommon.DisplayDate DESC
+  LIMIT :Start, :Amount
+SQL;
+        } else {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE DisplayDate <= :PastDate
+    AND ItemsSold.TotalSold < ItemsCommon.SalesLimit
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC
+  LIMIT :Start, :Amount
+SQL;
+        }
+
+        $statement = $this->database->prepare($sql);
+
+        $pastDate = $this->settings->getFeaturedDates()[0];
+
+        $statement->bindValue('PastDate', $pastDate->format('Y-m-d'), PDO::PARAM_STR);
+        $statement->bindValue('Start', $start, PDO::PARAM_INT);
+        $statement->bindValue('Amount', $limit, PDO::PARAM_INT);
+
+        $statement->execute();
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
+        }
+
+        return $array;
+    }
+
+    /**
+     * Gets the shirts that are in the "Vault"
+     *
+     * @param bool $preview If true, it will only return one of each shirt (by name)
+     * @param int  $start   The shirt to start with (for pagination)
+     * @param int  $limit   The max amount to return (for pagination)
+     *
+     * @return \Entity\Item[]
+     */
+    public function getVault($preview = false, $start = 0, $limit = 50)
+    {
+
+        if ($preview) {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, MAX(Items.Gender) AS Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE ItemsSold.TotalSold >= ItemsCommon.SalesLimit
+  GROUP BY Items.Name
+  ORDER BY ItemsCommon.DisplayDate DESC
+  LIMIT :Start, :Amount
+SQL;
+        } else {
+            $sql
+                = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE ItemsSold.TotalSold >= ItemsCommon.SalesLimit
+  ORDER BY ItemsCommon.DisplayDate DESC, Items.Gender ASC
+  LIMIT :Start, :Amount
+SQL;
+        }
+
+        $statement = $this->database->prepare($sql);
+
+        $statement->bindValue('Start', $start, PDO::PARAM_INT);
+        $statement->bindValue('Amount', $limit, PDO::PARAM_INT);
+
+        $statement->execute();
+
+        foreach ($statement->fetchAll(PDO::FETCH_ASSOC) as $item) {
+            $array[] = $this->createEntity($item);
+        }
+
+        return $array;
+    }
+
+    /**
+     * Returns an item based on it's name and gender
+     *
+     * @param string $name
+     * @param string $gender
+     *
+     * @return \Entity\Item
+     */
+    public function getItemByNameGender($name, $gender)
+    {
+
+        $sql
+            = <<<SQL
+SELECT Items.ID, Items.Name, Items.Gender, Items.ArticleID, Items.DesignID, Items.Description, Items.Cost, Items.Retail, Items.ProductImage, 
+    Items.DesignImage, Items.SizesAvailable, Items.LastUpdated, Items.Sold, ItemsCommon.SalesLimit, ItemsCommon.DisplayDate, ItemsCommon.Votes,
+    ItemsSold.TotalSold
+  FROM Items 
+  LEFT JOIN ItemsCommon ON (Items.Name = ItemsCommon.Name)
+  LEFT JOIN (SELECT Name, SUM(Sold) AS TotalSold FROM Items GROUP BY Name) AS ItemsSold ON Items.Name = ItemsSold.Name
+  WHERE Items.Name = :Name AND Items.Gender = :Gender
+  LIMIT 1
+SQL;
+
+        $statement = $this->database->prepare($sql);
+
+        $statement->bindValue(':Name', $name, PDO::PARAM_STR);
+        $statement->bindValue(':Gender', strtolower($gender), PDO::PARAM_STR);
+
+        $statement->execute();
+
+        return $this->createEntity($statement->fetch(PDO::FETCH_ASSOC));
+    }
+
+    /**
+     * Returns an array of the ItemsCommon data for the given Name
+     *
+     * @param $name
+     *
+     * @return \Entity\Item
+     */
+    public function getItemsCommonByName($name)
+    {
+        $sql = 'SELECT DisplayDate, SalesLimit, Votes FROM ItemsCommon WHERE Name=:Name LIMIT 1';
+
+        $statement = $this->database->prepare($sql);
+
+        $statement->bindValue(':Name', $name, PDO::PARAM_STR);
+
+        $statement->execute();
+
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if ($row === false) {
+            return [false, false, false];
+        } else {
+            return [$row['SalesLimit'], DateTime::createFromFormat('Y-m-d', $row['DisplayDate']), $row['Votes']];
+        }
+    }
+
+    /**
+     * Returns the last date used in the database, if no date exists, it uses the default from the Settings class.
+     *
+     * @return DateTime
+     */
+    public function getLastDate()
+    {
+        $sql = 'SELECT MAX(DisplayDate) FROM ItemsCommon';
+
+        $statement = $this->database->query($sql);
+
+        $result = $statement->fetch(PDO::FETCH_NUM)[0];
+
+        if (is_null($result)) {
+            return $this->settings->getStartingDisplayDate();
+        } else {
+            return DateTime::createFromFormat('Y-m-d', $result);
+        }
+    }
+
+
+    /**
+     * Delete an Item from the database.
+     *
+     * @param \Entity\Item $entity
+     *
+     * @throws \Exception
+     */
+    public function delete(Entity $entity)
+    {
+        if (empty($entity)) {
+            //Whoops, forgot the $entity
+            throw new Exception('ERROR! No Entity given for delete statement');
+        }
+
+        $statement = $this->database->prepare('DELETE FROM Items WHERE `ID` = :ID LIMIT 1');
+        $statement->bindValue(':ID', $entity->getID());
+        $statement->execute();
+
+        /* Delete the associated ItemsCommon row if there are no more Items with that name */
+        if (!$this->nameExistsInItems($entity->getName())) {
+            $statement = $this->database->prepare('DELETE FROM ItemsCommon WHERE Name = :Name LIMIT 1');
+            $statement->bindValue(':Name', $entity->getName());
+            $statement->execute();
+        }
+    }
+
+    /**
+     * Persists an Item to the database, will UPDATE if one with that ID exists, will INSERT if not.
+     *
+     * @param \Entity\Item $entity
+     *
+     * @throws \Exception
+     */
+    public function persist(Entity $entity)
+    {
+        try{
+
+            /* Start the transaction */
+            $this->database->beginTransaction();
+
+            /* This will SELECT the Name from the Items database to compare and see if it changed */
+            $itemsDeleteCheck = $this->database->prepare(
+                <<<SQL
+SELECT Name FROM Items WHERE ID=:ID
+SQL
+            );
+
+            /* This will INSERT the Item's Common info into the database if it does not exist, and will UPDATE it if it does */
+            $itemsCommon = $this->database->prepare(
+                <<<SQL
+INSERT INTO ItemsCommon
+  SET
+    Name=:Name,
+    SalesLimit=:SalesLimit,
+    DisplayDate=:DisplayDate,
+    Votes=:Votes
+  ON DUPLICATE KEY UPDATE
+    SalesLimit=:SalesLimit,
+    DisplayDate=:DisplayDate,
+    Votes=:Votes
+SQL
+            );
+
+            /* This will INSERT the item into the database if it does not exist, and will UPDATE it if it does */
+            $items = $this->database->prepare(
+                <<<SQL
+INSERT INTO Items
+  SET
+    `ID`=:ID,
+    Name=:Name,
+    Gender=:Gender,
+    ArticleID=:ArticleID,
+    DesignID=:DesignID,
+    Description=:Description,
+    Cost=:Cost,
+    Retail=:Retail,
+    ProductImage=:ProductImage,
+    DesignImage=:DesignImage,
+    SizesAvailable=:SizesAvailable,
+    LastUpdated=:LastUpdated,
+    Sold=:Sold
+  ON DUPLICATE KEY UPDATE
+    Name=:Name,
+    Gender=:Gender,
+    ArticleID=:ArticleID,
+    DesignID=:DesignID,
+    Description=:Description,
+    Cost=:Cost,
+    Retail=:Retail,
+    ProductImage=:ProductImage,
+    DesignImage=:DesignImage,
+    SizesAvailable=:SizesAvailable,
+    LastUpdated=:LastUpdated,
+    Sold=:Sold
+SQL
+            );
+
+
+            $itemsDeleteCheck->bindValue(':ID', $entity->getID(), PDO::PARAM_INT);
+
+            $itemsCommon->bindValue(':Name', $entity->getName(), PDO::PARAM_STR);
+            $itemsCommon->bindValue(':SalesLimit', $entity->getSalesLimit(), PDO::PARAM_INT);
+            $itemsCommon->bindValue(':DisplayDate', $entity->getDisplayDate()->format('Y-m-d'), PDO::PARAM_STR);
+            $itemsCommon->bindValue(':Votes', $entity->getVotes(), PDO::PARAM_INT);
+
+            $items->bindValue(':ID', $entity->getID(), PDO::PARAM_INT);
+            $items->bindValue(':Name', $entity->getName(), PDO::PARAM_STR);
+            $items->bindValue(':Gender', $entity->getGender(), PDO::PARAM_STR);
+            $items->bindValue(':ArticleID', $entity->getArticleID(), PDO::PARAM_STR);
+            $items->bindValue(':DesignID', $entity->getDesignID(), PDO::PARAM_STR);
+            $items->bindValue(':Description', $entity->getDescription(), PDO::PARAM_STR);
+            $items->bindValue(':Cost', $entity->getCost(), PDO::PARAM_STR);
+            $items->bindValue(':Retail', $entity->getRetail(), PDO::PARAM_STR);
+            $items->bindValue(':ProductImage', $entity->getProductImage(), PDO::PARAM_STR);
+            $items->bindValue(':DesignImage', $entity->getDesignImage(), PDO::PARAM_STR);
+            $items->bindValue(':SizesAvailable', implode(',', $entity->getSizesAvailable()), PDO::PARAM_STR);
+            $items->bindValue(':LastUpdated', $entity->getLastUpdated()->format('Y-m-d H:i:s'), PDO::PARAM_STR);
+            $items->bindValue(':Sold', $entity->getNumberSold(), PDO::PARAM_INT);
+
+            /* Execute the SELECT/INSERT statements */
+            $itemsDeleteCheck->execute();
+            $itemsCommon->execute();
+            $items->execute();
+
+            $oldName = $itemsDeleteCheck->fetch(PDO::FETCH_ASSOC)['Name'];
+
+            if ($oldName != $entity->getName()) {
+                //The name changed, delete the old (now orphaned) Items Common row
+
+                $itemsCommonDelete = $this->database->prepare(
+                    <<<SQL
+    DELETE FROM ItemsCommon WHERE Name=:OldName
+SQL
+                );
+
+                $itemsCommonDelete->bindValue(':OldName', $oldName, PDO::PARAM_STR);
+
+                $itemsCommonDelete->execute();
+
+            }
+
+
+        } catch(Exception $e){
+            /* H0LY SHIT! Something went wrong, so roll back changes and toss the Exception back up the ladder */
+            $this->database->rollBack();
+            throw $e;
+        }
+
+        /* Everything's Good, commit this to the database and free it up for other things */
+        $this->database->commit();
+
+        /* Because the ID is created when it is persisted, unset the entity after it is persisted to avoid any other changes that won't be saved */
+        unset($entity);
+    }
+
+    /**
+     * Create a new entity out of the data
+     *
+     * @param array $data The array of data to fill the object with
+     *
+     * @return \Entity\Item
+     */
+    private function createEntity($data)
+    {
+        if ($data === false) {
+            $entity = false;
+        } else {
+            $entity = new \Entity\Item($data['ID']);
+            $entity->setName($data['Name']);
+            $entity->setGender($data['Gender']);
+            $entity->setArticleID($data['ArticleID']);
+            $entity->setDesignID($data['DesignID']);
+            $entity->setDescription($data['Description']);
+            $entity->setSalesLimit($data['SalesLimit']);
+            $entity->setDisplayDate(DateTime::createFromFormat('Y-m-d', $data['DisplayDate']));
+            $entity->setCost($data['Cost']);
+            $entity->setRetail($data['Retail']);
+            $entity->setProductImage($data['ProductImage']);
+            $entity->setDesignImage($data['DesignImage']);
+            $entity->setSizesAvailable(explode(',', $data['SizesAvailable']));
+            $entity->setLastUpdated(DateTime::createFromFormat('Y-m-d H:i:s', $data['LastUpdated']));
+            $entity->setNumberSold($data['Sold']);
+            $entity->setVotes($data['Votes']);
+            $entity->setTotalSold($data['TotalSold']);
+            $entity->setCategory($this->settings->getItemCategory($entity));
+        }
+
+        return $entity;
+    }
+
+    /**
+     * Checks to see if there is any other Items with that name. This is to see if it is safe to delete the associated name in the ItemsCommon table
+     *
+     * @param string $name
+     *
+     * @return bool
+     */
+    private function nameExistsInItems($name)
+    {
+        $statement = $this->database->prepare('SELECT EXISTS(SELECT 1 FROM Items WHERE `Name`=:Name LIMIT 1)');
+        $statement->bindValue(':Name', $name, PDO::PARAM_STR);
+        $statement->execute();
+
+        return ($statement->fetch(PDO::FETCH_NUM)[0] == 0 ? false : true);
     }
 }

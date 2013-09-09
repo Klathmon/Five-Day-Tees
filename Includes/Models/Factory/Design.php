@@ -4,11 +4,11 @@
  * Date: 9/8/13
  */
 
-namespace Mapper;
+namespace Factory;
 
 use DateTime;
 
-class Design extends MapperBase implements MapperInterface
+class Design extends FactoryBase implements FactoryInterface
 {
 
     /**

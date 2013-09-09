@@ -4,9 +4,9 @@
  * Date: 9/8/13
  */
 
-namespace Mapper;
+namespace Factory;
 
-interface MapperInterface
+interface FactoryInterface
 {
 
     /**

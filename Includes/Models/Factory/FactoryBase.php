@@ -4,14 +4,14 @@
  * Date: 9/8/13
  */
 
-namespace Mapper;
+namespace Factory;
 
 use PDO;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
 
-abstract class MapperBase
+abstract class FactoryBase
 {
     /** @var PDO */
     protected $database;

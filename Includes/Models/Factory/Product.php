@@ -4,11 +4,11 @@
  * Date: 9/8/13
  */
 
-namespace Mapper;
+namespace Factory;
 
 use Currency;
 
-class Product extends MapperBase implements MapperInterface
+class Product extends FactoryBase implements FactoryInterface
 {
 
     /**
