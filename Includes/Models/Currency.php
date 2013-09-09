@@ -30,13 +30,13 @@ class Currency
         return number_format($this->getDecimal(), 2);
     }
     
-    public function add($cents)
+    public function add(Currency $amount)
     {
-        $this->cents += $cents;
+        $this->cents += $amount->getCents();
     }
     
-    public function subtract($cents)
+    public function subtract(Currency $amount)
     {
-        $this->cents -= $cents;
+        $this->cents -= $amount->getCents();
     }
 }
