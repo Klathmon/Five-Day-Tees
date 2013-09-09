@@ -24,4 +24,9 @@ class Currency
     {
         return (string)($this->cents / 100);
     }
+    
+    public function getNiceFormat()
+    {
+        return number_format($this->getDecimal(), 2);
+    }
 }
