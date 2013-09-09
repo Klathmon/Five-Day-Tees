@@ -11,20 +11,19 @@
 
     <div class="ItemsContainer">
         {foreach $items as $item}
-            <div class="Item {if $item@iteration == 1}Selected{/if}" data-linkname="{$item->getURL()}">
+            <div class="Item {if $item@iteration == 1}Selected{/if}" data-linkname="{$item['URLName']}">
                 <img
                         class="Preview"
-                        src="{$item->getFormattedDesignImage(150, 150, 'jpg')}"
-                        alt="{$item->getName()} - {$item->getDescription()}"
+                        src="{$item['designImageURL']}"
+                        alt="{$item['name']} - {$item['description']}"
                         height=150
                         width=150
                         />
 
-                <h3 class="Name">{$item->getName()}</h3>
+                <h3 class="Name">{$item['name']}</h3>
 
-                <p class="Price">${number_format($settings->getItemCurrentPrice($item), 2)}</p>
+                <p class="Price">${$item['price']}</p>
             </div>
         {/foreach}
     </div>
-
 </div>
