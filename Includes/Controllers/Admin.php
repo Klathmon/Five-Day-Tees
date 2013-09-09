@@ -5,7 +5,7 @@
  */
 
 $settings      = new Settings($database, $config);
-$itemsMapper   = new \Mapper\Item($database, $config);
+$itemsFactory  = new \Factory\Item($database, $settings);
 $couponsMapper = new \Mapper\Coupon($database);
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -128,7 +128,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $layout->assign('coupons', $couponsMapper->listAll());
 
 
-    $layout->assign('items', $itemsMapper->listAll());
+    $items = $itemsFactory->getAll();
+
+    foreach ($items as $item) {
+        $design = $item->getDesign();
+        foreach ($item->getArticles() as $article) {
+            $product        = $item->getProduct($article->getProductID());
+            $displayItems[] = [
+                'designID'       => $design->getID(),
+                'articleID'      => $article->getID(),
+                'productID'      => $product->getID(),
+                'name'           => $design->getName(),
+                'type'           => $product->getType(),
+                'description'    => $article->getDescription(),
+                'cost'           => $product->getCost()->getDecimal(),
+                'baseRetail'     => $article->getBaseRetail()->getDecimal(),
+                'displayDate'    => $design->getDisplayDate(),
+                'votes'          => $design->getVotes(),
+                'numberSold'     => $article->getNumberSold(),
+                'salesLimit'     => $design->getSalesLimit(),
+                'sizesAvailable' => $product->getSizesAvailable()
+            ];
+        }
+    }
+
+    $layout->assign('items', $displayItems);
 
     $layout->output();
 }

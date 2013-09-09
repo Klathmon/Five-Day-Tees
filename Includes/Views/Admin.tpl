@@ -31,7 +31,7 @@
     </table>
 
     {if $config->getMode() == 'DEV'}
-        <button onclick="$.post('/Admin', { 'Command': 'ReloadAllItems' }, function(data) { location.reload(); } )">Clear Out Shirts</button>
+        <button onclick="$.post('/Admin', { 'Command': 'ReloadAllItems' }, function() { location.reload(); } )">Clear Out Shirts</button>
     {/if}
 
     <h3>Coupons:</h3>
@@ -82,17 +82,17 @@
             <th></th>
         </tr>
         {foreach $items as $item}
-            <tr data-id="{$item->getID()}">
-                <td><input type="text" id="Name" value="{$item->getName()}"/></td>
-                <td><input type="text" value="{$item->getGender()}" disabled/></td>
-                <td><textarea id="Description">{$item->getDescription()}</textarea></td>
-                <td><input type="number" value="{$item->getCost()}" disabled/></td>
-                <td><input type="number" id="Retail" value="{$item->getRetail()}"/></td>
-                <td><input type="date" id="DisplayDate" value="{$item->getDisplayDate()|date_format:"%Y-%m-%d"}"/></td>
-                <td><input type="number" id="Votes" value="{$item->getVotes()}"/></td>
-                <td><input type="number" id="Sold" value="{$item->getNumberSold()}"/></td>
-                <td><input type="number" id="SalesLimit" value="{$item->getSalesLimit()}"/></td>
-                <td><input type="text" value="{foreach $item->getSizesAvailable() as $size}{$size},{/foreach}" disabled/></td>
+            <tr data-designid="{$item['designID']}" data-articleid="{$item['articleID']}" data-productid="{$item['productID']}">
+                <td><input type="text" id="Name" value="{$item['name']}"/></td>
+                <td><input type="text" value="{$item['type']}" disabled/></td>
+                <td><textarea id="Description">{$item['description']}</textarea></td>
+                <td><input type="number" value="{$item['cost']}" disabled/></td>
+                <td><input type="number" id="Retail" value="{$item['baseRetail']}"/></td>
+                <td><input type="date" id="DisplayDate" value="{$item['displayDate']|date_format:"%Y-%m-%d"}"/></td>
+                <td><input type="number" id="Votes" value="{$item['votes']}"/></td>
+                <td><input type="number" id="Sold" value="{$item['numberSold']}"/></td>
+                <td><input type="number" id="SalesLimit" value="{$item['salesLimit']}"/></td>
+                <td><input type="text" value="{foreach $item['sizesAvailable'] as $size}{$size},{/foreach}" disabled/></td>
                 <td>
                     <button class="SaveItem">Save</button>
                     <button class="DeleteItem">Delete</button>
