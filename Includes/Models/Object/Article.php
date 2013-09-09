@@ -123,4 +123,18 @@ class Article implements ObjectInterface
     {
         $this->baseRetail = $baseRetail;
     }
+
+    /**
+     * Returns the Article Image with the given parameters
+     *
+     * @param        $x
+     * @param        $y
+     * @param string $format
+     *
+     * @return string
+     */
+    public function getFormattedArticleImage($x, $y, $format = 'png')
+    {
+        return $this->getArticleImageURL() . ",width=$x,height=$y,mediaType=$format";
+    }
 }

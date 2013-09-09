@@ -103,6 +103,18 @@ class Design implements ObjectInterface
     {
         $this->votes = $votes;
     }
-    
-    
+
+    /**
+     * Returns the Design Image with the given parameters
+     *
+     * @param        $x
+     * @param        $y
+     * @param string $format
+     *
+     * @return string
+     */
+    public function getFormattedDesignImage($x, $y, $format = 'png')
+    {
+        return $this->getDesignImageURL() . ",width=$x,height=$y,mediaType=$format";
+    }
 }
