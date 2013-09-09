@@ -64,6 +64,17 @@ class Item implements ObjectInterface
         return $this->products[$ID];
     }
 
+    /**
+     * @return Article
+     */
+    public function getFirstArticle()
+    {
+        return reset($this->articles);
+    }
+
+    /**
+     * @return string
+     */
     public function getURL()
     {
         return urlencode(str_replace(' ', '_', $this->getDesign()->getName()));
