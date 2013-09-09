@@ -75,7 +75,7 @@ class Item implements ObjectInterface
     /**
      * @return string
      */
-    public function getURL()
+    public function getURLName()
     {
         return urlencode(str_replace(' ', '_', $this->getDesign()->getName()));
     }
