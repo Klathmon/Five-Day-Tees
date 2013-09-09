@@ -97,7 +97,7 @@ SQL;
     }
     
     /**
-     * @return \Object\Item
+     * @return \Object\Item[]
      */
     public function getAll()
     {
@@ -114,7 +114,7 @@ SQL;
      * @param int $start
      * @param int $limit
      *
-     * @return \Object\Item
+     * @return \Object\Item[]
      */
     public function getQueue($start = 0, $limit = 100)
     {
@@ -136,7 +136,7 @@ SQL;
     }
 
     /**
-     * @return \Object\Item
+     * @return \Object\Item[]
      */
     public function getFeatured()
     {
@@ -164,7 +164,7 @@ SQL;
      * @param int $start
      * @param int $limit
      *
-     * @return \Object\Item
+     * @return \Object\Item[]
      */
     public function getStore($start = 0, $limit = 50)
     {
@@ -191,7 +191,7 @@ SQL;
      * @param int $start
      * @param int $limit
      *
-     * @return \Object\Item
+     * @return \Object\Item[]
      */
     public function getVault($start = 0, $limit = 50)
     {
