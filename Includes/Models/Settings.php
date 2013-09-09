@@ -213,37 +213,38 @@ SQL
     /**
      * Returns the item's current price based on it's category
      *
-     * @param \Entity\Item $item
+     * @param Currency $baseRetail
+     * @param string $category
      *
      * @return double
      */
-    public function getItemCurrentPrice($item)
+    public function getItemCurrentPrice($baseRetail, $category)
     {
-        $currentPrice = $item->getRetail();
+        $currentPrice = $baseRetail->getCents();
 
-        switch ($item->getCategory()) {
+        switch ($category) {
             case 'Level1':
-                $currentPrice += $this->getLevel1();
+                $currentPrice += $this->getLevel1()->getCents();
                 break;
             case 'Level2':
-                $currentPrice += $this->getLevel2();
+                $currentPrice += $this->getLevel2()->getCents();
                 break;
             case 'Level3':
-                $currentPrice += $this->getLevel3();
+                $currentPrice += $this->getLevel3()->getCents();
                 break;
             case 'Vault':
             case 'Default':
             case 'Queue':
             default:
-                $currentPrice = '999.99';
+                $currentPrice = 99999;
                 break;
         }
 
-        return $currentPrice;
+        return new Currency($currentPrice);
     }
 
     /**
-     * This will return the item's "Category"
+     * This will return the item's "Category" based on the design and article
      * Return Values can be:
      * Queue    In the queue. (Treat items in this category as non-existent to the user)
      * Disabled Items not ready to be sold yet, but can be viewed by the user
@@ -252,21 +253,27 @@ SQL
      * Level3   In the store, the highest price items
      * Vault    Similar to disabled, When a item's total sold is >= the sales limit
      *
-     * @param \Entity\Item $item
+     * @param \Object\Item $item
      *
      * @return string
      */
     public function getItemCategory($item)
     {
         $dates       = $this->getFeaturedDates();
-        $displayDate = $item->getDisplayDate()->format('z');
+        $displayDate = $item->getDesign()->getDisplayDate()->format('z');
 
         $oldestDate = $dates[0]->format('z');
         $olderDate  = $dates[1]->format('z');
         $newerDate  = $dates[2]->format('z');
         $newestDate = $dates[3]->format('z');
+        
+        $totalSold = 0;
+        
+        foreach($item->getArticles() as $article){
+            $totalSold += $article->getNumberSold();
+        }
 
-        if ($item->getTotalSold() >= $item->getSalesLimit()) {
+        if ($totalSold >= $item->getDesign()->getSalesLimit()) {
             $category = 'Vault';
         } elseif ($displayDate <= $oldestDate) {
             $category = 'Level3';
