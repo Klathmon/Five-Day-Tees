@@ -220,27 +220,27 @@ SQL
      */
     public function getItemCurrentPrice($baseRetail, $category)
     {
-        $currentPrice = $baseRetail->getCents();
+        $currentPrice = clone $baseRetail;
 
         switch ($category) {
             case 'Level1':
-                $currentPrice += $this->getLevel1()->getCents();
+                $currentPrice->add($this->getLevel1());
                 break;
             case 'Level2':
-                $currentPrice += $this->getLevel2()->getCents();
+                $currentPrice->add($this->getLevel2());
                 break;
             case 'Level3':
-                $currentPrice += $this->getLevel3()->getCents();
+                $currentPrice->add($this->getLevel3());
                 break;
             case 'Vault':
             case 'Default':
             case 'Queue':
             default:
-                $currentPrice = 99999;
+                $currentPrice = new Currency(999.99);
                 break;
         }
 
-        return new Currency($currentPrice);
+        return $currentPrice;
     }
 
     /**
