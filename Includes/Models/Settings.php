@@ -307,21 +307,24 @@ SQL
      * @param string $nameEncoded
      *
      * @return string
-     */public function decodeName($nameEncoded)
+     */
+    public function decodeName($nameEncoded)
     {
         return urldecode(str_replace('_', ' ', $nameEncoded));
     }
 
     /**
      * @return string
-     */public function getCartCallout()
+     */
+    public function getCartCallout()
     {
         return $this->data['CartCallout'];
     }
 
     /**
      * @param string $cartCallout
-     */public function setCartCallout($cartCallout)
+     */
+    public function setCartCallout($cartCallout)
     {
         $this->data['CartCallout'] = $cartCallout;
     }
