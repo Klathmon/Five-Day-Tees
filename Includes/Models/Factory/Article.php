@@ -28,7 +28,7 @@ class Article extends FactoryBase implements FactoryInterface
      * @param string   $description
      * @param string   $articleImageURL
      * @param int      $numberSold
-     * @param null     $baseRetail
+     * @param Currency $baseRetail
      *
      * @return \Object\Article
      */
@@ -74,6 +74,7 @@ class Article extends FactoryBase implements FactoryInterface
     public function convertArrayToObject($array)
     {
         $array['lastUpdated'] = DateTime::createFromFormat('Y-m-d H:i:s', $array['lastUpdated']);
+        $array['baseRetail'] = new Currency($array['baseRetail']);
 
         return parent::convertArrayToObject($array);
     }
