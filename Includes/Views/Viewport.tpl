@@ -11,10 +11,8 @@
     <p class="Description">{$description}</p>
 
     <div class="FullImages">
-        <img src="{$articleImageURL}" alt="{$name} - {$description}"
-             class="Primary"/>
-        <img src="{$secondaryArticleImageURL}" alt="{$name} - {$secondaryDescription}"
-             class="Secondary"/>
+        <img src="{$articleImageURL}" alt="{$name} - {$description}" class="Primary" height=450 width=400/>
+        <img src="{$secondaryArticleImageURL}" alt="{$name} - {$secondaryDescription}" class="Secondary" height=450 width=400/>
     </div>
 
     <p class="Price"><span class="Number">${$price}</span> + Shipping</p>
