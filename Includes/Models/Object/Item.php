@@ -69,7 +69,24 @@ class Item implements ObjectInterface
      */
     public function getFirstArticle()
     {
-        return reset($this->articles);
+        //Okay, this is terra-bad, but it's how i'm doing it now.
+        //the first article will always be female (unless a female doesn't exist in which case it will pick the first available semi-randomly)
+        $productID = null;
+        foreach($this->products as $product){
+            if($product->getType() == 'female'){
+                $productID = $product->getID();
+            }
+        }
+        foreach($this->articles as $article){
+            if($article->getProductID() == $productID){
+                $returnArticle = $article;
+            }
+        }
+        
+        if($productID === null){
+            $returnArticle = reset($this->articles);
+        }
+        return $returnArticle;
     }
 
     /**
