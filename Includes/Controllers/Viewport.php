@@ -8,29 +8,55 @@ $template = new FDTSmarty($config, 'Viewport.tpl', 'Viewport', $request->getFull
 
 
 if (!$template->isPageCached()) {
-    $settings    = new Settings($database, $config);
-    $itemsMapper = new \Mapper\Item($database, $config);
+    $settings     = new Settings($database, $config);
+    $itemsFactory = new \Factory\Item($database, $settings);
 
-    $items = $itemsMapper->getByName($settings->decodeName($request->get(1)));
+    /* Try to grab the shirt from the database, if it fails, forward the user to /404 */
+    try{
+        $item = $itemsFactory->getByName($settings->decodeName($request->get(1)));
 
-    //We are good! shirts are okay to display!
+        /* If there is no articleID set, set it to the first article's ID */
+        $articleID = (!is_null($request->get(2)) ? Sanitize::cleanInteger($request->get(2)) : $item->getFirstArticle()->getID());
 
-    $template->assign('settings', $settings);
+        $design   = $item->getDesign();
+        $category = $settings->getItemCategory($item);
 
-    /* If there is no default ID set, set it to the first shirt's ID */
-    $defaultID = (!is_null($request->get(2)) ? Sanitize::cleanInteger($request->get(2)) : $items[0]->getID());
+        $template->assign('name', $design->getName());
+        $template->assign('displayDate', $design->getDisplayDate());
+        $template->assign('designImageURL', $design->getFormattedDesignImage(800, 800, 'jpg'));
+        $template->assign('salesLimit', $design->getSalesLimit());
+        $template->assign('votes', $design->getVotes());
+        $template->assign('URLName', $item->getURLName());
+        $template->assign('permalink', $item->getPermalink());
 
-    foreach ($items as $item) {
-        if ($item->getID() == $defaultID) {
-            $template->assign('primaryItem', $item);
-        } else {
-            $template->assign('secondaryItem', $item);
+        /* Get the primary and secondary items' information */
+        foreach ($item->getArticles() as $article) {
+            $product = $item->getProduct($article->getProductID());
+            /* Set the gender article id's */
+            if ($product->getType() == 'male') {
+                $template->assign('maleArticleID', $article->getID());
+            } elseif ($product->getType() == 'female') {
+                $template->assign('femaleArticleID', $article->getID());
+            }
+            /* Set the primary and secondary information */
+            if ($article->getID() == $articleID) {
+                //Primary
+                $template->assign('description', $article->getDescription());
+                $template->assign('articleImageURL', $article->getFormattedArticleImage(400, 450, 'png'));
+                $template->assign('price', $settings->getItemCurrentPrice($article->getBaseRetail(), $category)->getNiceFormat());
+                $template->assign('type', $product->getType());
+                $template->assign('sizesAvailable', $product->getSizesAvailable());
+            } else {
+                //Secondary
+                $template->assign('secondaryArticleImageURL', $article->getFormattedArticleImage(400, 450, 'png'));
+                $template->assign('secondaryDescription', $article->getDescription());
+            }
         }
+        
+    } catch(Exception $e){
+        header('/404');
+        die();
     }
-
-    if ($items !== false && $items[0]->getCategory() != 'Queue') {
-        $template->output();
-    }
-} else {
-    $template->output();
 }
+
+$template->output();
