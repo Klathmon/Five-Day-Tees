@@ -30,8 +30,5 @@
 <article id="Main">
     {include $mainTemplate}
 </article>
-<footer>
-    <p>Site created by Gregory Benner</p>
-</footer>
 
 {include 'Global/HTMLFooter.tpl'}
