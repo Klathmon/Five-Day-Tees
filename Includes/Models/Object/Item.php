@@ -79,4 +79,11 @@ class Item implements ObjectInterface
     {
         return urlencode(str_replace(' ', '_', $this->getDesign()->getName()));
     }
+
+    /**
+     * @return string
+     */
+    public function getPermalink(){
+        return "//" . $_SERVER['HTTP_HOST'] . '/Item/' . $this->getURLName();
+    }
 }
