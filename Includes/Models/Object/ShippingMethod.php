@@ -6,6 +6,8 @@
 
 namespace Object;
 
+use Currency;
+
 class ShippingMethod implements ObjectInterface
 {
     /** @var int */
@@ -16,17 +18,17 @@ class ShippingMethod implements ObjectInterface
     protected $daysLow;
     /** @var int */
     protected $daysHigh;
-    /** @var double */
+    /** @var Currency */
     protected $tier1Cost;
-    /** @var double */
+    /** @var Currency */
     protected $tier2Cost;
-    /** @var double */
+    /** @var Currency */
     protected $tier3Cost;
-    /** @var double */
+    /** @var Currency */
     protected $tier1PriceLimit;
-    /** @var double */
+    /** @var Currency */
     protected $tier2PriceLimit;
-    /** @var double */
+    /** @var Currency */
     protected $tier3PriceLimit;
     /** @var bool */
     protected $disabled;
@@ -104,7 +106,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @param float $tier1Cost
+     * @param Currency $tier1Cost
      */
     public function setTier1Cost($tier1Cost)
     {
@@ -112,7 +114,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @return float
+     * @return Currency
      */
     public function getTier1Cost()
     {
@@ -120,7 +122,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @param float $tier1PriceLimit
+     * @param Currency $tier1PriceLimit
      */
     public function setTier1PriceLimit($tier1PriceLimit)
     {
@@ -128,7 +130,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @return float
+     * @return Currency
      */
     public function getTier1PriceLimit()
     {
@@ -136,7 +138,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @param float $tier2Cost
+     * @param Currency $tier2Cost
      */
     public function setTier2Cost($tier2Cost)
     {
@@ -144,7 +146,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @return float
+     * @return Currency
      */
     public function getTier2Cost()
     {
@@ -152,7 +154,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @param float $tier2PriceLimit
+     * @param Currency $tier2PriceLimit
      */
     public function setTier2PriceLimit($tier2PriceLimit)
     {
@@ -160,7 +162,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @return float
+     * @return Currency
      */
     public function getTier2PriceLimit()
     {
@@ -168,7 +170,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @param float $tier3Cost
+     * @param Currency $tier3Cost
      */
     public function setTier3Cost($tier3Cost)
     {
@@ -176,7 +178,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @return float
+     * @return Currency
      */
     public function getTier3Cost()
     {
@@ -184,7 +186,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @param float $tier3PriceLimit
+     * @param Currency $tier3PriceLimit
      */
     public function setTier3PriceLimit($tier3PriceLimit)
     {
@@ -192,7 +194,7 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @return float
+     * @return Currency
      */
     public function getTier3PriceLimit()
     {
