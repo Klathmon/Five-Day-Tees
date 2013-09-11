@@ -6,10 +6,8 @@
 
 echo 'Test Page!';
 
-$settings = new Settings($database, $config);
+$shippingMethodFactory = new \Factory\ShippingMethod($database);
 
-$itemFactory = new \Factory\Item($database, $settings);
+$shippingMethods = $shippingMethodFactory->getAll();
 
-$items = $itemFactory->getVault();
-
-var_dump($items);
+var_dump($shippingMethods);
