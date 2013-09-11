@@ -24,7 +24,13 @@ class ShippingMethod extends FactoryBase implements FactoryInterface
         $statement->bindValue(':Name', $name, PDO::PARAM_STR);
         $statement->execute();
         
-        $object = $this->convertArrayToObject($statement->fetch(PDO::FETCH_ASSOC));
+        $row = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if ($row === false) {
+            throw new \Exception('No coupon with that code exists in the database');
+        }
+        
+        $object = $this->convertArrayToObject($row);
         
         return $object;
     }
@@ -39,7 +45,17 @@ class ShippingMethod extends FactoryBase implements FactoryInterface
      */
     public function getAll($showDisabled = false)
     {
-        $rows = $this->database->query('SELECT * FROM ' . $this->className)->fetchAll(PDO::FETCH_ASSOC);
+        $sql = 'SELECT * FROM ' . $this->className;
+        
+        if($showDisabled == false){
+            $sql .= ' WHERE disable=0';
+        }
+        
+        $rows = $this->database->query($sql)->fetchAll(PDO::FETCH_ASSOC);
+        
+        if ($rows === false) {
+            throw new \Exception('No objects exist in the database');
+        }
 
 
         foreach ($rows as $row){
