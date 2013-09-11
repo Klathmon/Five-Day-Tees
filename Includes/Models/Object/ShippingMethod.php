@@ -7,6 +7,7 @@
 namespace Object;
 
 use Currency;
+use Exception;
 
 class ShippingMethod implements ObjectInterface
 {
@@ -15,9 +16,9 @@ class ShippingMethod implements ObjectInterface
     /** @var string */
     protected $name;
     /** @var int */
-    protected $daysLow;
+    protected $estimatedDaysLow;
     /** @var int */
-    protected $daysHigh;
+    protected $estimatedDaysHigh;
     /** @var Currency */
     protected $tier1Cost;
     /** @var Currency */
@@ -31,7 +32,31 @@ class ShippingMethod implements ObjectInterface
     /** @var Currency */
     protected $tier3PriceLimit;
     /** @var bool */
-    protected $disabled;
+    protected $disable;
+
+
+    /**
+     * @param Currency $subtotal
+     *
+     * @return Currency
+     * @throws \Exception
+     */
+    public function calculateShippingPrice(Currency $subtotal)
+    {
+        $subtotalCents = $subtotal->getCents();
+        
+        if ($subtotalCents <= $this->getTier1PriceLimit()->getCents()) {
+            $shippingCost = $this->getTier1Cost();
+        } elseif ($subtotalCents <= $this->getTier2PriceLimit()->getCents()) {
+            $shippingCost = $this->getTier2Cost();
+        } elseif ($subtotalCents <= $this->getTier3PriceLimit()->getCents()) {
+            $shippingCost = $this->getTier3Cost();
+        } else {
+            throw new Exception('Order Total is too high!', 2);
+        }
+
+        return $shippingCost;
+    }
 
     /**
      * @return int
@@ -42,35 +67,35 @@ class ShippingMethod implements ObjectInterface
     }
 
     /**
-     * @param int $daysHigh
+     * @param int $estimatedDaysHigh
      */
-    public function setDaysHigh($daysHigh)
+    public function setEstimatedDaysHigh($estimatedDaysHigh)
     {
-        $this->daysHigh = $daysHigh;
+        $this->estimatedDaysHigh = $estimatedDaysHigh;
     }
 
     /**
      * @return int
      */
-    public function getDaysHigh()
+    public function getEstimatedDaysHigh()
     {
-        return $this->daysHigh;
+        return $this->estimatedDaysHigh;
     }
 
     /**
-     * @param int $daysLow
+     * @param int $estimatedDaysLow
      */
-    public function setDaysLow($daysLow)
+    public function setEstimatedDaysLow($estimatedDaysLow)
     {
-        $this->daysLow = $daysLow;
+        $this->estimatedDaysLow = $estimatedDaysLow;
     }
 
     /**
      * @return int
      */
-    public function getDaysLow()
+    public function getEstimatedDaysLow()
     {
-        return $this->daysLow;
+        return $this->estimatedDaysLow;
     }
 
     /**
@@ -78,7 +103,7 @@ class ShippingMethod implements ObjectInterface
      */
     public function setDisabled($disabled)
     {
-        $this->disabled = $disabled;
+        $this->disable = $disabled;
     }
 
     /**
@@ -86,7 +111,14 @@ class ShippingMethod implements ObjectInterface
      */
     public function getDisabled()
     {
-        return $this->disabled;
+        return $this->disable;
+    }
+    /**
+     * @return boolean
+     */
+    public function isDisabled()
+    {
+        return $this->getDisabled();
     }
 
     /**
