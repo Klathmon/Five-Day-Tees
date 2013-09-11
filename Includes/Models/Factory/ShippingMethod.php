@@ -21,7 +21,7 @@ class ShippingMethod extends FactoryBase implements FactoryInterface
     {
         $statement = $this->database->prepare('SELECT * FROM ' . $this->className . ' WHERE name=:Name');
 
-        $statement->bindValue(':Name', $name, PDO::PARAM_INT);
+        $statement->bindValue(':Name', $name, PDO::PARAM_STR);
         $statement->execute();
         
         $object = $this->convertArrayToObject($statement->fetch(PDO::FETCH_ASSOC));
