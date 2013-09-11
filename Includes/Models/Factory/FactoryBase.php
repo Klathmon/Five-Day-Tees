@@ -46,11 +46,30 @@ abstract class FactoryBase
 
         if ($array === false) {
             throw new \Exception('No object with that ID exists in the database');
-        } else {
-            $object = $this->convertArrayToObject($array);
         }
+        
+        return $this->convertArrayToObject($array);
+    }
 
-        return $object;
+    /**
+     * Returns all of the objects from the database.
+     * 
+     * @return array
+     * @throws \Exception
+     */
+    public function getAll()
+    {
+        $rows = $this->database->query('SELECT * FROM ' . $this->className)->fetchAll(PDO::FETCH_ASSOC);
+
+        if ($rows === false) {
+            throw new \Exception('No objects exist in the database');
+        }
+        
+        foreach($rows as $row){
+            $returnArray[] = $this->convertArrayToObject($row);
+        }
+        
+        return $returnArray;
     }
 
     /**
