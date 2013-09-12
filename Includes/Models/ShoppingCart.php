@@ -267,9 +267,10 @@ class ShoppingCart
         foreach ($this->getAllSalesItems() as $salesItem) {
             /** @var \Object\SalesItem $salesItem */
 
-            $purchasePrice = $salesItem->getPurchasePrice();
+            $itemTotalCents = $salesItem->getPurchasePrice()->getCents() * $salesItem->getQuantity();
+            
 
-            $subtotal->add($purchasePrice->multiply($salesItem->getQuantity()));
+            $subtotal = Currency::createFromCents($subtotal->getCents() + $itemTotalCents);
         }
 
         return $subtotal;
@@ -283,7 +284,7 @@ class ShoppingCart
      */
     public function getPreShippingTotal()
     {
-        return $this->getSubtotal()->add($this->getCouponDiscount());
+        return Currency::createFromCents($this->getSubtotal()->getCents() + $this->getCouponDiscount()->getCents());
     }
 
     /**
@@ -305,8 +306,9 @@ class ShoppingCart
                 $shipping = new Currency(0);
             }
         }
+        
 
-        return $subtotal->add($shipping);
+        return Currency::createFromCents($subtotal->getCents() + $shipping->getCents());
     }
 
     /**

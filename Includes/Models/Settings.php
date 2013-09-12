@@ -220,17 +220,15 @@ SQL
      */
     public function getItemCurrentPrice($baseRetail, $category)
     {
-        $currentPrice = clone $baseRetail;
-
         switch ($category) {
             case 'Level1':
-                $currentPrice->add($this->getLevel1());
+                $currentPrice = Currency::createFromCents($baseRetail->getCents() + $this->getLevel1()->getCents());
                 break;
             case 'Level2':
-                $currentPrice->add($this->getLevel2());
+                $currentPrice = Currency::createFromCents($baseRetail->getCents() + $this->getLevel2()->getCents());
                 break;
             case 'Level3':
-                $currentPrice->add($this->getLevel3());
+                $currentPrice = Currency::createFromCents($baseRetail->getCents() + $this->getLevel3()->getCents());
                 break;
             case 'Vault':
             case 'Default':
