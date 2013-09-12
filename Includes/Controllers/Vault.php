@@ -15,7 +15,7 @@ if (!$layout->isPageCached()) {
     $items = $itemsFactory->getVault();
 
     foreach($items as $item){
-        $category = $settings->getItemCategory($item);
+        $category = $settings->getItemCategory($item->getDisplayDate(), $item->getTotalSold(), $item->getSalesLimit());
         $itemsDisplay[] = [
             'URLName' => $item->getURLName(),
             'name' => $item->getName(),

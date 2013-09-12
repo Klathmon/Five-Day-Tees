@@ -18,7 +18,7 @@ if (!$template->isPageCached()) {
         /* If there is no articleID set, set it to the first article's ID */
         $articleID = (!is_null($request->get(2)) ? Sanitize::cleanInteger($request->get(2)) : $item->getFirstArticle()->getID());
 
-        $category = $settings->getItemCategory($item);
+        $category = $settings->getItemCategory($item->getDisplayDate(), $item->getTotalSold(), $item->getSalesLimit());
 
         $template->assign('name', $item->getName());
         $template->assign('displayDate', $item->getDisplayDate());

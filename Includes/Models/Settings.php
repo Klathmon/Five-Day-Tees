@@ -214,7 +214,7 @@ SQL
      * Returns the item's current price based on it's category
      *
      * @param Currency $baseRetail
-     * @param string $category
+     * @param string   $category
      *
      * @return Currency
      */
@@ -253,27 +253,26 @@ SQL
      * Level3   In the store, the highest price items
      * Vault    Similar to disabled, When a item's total sold is >= the sales limit
      *
-     * @param \Object\Item $item
+     *
+     * @param DateTime $displayDate
+     * @param int      $totalSold
+     * @param int      $salesLimit
      *
      * @return string
      */
-    public function getItemCategory($item)
+    public function getItemCategory($displayDate, $totalSold, $salesLimit)
     {
+
         $dates       = $this->getFeaturedDates();
-        $displayDate = $item->getDisplayDate()->format('z');
+        $displayDate = $displayDate->format('z');
 
         $oldestDate = $dates[0]->format('z');
         $olderDate  = $dates[1]->format('z');
         $newerDate  = $dates[2]->format('z');
         $newestDate = $dates[3]->format('z');
-        
-        $totalSold = 0;
-        
-        foreach($item->getArticles() as $article){
-            $totalSold += $article->getNumberSold();
-        }
 
-        if ($totalSold >= $item->getSalesLimit()) {
+
+        if ($totalSold >= $salesLimit) {
             $category = 'Vault';
         } elseif ($displayDate <= $oldestDate) {
             $category = 'Level3';
