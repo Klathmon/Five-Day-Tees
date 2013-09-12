@@ -97,12 +97,17 @@ class ShoppingCart
 
     /**
      * Saves the given SalesItem to the session
+     * If the quantity is 0 or less then it deletes it (fixes a bug where people could set their quantities to negative)
      *
      * @param SalesItem $salesItem
      */
     public function persistSalesItem(SalesItem $salesItem)
     {
-        $this->storageArray['SalesItems'][$salesItem->getID()] = $salesItem;
+        if ($salesItem->getQuantity() <= 0) {
+            $this->deleteSalesItemByObject($salesItem);
+        }else{
+            $this->storageArray['SalesItems'][$salesItem->getID()] = $salesItem;
+        }
     }
 
     /**
@@ -114,6 +119,20 @@ class ShoppingCart
     public function deleteSalesItem($articleID, $size)
     {
         $key = $this->salesItemFactory->getKey($articleID, $size);
+
+        if (array_key_exists($key, $this->storageArray['SalesItems'])) {
+            unset($this->storageArray['SalesItems'][$key]);
+        }
+    }
+
+    /**
+     * Deletes the SalesItem by it's Object
+     *
+     * @param SalesItem $salesItem
+     */
+    public function deleteSalesItemByObject($salesItem)
+    {
+        $key = $salesItem->getID();
 
         if (array_key_exists($key, $this->storageArray['SalesItems'])) {
             unset($this->storageArray['SalesItems'][$key]);
@@ -268,7 +287,7 @@ class ShoppingCart
             /** @var \Object\SalesItem $salesItem */
 
             $itemTotalCents = $salesItem->getPurchasePrice()->getCents() * $salesItem->getQuantity();
-            
+
 
             $subtotal = Currency::createFromCents($subtotal->getCents() + $itemTotalCents);
         }
@@ -306,7 +325,7 @@ class ShoppingCart
                 $shipping = new Currency(0);
             }
         }
-        
+
 
         return Currency::createFromCents($subtotal->getCents() + $shipping->getCents());
     }
