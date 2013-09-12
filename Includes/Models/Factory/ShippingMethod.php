@@ -9,12 +9,18 @@ namespace Factory;
 use Currency;
 use \PDO;
 
+/**
+ * Class ShippingMethod
+ *
+ * @method \Object\ShippingMethod getByID
+ */
 class ShippingMethod extends FactoryBase implements FactoryInterface
 {
 
     /**
      * @param string $name
      *
+     * @throws \Exception
      * @return \Object\ShippingMethod
      */
     public function getByName($name)
