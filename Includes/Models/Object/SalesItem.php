@@ -10,6 +10,8 @@ use Currency;
 
 class SalesItem extends Design implements ObjectInterface
 {
+    /** @var int */
+    protected $ID;
     /** @var Article */
     protected $article;
     /** @var Product */
@@ -20,10 +22,12 @@ class SalesItem extends Design implements ObjectInterface
     protected $quantity;
     /** @var Currency */
     protected $purchasePrice;
+    /** @var int */
+    protected $totalSold;
 
     public function getID()
     {
-        return $this->getArticle()->getID() . '|' . $this->getSize();
+        return $this->ID;
     }
 
     /**
@@ -80,5 +84,13 @@ class SalesItem extends Design implements ObjectInterface
     public function addOne()
     {
         $this->setQuantity($this->getQuantity() + 1);
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalSold()
+    {
+        return $this->totalSold;
     }
 }

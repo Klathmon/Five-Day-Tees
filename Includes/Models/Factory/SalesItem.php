@@ -31,6 +31,14 @@ class SalesItem extends Design implements FactoryInterface
         $this->productFactory = new Product($database);
     }
 
+    /**
+     * @param int    $articleID
+     * @param string $size
+     * @param int    $quantity
+     *
+     * @return \Object\SalesItem
+     * @throws \Exception
+     */
     public function create($articleID = null, $size = null, $quantity = null)
     {
 
@@ -58,7 +66,7 @@ class SalesItem extends Design implements FactoryInterface
         );
 
         $purchasePrice = $this->settings->getItemCurrentPrice(new Currency($results['baseRetail']), $category);
-        
+
         if (in_array(strtolower($category), ['vault', 'queue', 'disabled'])) {
             throw new Exception('You can\' sell that shirt!');
         } elseif (stripos($results['sizesAvailable'], $size) === false) {
@@ -70,13 +78,20 @@ class SalesItem extends Design implements FactoryInterface
 
 
         $bigArray                  = $parsedArray['design'];
+        $bigArray['ID']            = $this->getKey($results['articleID'], $size);
         $bigArray['article']       = $this->articleFactory->convertArrayToObject(reset($parsedArray['articles']));
         $bigArray['product']       = $this->productFactory->convertArrayToObject(reset($parsedArray['products']));
         $bigArray['size']          = $size;
         $bigArray['quantity']      = $quantity;
         $bigArray['purchasePrice'] = $purchasePrice;
+        $bigArray['totalSold']     = $results['totalSold'];
 
         return $this->convertArrayToObject($bigArray);
+    }
+
+    public function getKey($articleID, $size)
+    {
+        return implode('|', [$articleID, $size]);
     }
 
 }
