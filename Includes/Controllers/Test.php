@@ -10,4 +10,6 @@ $settings = new Settings($database, $config);
 
 $salesItemFactory = new \Factory\SalesItem($database, $settings);
 
-$salesItemFactory->create('59', 'XL', 1);
+$salesItem = $salesItemFactory->create(12101407, 'XL', 1);
+
+var_dump($salesItem);

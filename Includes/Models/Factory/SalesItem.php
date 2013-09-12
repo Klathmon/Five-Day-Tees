@@ -7,19 +7,22 @@
 namespace Factory;
 
 use Currency;
+use DateTime;
+use Exception;
 use PDO;
 use Settings;
 
 class SalesItem extends Design implements FactoryInterface
 {
+    use SQLTrait;
+
     /** @var Settings */
-    protected $settings;
+    private $settings;
     /** @var Article */
     protected $articleFactory;
     /** @var Product */
     protected $productFactory;
-    
-    
+
     public function __construct(PDO $database, Settings $settings)
     {
         parent::__construct($database);
@@ -28,27 +31,52 @@ class SalesItem extends Design implements FactoryInterface
         $this->productFactory = new Product($database);
     }
 
-    protected function convertObjectToArray($object)
+    public function create($articleID = null, $size = null, $quantity = null)
     {
-        $array = parent::convertObjectToArray($object);
 
-        /** @var Currency $purchasePrice */
-        $purchasePrice = $array['purchasePrice'];
+        $sql       = $this->selectItemSQL
+            . ', itemsSold.totalSold '
+            . $this->fromDesignSQL
+            . $this->itemCountJoinSQL
+            . 'WHERE Article.ID = :ID LIMIT 1';
+        $statement = $this->database->prepare($sql);
 
-        $array['article'] = $this->articleFactory->convertObjectToArray($array['article']);
-        $array['product'] = $this->productFactory->convertObjectToArray($array['product']);
-        $array['purchasePrice'] = $purchasePrice->getDecimal();
+        $statement->bindValue(':ID', $articleID, PDO::PARAM_INT);
+
+        $statement->execute();
+
+        $results = $statement->fetch(PDO::FETCH_ASSOC);
+
+        if ($results == false) {
+            throw new Exception('There is no Article with that ID!');
+        }
+
+        $category = $this->settings->getItemCategory(
+            DateTime::createFromFormat('Y-m-d', $results['displayDate']),
+            $results['totalSold'],
+            $results['salesLimit']
+        );
+
+        $purchasePrice = $this->settings->getItemCurrentPrice(new Currency($results['baseRetail']), $category);
         
-        return $array;
-    }
+        if (in_array(strtolower($category), ['vault', 'queue', 'disabled'])) {
+            throw new Exception('You can\' sell that shirt!');
+        } elseif (stripos($results['sizesAvailable'], $size) === false) {
+            throw new Exception('That size does not exist!');
+        }
 
-    protected function convertArrayToObject($array)
-    {
-        $array['purchasePrice'] = new Currency($array['purchasePrice']);
-        $array['article'] = $this->articleFactory->convertArrayToObject($array['article']);
-        $array['product'] = $this->productFactory->convertArrayToObject($array['product']);
-        
-        return parent::convertArrayToObject($array);
+        $parsedArray = $this->parseResults([$results]);
+        $parsedArray = reset($parsedArray);
+
+
+        $bigArray                  = $parsedArray['design'];
+        $bigArray['article']       = $this->articleFactory->convertArrayToObject(reset($parsedArray['articles']));
+        $bigArray['product']       = $this->productFactory->convertArrayToObject(reset($parsedArray['products']));
+        $bigArray['size']          = $size;
+        $bigArray['quantity']      = $quantity;
+        $bigArray['purchasePrice'] = $purchasePrice;
+
+        return $this->convertArrayToObject($bigArray);
     }
 
 }
