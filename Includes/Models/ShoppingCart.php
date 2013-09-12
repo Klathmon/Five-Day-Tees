@@ -1,104 +1,128 @@
 <?php
-
 /**
  * Created by: Gregory Benner.
  * Date: 9/4/13
  */
 
-use \Entity\CartItem;
-use \Entity\Coupon;
-use \Entity\ShippingMethod;
+use Object\Coupon;
+use Object\SalesItem;
+use Object\ShippingMethod;
 
 class ShoppingCart
 {
+    /** @var PDO */
+    private $database;
     /** @var Settings */
     private $settings;
+    /** @var \Factory\SalesItem */
+    private $salesItemFactory;
     /** @var array */
-    public $sessionArray;
+    private $storageArray;
 
-    public function __construct(Settings $settings)
+    public function __construct(PDO $database, Settings $settings)
     {
+        /* Start a session if one is not already started */
         if (session_id() == '') {
             session_start();
         }
 
-        $this->settings = $settings;
+        $this->settings         = $settings;
+        $this->salesItemFactory = new \Factory\SalesItem($database, $settings);
 
         if (!array_key_exists('ShoppingCart', $_SESSION)) {
-            // if the shopping cart array does not exist in the session, initialize it using emptyCart()
+            /* if the shopping cart array does not exist in the session, initialize it using emptyCart() */
             $this->emptyCart();
         } else {
-            //The cart element exists, bring it into the object
-            $this->sessionArray = $_SESSION['ShoppingCart'];
+            /* The cart element exists, bring it into the object */
+            $this->storageArray = $_SESSION['ShoppingCart'];
         }
     }
 
     /**
-     * Returns an array of cart items
+     * Returns an array all of the SalesItems
      *
-     * @return \Entity\CartItem[]
+     * @return SalesItem[]
+     */
+    public function getAllSalesItems()
+    {
+        return $this->storageArray['SalesItems'];
+    }
+
+    /**
+     * Returns a single SalesItem by it's key-parts
+     *
+     * @param $articleID
+     * @param $size
      *
      * @throws Exception
+     * @return SalesItem;
      */
-    public function getCartItems()
+    public function getSalesItem($articleID, $size)
     {
-        if (array_key_exists('CartItems', $this->sessionArray)) {
-            return $this->sessionArray['CartItems'];
-        } else {
-            throw new Exception('CartItem array does not exist');
-        }
+        $key = $this->salesItemFactory->getKey($articleID, $size);
+
+        return $this->getSalesItemByKey($key);
     }
 
     /**
-     * Returns a single cart item by it's ID
+     * Returns a single SalesItem by it's key
      *
-     * @param string $ID This is actually the Item's ID + the size (ex: 164XL or $ID . $size)
+     * @param $key
      *
-     * @return CartItem;
-     *
+     * @return SalesItem
      * @throws Exception
      */
-    public function getByID($ID)
+    public function getSalesItemByKey($key)
     {
-        if (array_key_exists($ID, $this->sessionArray['CartItems'])) {
-            return $this->sessionArray['CartItems'][$ID];
+        $salesItemArray = $this->getAllSalesItems();
+
+        if (array_key_exists($key, $salesItemArray)) {
+            return $salesItemArray[$key];
         } else {
-            throw new Exception('CartItem does not exist');
+            throw new Exception('No SalesItem with that ID exists');
         }
     }
 
     /**
-     * Deletes the given cart item
-     *
-     * @param CartItem $cartItem
+     * @param int    $articleID
+     * @param string $size
+     * @param int    $quantity
      */
-    public function deleteCartItem(CartItem $cartItem)
+    public function addSalesItem($articleID, $size, $quantity)
     {
-        if (array_key_exists($cartItem->getID(), $this->sessionArray['CartItems'])) {
-            unset($this->sessionArray['CartItems'][$cartItem->getID()]);
+        $salesItem = $this->salesItemFactory->create($articleID, $size, $quantity);
+
+        $this->persistSalesItem($salesItem);
+    }
+
+    /**
+     * Saves the given SalesItem to the session
+     *
+     * @param SalesItem $salesItem
+     */
+    public function persistSalesItem(SalesItem $salesItem)
+    {
+        $this->storageArray['SalesItems'][$salesItem->getID()] = $salesItem;
+    }
+
+    /**
+     * Deletes the SalesItem if it exists in the database.
+     *
+     * @param int    $articleID
+     * @param string $size
+     */
+    public function deleteSalesItem($articleID, $size)
+    {
+        $key = $this->salesItemFactory->getKey($articleID, $size);
+
+        if (array_key_exists($key, $this->storageArray['SalesItems'])) {
+            unset($this->storageArray['SalesItems'][$key]);
         }
     }
 
-    /**
-     * Persist a cart item to the session array
-     *
-     * @param CartItem $cartItem
-     */
-    public function persist(CartItem $cartItem)
-    {
-        $this->sessionArray['CartItems'][$cartItem->getID()] = $cartItem;
-    }
 
     /**
-     * Empties the shopping cart of everything. Items, coupons, and shipping stuff.
-     */
-    public function emptyCart()
-    {
-        $this->sessionArray = ['CartItems' => [], 'Coupon' => null, 'ShippingMethod' => null];
-    }
-
-    /**
-     * Returns the given coupon, if there is none throws an exception
+     * Returns the coupon currently applied, if there is none it throws an exception
      *
      * @return Coupon;
      *
@@ -106,32 +130,42 @@ class ShoppingCart
      */
     public function getCoupon()
     {
-        if (array_key_exists('Coupon', $this->sessionArray)) {
-            $coupon = $this->sessionArray['Coupon'];
-            if (!is_null($coupon)) {
-                return $coupon;
-            } else {
-                throw new Exception('No coupon found');
-            }
+        $coupon = $this->storageArray['Coupon'];
+        if (!is_null($coupon)) {
+            return $coupon;
         } else {
             throw new Exception('No coupon found');
         }
     }
 
     /**
-     * Set the coupon to the given entity
+     * Persist the given coupon to cart
      *
      * @param Coupon $coupon
      *
      * @throws Exception
      */
-    public function setCoupon(Coupon $coupon)
+    public function persistCoupon(Coupon $coupon)
     {
         if ($coupon->getUsesRemaining() > 0) {
-            $this->sessionArray['Coupon'] = $coupon;
+            $this->storageArray['Coupon'] = $coupon;
         } else {
             throw new Exception('Coupon does not have enough uses left.');
         }
+    }
+
+    /**
+     * Sets the Coupon by it's code
+     *
+     * @param string $code
+     */
+    public function setCoupon($code)
+    {
+        $couponFactory = new \Factory\Coupon($this->database);
+
+        $coupon = $couponFactory->getByCode($code);
+
+        $this->persistCoupon($coupon);
     }
 
     /**
@@ -139,61 +173,64 @@ class ShoppingCart
      */
     public function deleteCoupon()
     {
-        $this->sessionArray['Coupon'] = null;
-        unset($this->sessionArray['Coupon']);
+        unset($this->storageArray['Coupon']);
+        $this->storageArray['Coupon'] = null;
     }
 
     /**
      * Returns the exact amount that the coupon discounts from the cart
      *
-     * @return float|int
+     * @return Currency
      */
     public function getCouponDiscount()
     {
         try{
-            $coupon = $this->getCoupon();
-            if ($coupon->isPercent()) {
-                $percentage = $coupon->getAmount() / 100;
-
-                $discount = ($this->getSubtotal() * $percentage) * -1;
-            } else {
-                $amount = $coupon->getAmount();
-
-                $discount = $amount * -1;
-            }
+            $discount = $this->getCoupon()->getAmount();
         } catch(Exception $e){
-            $discount = 0;
+            $discount = new Currency('0.00');
         }
 
         return $discount;
     }
 
+
     /**
-     * Set the shipping method
+     * Set the ShippingMethod by it's ID
      *
-     * @param ShippingMethod $shippingMethod
+     * @param $ID
+     *
      */
-    public function setShippingMethod(ShippingMethod $shippingMethod)
+    public function setShippingMethod($ID)
     {
-        $this->sessionArray['ShippingMethod'] = $shippingMethod;
+        $shippingMethodFactory = new \Factory\ShippingMethod($this->database);
+
+        $shippingMethod = $shippingMethodFactory->getByID($ID);
+
+        $this->persistShippingMethod($shippingMethod);
     }
 
     /**
-     * Returns the Shipping Method selected
+     * Sets the shipping method to the given entity
      *
-     * @return \Entity\ShippingMethod
+     * @param ShippingMethod $shippingMethod
+     */
+    public function persistShippingMethod(ShippingMethod $shippingMethod)
+    {
+        $this->storageArray['ShippingMethod'] = $shippingMethod;
+    }
+
+    /**
+     * Returns the selected ShippingMethod
+     *
+     * @return \Object\ShippingMethod
      *
      * @throws Exception
      */
     public function getShippingMethod()
     {
-        if (array_key_exists('ShippingMethod', $this->sessionArray)) {
-            $shippingMethod = $this->sessionArray['ShippingMethod'];
-            if (!is_null($shippingMethod)) {
-                return $shippingMethod;
-            } else {
-                throw new Exception('No Shipping Method found', 1);
-            }
+        $shippingMethod = $this->storageArray['ShippingMethod'];
+        if (!is_null($shippingMethod)) {
+            return $shippingMethod;
         } else {
             throw new Exception('No Shipping Method found', 1);
         }
@@ -204,25 +241,35 @@ class ShoppingCart
      */
     public function deleteShippingMethod()
     {
-        $this->sessionArray['ShippingMethod'] = null;
-        unset($this->sessionArray['ShippingMethod']);
+        unset($this->storageArray['ShippingMethod']);
+        $this->storageArray['ShippingMethod'] = null;
+    }
+
+
+    /**
+     * Empties the shopping cart of everything. SalesItems, Coupons, and ShippingMethods and re-initializes everything.
+     */
+    public function emptyCart()
+    {
+        $this->storageArray = ['SalesItems' => [], 'Coupon' => null, 'ShippingMethod' => null];
     }
 
     /**
      * Returns the SubTotal.
      * The SubTotal is the sum of the cart items and nothing else (no coupons or shipping stuff)
      *
-     * @return float|int
+     * @return Currency
      */
     public function getSubtotal()
     {
-        $subtotal = 0;
+        $subtotal = new Currency(0);
 
-        foreach ($this->getCartItems() as $cartItem) {
-            /** @var \Entity\CartItem $cartItem */
-            $itemTotal = $this->settings->getItemCurrentPrice($cartItem->item) * $cartItem->getQuantity();
+        foreach ($this->getAllSalesItems() as $salesItem) {
+            /** @var \Object\SalesItem $salesItem */
 
-            $subtotal += $itemTotal;
+            $purchasePrice = $salesItem->getPurchasePrice();
+
+            $subtotal->add($purchasePrice->multiply($salesItem->getQuantity()));
         }
 
         return $subtotal;
@@ -230,18 +277,20 @@ class ShoppingCart
 
     /**
      * Returns the SubTotal (before shipping is calculated)
+     * This includes the Subtotal, and the coupon discount
      *
-     * @return float|int
+     * @return Currency
      */
     public function getPreShippingTotal()
     {
-        return $this->getSubtotal() + $this->getCouponDiscount();
+        return $this->getSubtotal()->add($this->getCouponDiscount());
     }
 
     /**
      * Returns the full total for the cart, shipping, coupons, and items all included
      *
-     * @return float|int
+     * @throws Exception
+     * @return Currency
      */
     public function getFinalTotal()
     {
@@ -253,11 +302,11 @@ class ShoppingCart
             if ($e->getCode() == 2) {
                 throw new Exception('Total Price Too High!');
             } else {
-                $shipping = 0;
+                $shipping = new Currency(0);
             }
         }
 
-        return $subtotal + $shipping;
+        return $subtotal->add($shipping);
     }
 
     /**
@@ -267,6 +316,6 @@ class ShoppingCart
     {
         $_SESSION['ShoppingCart'] = [];
 
-        $_SESSION['ShoppingCart'] = $this->sessionArray;
+        $_SESSION['ShoppingCart'] = $this->storageArray;
     }
 }
