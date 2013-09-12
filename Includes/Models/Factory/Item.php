@@ -21,6 +21,8 @@ use Settings;
  */
 class Item extends Design implements FactoryInterface
 {
+    use SQLTrait;
+    
     /** @var Settings */
     protected $settings;
     /** @var Article */
@@ -28,33 +30,7 @@ class Item extends Design implements FactoryInterface
     /** @var Product */
     protected $productFactory;
 
-    protected $queryPrefix
-        = <<<SQL
-SELECT 
-    Design.ID AS designID, Design.name, Design.displayDate, Design.designImageURL, Design.salesLimit, Design.votes,
-    Article.ID AS articleID, Article.lastUpdated, Article.description, Article.articleImageURL, Article.numberSold, Article.baseRetail,
-    Product.ID AS productID, Product.cost, Product.type, Product.sizesAvailable
-  FROM Design
-    LEFT JOIN Article ON (Design.ID = Article.designID)
-    LEFT JOIN Product ON (Article.productID = Product.ID)
 
-SQL;
-
-    protected $itemCountJoin
-        = <<<SQL
-LEFT JOIN (
-    SELECT designID, SUM(numberSold) AS totalSold 
-        FROM Article 
-        GROUP BY designID
-    ) AS itemsSold ON (Design.ID = itemsSold.designID)
-SQL;
-
-    protected $querySuffix
-        = <<<SQL
-
-ORDER BY Design.displayDate DESC
-
-SQL;
 
 
     public function __construct(PDO $database, Settings $settings)
@@ -68,11 +44,12 @@ SQL;
     /**
      * @param int $designID
      *
+     * @throws \Exception
      * @return \Object\Item
      */
     public function getByID($designID)
     {
-        $sql = $this->queryPrefix . 'WHERE Design.ID=:ID';
+        $sql = $this->selectItemSQL . $this->fromDesignSQL . 'WHERE Design.ID=:ID';
 
         $statement = $this->database->prepare($sql);
         $statement->bindValue(':ID', $designID, PDO::PARAM_INT);
@@ -91,13 +68,14 @@ SQL;
     }
 
     /**
-     * @param $name
+     * @param string $name
      *
+     * @throws \Exception
      * @return \Object\Item
      */
     public function getByName($name)
     {
-        $sql = $this->queryPrefix . 'WHERE Design.name = :name';
+        $sql = $this->selectItemSQL . $this->fromDesignSQL . 'WHERE Design.name = :name';
 
         $statement = $this->database->prepare($sql);
         $statement->bindValue(':name', $name, PDO::PARAM_STR);
@@ -119,7 +97,7 @@ SQL;
      */
     public function getAll()
     {
-        $parsedArray = $this->parseResults($this->database->query($this->queryPrefix . $this->querySuffix)->fetchAll(PDO::FETCH_ASSOC));
+        $parsedArray = $this->parseResults($this->database->query($this->selectItemSQL . $this->fromDesignSQL . $this->orderByDisplayDateSQL)->fetchAll(PDO::FETCH_ASSOC));
 
         foreach ($parsedArray as $itemArray) {
             $items[] = $this->convertArrayToObject($itemArray);
@@ -137,7 +115,7 @@ SQL;
     public function getQueue($start = 0, $limit = 100)
     {
         $statement = $this->database->prepare(
-            $this->queryPrefix . 'WHERE Design.displayDate >= :FutureDate ' . $this->querySuffix . 'Limit :Start, :Amount'
+            $this->selectItemSQL . $this->fromDesignSQL . 'WHERE Design.displayDate >= :FutureDate ' . $this->orderByDisplayDateSQL . 'Limit :Start, :Amount'
         );
 
         $futureDate = $this->settings->getFeaturedDates()[3];
@@ -160,7 +138,7 @@ SQL;
      */
     public function getFeatured()
     {
-        $statement = $this->database->prepare($this->queryPrefix . 'WHERE Design.displayDate > :PastDate AND Design.displayDate < :FutureDate' . $this->querySuffix);
+        $statement = $this->database->prepare($this->selectItemSQL . $this->fromDesignSQL . 'WHERE Design.displayDate > :PastDate AND Design.displayDate < :FutureDate' . $this->orderByDisplayDateSQL);
 
         $dates = $this->settings->getFeaturedDates();
 
@@ -188,8 +166,8 @@ SQL;
      */
     public function getStore($start = 0, $limit = 50)
     {
-        $query     = $this->queryPrefix . $this->itemCountJoin
-            . 'WHERE Design.displayDate <= :PastDate AND itemsSold.totalSold < Design.salesLimit' . $this->querySuffix . 'Limit :Start, :Amount';
+        $query     = $this->selectItemSQL . $this->fromDesignSQL . $this->itemCountJoinSQL
+            . 'WHERE Design.displayDate <= :PastDate AND itemsSold.totalSold < Design.salesLimit' . $this->orderByDisplayDateSQL . 'Limit :Start, :Amount';
         $statement = $this->database->prepare($query);
 
         $pastDate = $this->settings->getFeaturedDates()[0];
@@ -215,8 +193,8 @@ SQL;
      */
     public function getVault($start = 0, $limit = 50)
     {
-        $query     = $this->queryPrefix . $this->itemCountJoin
-            . 'WHERE itemsSold.totalSold >= Design.salesLimit' . $this->querySuffix . 'Limit :Start, :Amount';
+        $query     = $this->selectItemSQL . $this->fromDesignSQL . $this->itemCountJoinSQL
+            . 'WHERE itemsSold.totalSold >= Design.salesLimit' . $this->orderByDisplayDateSQL . 'Limit :Start, :Amount';
         $statement = $this->database->prepare($query);
 
         $statement->bindValue('Start', $start, PDO::PARAM_INT);
@@ -250,9 +228,9 @@ SQL;
     public function create(){ }
 
     /** Stub, don't use */
-    protected function convertObjectToArray($object){ }
+    public function convertObjectToArray($object){ }
 
-    protected function convertArrayToObject($array)
+    public function convertArrayToObject($array)
     {
         $itemArray = $array['design'];
         
