@@ -8,8 +8,6 @@ namespace Factory;
 
 use \Currency;
 use PDO;
-use ReflectionClass;
-use ReflectionProperty;
 
 class Coupon extends FactoryBase implements FactoryInterface
 {
