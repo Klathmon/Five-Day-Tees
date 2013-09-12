@@ -18,12 +18,10 @@ use Settings;
  * This class is a "Wrapper" for a few classes. It represents a distinct Design and all it's associated information (Articles and Products)
  * This is mainly used for displaying "previews" of all the shirts in our system (for example, the store page)
  */
-class Item extends FactoryBase implements FactoryInterface
+class Item extends Design implements FactoryInterface
 {
     /** @var Settings */
     protected $settings;
-    /** @var Design */
-    protected $designFactory;
     /** @var Article */
     protected $articleFactory;
     /** @var Product */
@@ -62,7 +60,6 @@ SQL;
     {
         parent::__construct($database);
         $this->settings       = $settings;
-        $this->designFactory  = new Design($database);
         $this->articleFactory = new Article($database);
         $this->productFactory = new Product($database);
     }
@@ -223,7 +220,6 @@ SQL;
 
     public function persist($object)
     {
-        $this->designFactory->persist($object->getDesign());
 
         foreach ($object->getArticles() as $article) {
             $this->articleFactory->persist($article);
@@ -233,28 +229,29 @@ SQL;
             $this->productFactory->persist($product);
         }
 
-        unset($object);
+
+        parent::persist($object);
     }
 
     /** Stub, don't use */
     public function create(){ }
 
     /** Stub, don't use */
-    protected function convertObjectToArray($object){ }
+    public function convertObjectToArray($object){ }
 
-    protected function convertArrayToObject($array)
+    public function convertArrayToObject($array)
     {
-        $design = $this->designFactory->convertArrayToObject($array['design']);
-
+        $itemArray = $array['design'];
+        
         foreach ($array['articles'] as $articleArray) {
-            $articles[$articleArray['ID']] = $this->articleFactory->convertArrayToObject($articleArray);
+            $itemArray['articles'][$articleArray['ID']] = $this->articleFactory->convertArrayToObject($articleArray);
         }
 
         foreach ($array['products'] as $productArray) {
-            $products[$productArray['ID']] = $this->productFactory->convertArrayToObject($productArray);
+            $itemArray['products'][$productArray['ID']] = $this->productFactory->convertArrayToObject($productArray);
         }
-
-        return parent::convertArrayToObject(['design' => $design, 'articles' => $articles, 'products' => $products]);
+        
+        return parent::convertArrayToObject($itemArray);
     }
 
     private function parseResults($array)

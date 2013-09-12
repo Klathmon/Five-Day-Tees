@@ -18,14 +18,13 @@ if (!$template->isPageCached()) {
         /* If there is no articleID set, set it to the first article's ID */
         $articleID = (!is_null($request->get(2)) ? Sanitize::cleanInteger($request->get(2)) : $item->getFirstArticle()->getID());
 
-        $design   = $item->getDesign();
         $category = $settings->getItemCategory($item);
 
-        $template->assign('name', $design->getName());
-        $template->assign('displayDate', $design->getDisplayDate());
-        $template->assign('designImageURL', $design->getFormattedDesignImage(800, 800, 'jpg'));
-        $template->assign('salesLimit', $design->getSalesLimit());
-        $template->assign('votes', $design->getVotes());
+        $template->assign('name', $item->getName());
+        $template->assign('displayDate', $item->getDisplayDate());
+        $template->assign('designImageURL', $item->getFormattedDesignImage(800, 800, 'jpg'));
+        $template->assign('salesLimit', $item->getSalesLimit());
+        $template->assign('votes', $item->getVotes());
         $template->assign('URLName', $item->getURLName());
         $template->assign('permalink', $item->getPermalink());
 

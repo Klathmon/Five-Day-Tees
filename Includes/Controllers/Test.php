@@ -6,8 +6,10 @@
 
 echo 'Test Page!';
 
-$shippingMethodFactory = new \Factory\ShippingMethod($database);
+$settings = new Settings($database, $config);
 
-$shippingMethods = $shippingMethodFactory->getAll();
+$itemFactory = new \Factory\Item($database, $settings);
 
-var_dump($shippingMethods);
+$items = $itemFactory->getFeatured();
+
+var_dump($items);

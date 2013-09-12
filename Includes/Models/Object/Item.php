@@ -6,27 +6,12 @@
 
 namespace Object;
 
-class Item implements ObjectInterface
+class Item extends Design implements ObjectInterface
 {
-    /** @var Design */
-    protected $design;
     /** @var Article[] */
     protected $articles;
     /** @var Product[] */
     protected $products;
-
-    public function getID()
-    {
-        // TODO: Implement getID() method.
-    }
-
-    /**
-     * @return \Object\Design
-     */
-    public function getDesign()
-    {
-        return $this->design;
-    }
 
     /**
      * @return \Object\Article[]
@@ -94,7 +79,7 @@ class Item implements ObjectInterface
      */
     public function getURLName()
     {
-        return urlencode(str_replace(' ', '_', $this->getDesign()->getName()));
+        return urlencode(str_replace(' ', '_', $this->getName()));
     }
 
     /**

@@ -17,10 +17,10 @@ if (!$layout->isPageCached()) {
         $category = $settings->getItemCategory($item);
         $itemsDisplay[] = [
             'URLName' => $item->getURLName(),
-            'name' => $item->getDesign()->getName(),
+            'name' => $item->getName(),
             'description' => $item->getFirstArticle()->getDescription(),
             'price' => $settings->getItemCurrentPrice($item->getFirstArticle()->getBaseRetail(), $category)->getNiceFormat(),
-            'designImageURL' => $item->getDesign()->getFormattedDesignImage(150, 150, 'jpg')
+            'designImageURL' => $item->getFormattedDesignImage(150, 150, 'jpg')
         ];
     }
 

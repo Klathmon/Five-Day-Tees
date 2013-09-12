@@ -260,7 +260,7 @@ SQL
     public function getItemCategory($item)
     {
         $dates       = $this->getFeaturedDates();
-        $displayDate = $item->getDesign()->getDisplayDate()->format('z');
+        $displayDate = $item->getDisplayDate()->format('z');
 
         $oldestDate = $dates[0]->format('z');
         $olderDate  = $dates[1]->format('z');
@@ -273,7 +273,7 @@ SQL
             $totalSold += $article->getNumberSold();
         }
 
-        if ($totalSold >= $item->getDesign()->getSalesLimit()) {
+        if ($totalSold >= $item->getSalesLimit()) {
             $category = 'Vault';
         } elseif ($displayDate <= $oldestDate) {
             $category = 'Level3';

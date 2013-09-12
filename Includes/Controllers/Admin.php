@@ -49,6 +49,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $article = $articleFactory->getByID(Sanitize::cleanInteger($_POST['articleID']));
             $articleFactory->delete($article);
             
+            //todo: try-catch to delete product and design as well
+            
             $response['status']  = 'OK';
             $response['message'] = 'Item Deleted!';
             break;
@@ -141,22 +143,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $items = $itemsFactory->getAll();
 
     foreach ($items as $item) {
-        $design = $item->getDesign();
         foreach ($item->getArticles() as $article) {
             $product        = $item->getProduct($article->getProductID());
             $displayItems[] = [
-                'designID'       => $design->getID(),
+                'designID'       => $item->getID(),
                 'articleID'      => $article->getID(),
                 'productID'      => $product->getID(),
-                'name'           => $design->getName(),
+                'name'           => $item->getName(),
                 'type'           => $product->getType(),
                 'description'    => $article->getDescription(),
                 'cost'           => $product->getCost()->getDecimal(),
                 'baseRetail'     => $article->getBaseRetail()->getDecimal(),
-                'displayDate'    => $design->getDisplayDate(),
-                'votes'          => $design->getVotes(),
+                'displayDate'    => $item->getDisplayDate(),
+                'votes'          => $item->getVotes(),
                 'numberSold'     => $article->getNumberSold(),
-                'salesLimit'     => $design->getSalesLimit(),
+                'salesLimit'     => $item->getSalesLimit(),
                 'sizesAvailable' => $product->getSizesAvailable()
             ];
         }
