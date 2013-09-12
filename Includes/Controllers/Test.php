@@ -8,8 +8,6 @@ echo 'Test Page!';
 
 $settings = new Settings($database, $config);
 
-$itemFactory = new \Factory\Item($database, $settings);
+$salesItemFactory = new \Factory\SalesItem($database, $settings);
 
-$items = $itemFactory->getFeatured();
-
-var_dump($items);
+$salesItemFactory->create('59', 'XL', 1);

@@ -6,6 +6,7 @@
 
 namespace Factory;
 
+use Exception;
 use PDO;
 use \Factory\Design;
 use \Factory\Article;
@@ -27,7 +28,7 @@ class Item extends Design implements FactoryInterface
     /** @var Product */
     protected $productFactory;
 
-    private $queryPrefix
+    protected $queryPrefix
         = <<<SQL
 SELECT 
     Design.ID AS designID, Design.name, Design.displayDate, Design.designImageURL, Design.salesLimit, Design.votes,
@@ -39,7 +40,7 @@ SELECT
 
 SQL;
 
-    private $itemCountJoin
+    protected $itemCountJoin
         = <<<SQL
 LEFT JOIN (
     SELECT designID, SUM(numberSold) AS totalSold 
@@ -48,7 +49,7 @@ LEFT JOIN (
     ) AS itemsSold ON (Design.ID = itemsSold.designID)
 SQL;
 
-    private $querySuffix
+    protected $querySuffix
         = <<<SQL
 
 ORDER BY Design.displayDate DESC
@@ -76,8 +77,14 @@ SQL;
         $statement = $this->database->prepare($sql);
         $statement->bindValue(':ID', $designID, PDO::PARAM_INT);
         $statement->execute();
+        
+        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+        
+        if($result == false){
+            throw new Exception('There are no items with that ID');
+        }
 
-        $array = $this->parseResults($statement->fetchAll(PDO::FETCH_ASSOC));
+        $array = $this->parseResults($result);
 
         return $this->convertArrayToObject(reset($array));
 
@@ -96,7 +103,13 @@ SQL;
         $statement->bindValue(':name', $name, PDO::PARAM_STR);
         $statement->execute();
 
-        $array = $this->parseResults($statement->fetchAll(PDO::FETCH_ASSOC));
+        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+
+        if($result == false){
+            throw new Exception('There are no items with that Name');
+        }
+
+        $array = $this->parseResults($result);
 
         return $this->convertArrayToObject(reset($array));
     }
@@ -254,7 +267,7 @@ SQL;
         return parent::convertArrayToObject($itemArray);
     }
 
-    private function parseResults($array)
+    protected function parseResults($array)
     {
         $return = [];
 
