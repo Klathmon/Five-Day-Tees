@@ -33,10 +33,25 @@ class Currency
     public function add(Currency $amount)
     {
         $this->cents += $amount->getCents();
+        
+        return $this;
     }
     
     public function subtract(Currency $amount)
     {
         $this->cents -= $amount->getCents();
+
+        return $this;
+    }
+    
+    public function multiply($integer)
+    {
+        if(is_int($integer)){
+            $this->cents *= $integer;
+
+            return $this;
+        }else{
+            throw new Exception('Must multiply by an integer!');
+        }
     }
 }
