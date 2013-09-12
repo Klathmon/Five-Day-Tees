@@ -78,6 +78,4 @@ class Coupon extends FactoryBase implements FactoryInterface
         
         return parent::convertArrayToObject($array);
     }
-
-
 }
