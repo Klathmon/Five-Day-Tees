@@ -61,7 +61,7 @@ class Design extends FactoryBase implements FactoryInterface
         return $design;
     }
 
-    public function convertObjectToArray($object)
+    protected function convertObjectToArray($object)
     {
         $array = parent::convertObjectToArray($object);
         
@@ -72,7 +72,7 @@ class Design extends FactoryBase implements FactoryInterface
         return $array;
     }
 
-    public function convertArrayToObject($array)
+    protected function convertArrayToObject($array)
     {
         $array['displayDate'] = DateTime::createFromFormat('Y-m-d', $array['displayDate']);
         

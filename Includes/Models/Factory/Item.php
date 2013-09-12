@@ -237,9 +237,9 @@ SQL;
     public function create(){ }
 
     /** Stub, don't use */
-    public function convertObjectToArray($object){ }
+    protected function convertObjectToArray($object){ }
 
-    public function convertArrayToObject($array)
+    protected function convertArrayToObject($array)
     {
         $itemArray = $array['design'];
         
