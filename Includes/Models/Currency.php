@@ -7,12 +7,24 @@
 
 class Currency
 {
+    const MULTIPLIER = 100;
+    
     /** @var int */
     private $cents;
     
     public function __construct($decimal)
     {
-        $this->cents = $decimal * 100;
+        $this->cents = self::convertDecimalToCents($decimal);
+    }
+    
+    public static function createFromCents($cents)
+    {
+        return new self(self::convertCentsToDecimal($cents));
+    }
+    
+    public static function createFromDecimal($decimal)
+    {
+        return new self(self::convertDecimalToCents($decimal));
     }
     
     public function getCents()
@@ -22,7 +34,7 @@ class Currency
     
     public function getDecimal()
     {
-        return (string)($this->cents / 100);
+        return self::convertCentsToDecimal($this->cents);
     }
     
     public function getNiceFormat()
@@ -30,28 +42,13 @@ class Currency
         return number_format($this->getDecimal(), 2);
     }
     
-    public function add(Currency $amount)
+    private static function convertCentsToDecimal($cents)
     {
-        $this->cents += $amount->getCents();
-        
-        return $this;
+        return $cents / self::MULTIPLIER;
     }
     
-    public function subtract(Currency $amount)
+    private static function convertDecimalToCents($decimal)
     {
-        $this->cents -= $amount->getCents();
-
-        return $this;
-    }
-    
-    public function multiply($integer)
-    {
-        if(is_int($integer)){
-            $this->cents *= $integer;
-
-            return $this;
-        }else{
-            throw new Exception('Must multiply by an integer!');
-        }
+        return $decimal * self::MULTIPLIER;
     }
 }
