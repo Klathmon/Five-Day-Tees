@@ -57,20 +57,21 @@ class Item extends Design implements ObjectInterface
         //Okay, this is terra-bad, but it's how i'm doing it now.
         //the first article will always be female (unless a female doesn't exist in which case it will pick the first available semi-randomly)
         $productID = null;
-        foreach($this->products as $product){
-            if($product->getType() == 'female'){
+        foreach ($this->products as $product) {
+            if ($product->getType() == 'female') {
                 $productID = $product->getID();
             }
         }
-        foreach($this->articles as $article){
-            if($article->getProductID() == $productID){
+        foreach ($this->articles as $article) {
+            if ($article->getProductID() == $productID) {
                 $returnArticle = $article;
             }
         }
-        
-        if($productID === null){
+
+        if ($productID === null) {
             $returnArticle = reset($this->articles);
         }
+
         return $returnArticle;
     }
 
@@ -85,7 +86,23 @@ class Item extends Design implements ObjectInterface
     /**
      * @return string
      */
-    public function getPermalink(){
+    public function getPermalink()
+    {
         return "//" . $_SERVER['HTTP_HOST'] . '/Item/' . $this->getURLName();
+    }
+
+    /**
+     * Returns the total number sold for this design/Item
+     * 
+     * @return int
+     */
+    public function getTotalSold()
+    {
+        $totalSold = 0;
+        foreach ($this->getArticles() as $article) {
+            $totalSold += $article->getNumberSold();
+        }
+
+        return $totalSold;
     }
 }
