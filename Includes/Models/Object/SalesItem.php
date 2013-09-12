@@ -24,6 +24,8 @@ class SalesItem extends Design implements ObjectInterface
     protected $purchasePrice;
     /** @var int */
     protected $totalSold;
+    /** @var string */
+    protected $category;
 
     public function getID()
     {
@@ -92,5 +94,13 @@ class SalesItem extends Design implements ObjectInterface
     public function getTotalSold()
     {
         return $this->totalSold;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCategory()
+    {
+        return $this->category;
     }
 }

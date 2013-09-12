@@ -85,6 +85,7 @@ class SalesItem extends Design implements FactoryInterface
         $bigArray['quantity']      = $quantity;
         $bigArray['purchasePrice'] = $purchasePrice;
         $bigArray['totalSold']     = $results['totalSold'];
+        $bigArray['category']      = $category;
 
         return $this->convertArrayToObject($bigArray);
     }
