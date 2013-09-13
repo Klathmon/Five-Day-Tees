@@ -86,6 +86,11 @@ class Cache
     {
         return is_readable($this->getFilename($key));
     }
+    
+    public function clearCache()
+    {
+        $this->cleanCacheDir('0 seconds');
+    }
 
     private function getFilename($key)
     {
