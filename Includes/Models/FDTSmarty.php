@@ -28,6 +28,7 @@ class FDTSmarty extends Smarty
      * @param ConfigParser $config
      * @param string       $template
      * @param string       $title
+     * @param string       $cacheID
      */
     public function __construct($config, $template, $title = '', $cacheID = null)
     {
@@ -40,8 +41,8 @@ class FDTSmarty extends Smarty
         $this->assign('title', $title);
 
         $this->setTemplateDir(get_include_path() . 'Views/');
-        $this->setCompileDir((string)$this->getTemplateDir()[0] . 'Compiled/');
-        $this->setCacheDir((string)$this->getTemplateDir()[0] . 'Cache/');
+        $this->setCompileDir('Cache/CompiledTemplates');
+        $this->setCacheDir('Cache/CachedTemplates');
 
         if ($this->config->debugModeOn()) {
             //$this->debugging = true;
