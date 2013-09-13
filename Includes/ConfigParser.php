@@ -14,7 +14,7 @@ class ConfigParser
             $array = file($configFile, FILE_SKIP_EMPTY_LINES);
 
             foreach ($array as $line) {
-                if ($line[0] != '#') {
+                if ($line[0] != '#' && trim($line) != '') {
                     list($name, $value) = explode('=', $line, 2);
 
                     $temp[strtoupper(trim($name))] = trim($value);
