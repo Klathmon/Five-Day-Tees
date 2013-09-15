@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['message'] = 'Item Deleted!';
             break;
         case 'GetNewItems':
-            $spreadshirt = new SpreadshirtItems($database, $config);
+            $spreadshirt = new \SpreadShirt\SpreadShirtItems($database, $config);
             $spreadshirt->getNewItems();
             $response['status']  = 'OK';
             $response['command'] = 'refreshPage';
@@ -100,7 +100,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $database->query('DELETE FROM Design');
                 $database->query('DELETE FROM Product');
 
-                $spreadshirtItems = new SpreadshirtItems($database, $config);
+                $spreadshirtItems = new \SpreadShirt\SpreadShirtItems($database, $config);
                 $spreadshirtItems->getNewItems();
             }
             break;
