@@ -9,6 +9,11 @@ namespace Factory;
 use \Currency;
 use PDO;
 
+/**
+ * Class Coupon
+ *
+ * @method \Object\Coupon[] getAll()
+ */
 class Coupon extends FactoryBase implements FactoryInterface
 {
 
