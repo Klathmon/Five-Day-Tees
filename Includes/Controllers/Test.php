@@ -6,19 +6,9 @@
 
 echo 'Test Page!';
 
-for($x = 0; $x != 1000; $x++)
-{
-    try{
-        $cacheCrap = DataCache::fetch('test');
-    }catch(Exception $e){
-        $cacheCrap = [
-            'lol' => 'testing',
-            'RAWR',
-            '4' => 45,
-            'dtobject' => DateTime::createFromFormat('U', time())
-        ];
-        DataCache::store('test', $cacheCrap, '1 hour');
-    }
-}
+$addressFactory = new \Factory\Address($database);
 
-var_dump($cacheCrap);
+$address = $addressFactory->create(null, '123 Fake Street', null, 'FakesBurg', 'PA', '19060', 'US');
+
+$addressFactory->persist($address);
+Debug::dump($address);
