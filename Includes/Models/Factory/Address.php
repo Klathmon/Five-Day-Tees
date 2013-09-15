@@ -25,7 +25,7 @@ class Address extends FactoryBase implements FactoryInterface
     public function fetchOrCreate($address1, $address2, $city, $state, $zip, $country)
     {
         try{
-            $address = $this->getByAddress($address1, $address2, $city, $state, $zip, $country);
+            $address = $this->getByAddressInfo($address1, $address2, $city, $state, $zip, $country);
         } catch(Exception $e){
             $address = $this->create(null, $address1, $address2, $city, $state, $zip, $country);
             $this->persist($address);
@@ -45,7 +45,7 @@ class Address extends FactoryBase implements FactoryInterface
      * @return \Object\Address
      * @throws \Exception
      */
-    public function getByAddress($address1, $address2, $city, $state, $zip, $country)
+    public function getByAddressInfo($address1, $address2, $city, $state, $zip, $country)
     {
         $sql
                    = <<<SQL

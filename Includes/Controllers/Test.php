@@ -6,9 +6,10 @@
 
 echo 'Test Page!';
 
-$addressFactory = new \Factory\Address($database);
+$customerFactory = new \Factory\Customer($database);
 
-$address = $addressFactory->create(null, '123 Fake Street', null, 'FakesBurg', 'PA', '19060', 'US');
+$customer = $customerFactory->getByID('1');
 
-$addressFactory->persist($address);
-Debug::dump($address);
+
+
+Debug::dump($customer);

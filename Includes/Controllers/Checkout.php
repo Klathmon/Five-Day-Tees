@@ -29,25 +29,29 @@ switch ($request->get(1)) {
             $response['PAYMENTREQUEST_0_SHIPTOCOUNTRYNAME']
         );
 
-        var_dump($address);
-
-        die();
-
-
-        $expressCheckoutPayment = new \PayPal\ExpressCheckout($config);
-        $expressCheckoutPayment->addParameter('LOCALECODE', 'US');
-        $expressCheckoutPayment->addParameter('CURRENCYCODE', 'USD');
-        $expressCheckoutPayment->addParameter('PAYMENTACTION', 'Sale');
-        $expressCheckoutPayment->addParameter('TOKEN', $query['token']);
-        $expressCheckoutPayment->addParameter('PAYERID', $query['PayerID']);
-        $expressCheckoutPayment->addParameter('METHOD', 'DoExpressCheckoutPayment');
-
+        $customerFactory = new \Factory\Customer($database);
+        
         try{
-            $expressCheckoutPayment->getUserCheckoutURL();
-        } catch(Exception $e){
-            //Shit hit the fan, tell the customer that their order is not going to work...
-            Debug::dump($expressCheckoutPayment);
+            $customer = $customerFactory->getByPayPalPayerID($response['PAYERID']);
+            $customer->setFirstName($response['FIRSTNAME']);
+            $customer->setLastName($response['LASTNAME']);
+            $customer->setEmail($response['EMAIL']);
+        }catch(Exception $e){
+            $customer = $customerFactory->create(
+                null,
+                $response['PAYERID'],
+                $response['FIRSTNAME'],
+                $response['LASTNAME'],
+                null,
+                null,
+                $response['EMAIL'],
+                1
+            );
         }
+        
+        $customerFactory->persist($customer);
+        
+        
 
         echo 'IT WORKED!';
 
@@ -88,8 +92,8 @@ switch ($request->get(1)) {
 
         try{
             $coupon = $shoppingCart->getCoupon();
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NAME' . $index, $coupon->getCode());
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_DESC' . $index, 'Five Day Tees Coupon');
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NAME' . $index, 'COUPON:' . $coupon->getCode());
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NUMBER' . $index, $coupon->getID());
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_QTY' . $index, 1);
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_AMT' . $index, $shoppingCart->getCouponDiscount()->getNiceFormat());
             $index++;
