@@ -128,11 +128,11 @@ class ShoppingCart
     public function getCoupon()
     {
         $coupon = $this->storageArray['Coupon'];
-        if (!is_null($coupon)) {
-            return $coupon;
-        } else {
-            throw new Exception('No coupon found');
+        if (is_null($coupon)) {
+            throw new Exception('No Coupon Found!');
         }
+        
+        return $coupon;
     }
 
     /**
