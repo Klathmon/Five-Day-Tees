@@ -89,7 +89,7 @@ foreach($shippingMethodFactory->getAll(false) as $shippingMethod){
     ];
 }
 
-$template->assign('salesItems', $salesItems);
+$template->assign('salesItems', (isset($salesItems) ? $salesItems : []));
 $template->assign('shippingMethods', $shippingMethods);
 $template->assign('total', $shoppingCart->getFinalTotal()->getNiceFormat());
 $template->assign('callOutBoxText', $settings->getCartCallout());

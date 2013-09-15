@@ -6,10 +6,19 @@
 
 echo 'Test Page!';
 
-$customerFactory = new \Factory\Customer($database);
+$settings         = new Settings($database, $config);
+$salesItemFactory = new \Factory\SalesItem($database, $settings);
+$orderItemFactory = new \Factory\OrderItem($database, $settings);
+$shoppingCart = new ShoppingCart($database, $settings);
 
-$customer = $customerFactory->getByID('1');
+//$shoppingCart->addSalesItem('11897256', 'M');
 
+//$salesitemArray = $shoppingCart->getAllSalesItems();
 
+//Debug::dump($salesitemArray);
 
-Debug::dump($customer);
+$salesItemArray = $salesItemFactory->create('11897256', 'M', 1);
+
+$array = $salesItemFactory->convertArrayToObject($salesItemArray);
+
+Debug::dump($array);

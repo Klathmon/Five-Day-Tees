@@ -81,7 +81,7 @@ switch ($request->get(1)) {
         $index = 0;
         foreach ($shoppingCart->getAllSalesItems() as $salesItem) {
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NAME' . $index, $salesItem->getName());
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NUMBER' . $index, $salesItem->getID());
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NUMBER' . $index, $salesItem->getKey());
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_DESC' . $index, $salesItem->getArticle()->getDescription());
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_QTY' . $index, $salesItem->getQuantity());
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_AMT' . $index, $salesItem->getPurchasePrice()->getNiceFormat());

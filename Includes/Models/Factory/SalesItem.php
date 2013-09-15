@@ -82,14 +82,14 @@ class SalesItem extends Design implements FactoryInterface
 
         $bigArray                  = $parsedArray['design'];
         $bigArray['key']           = $this->getKey($results['articleID'], $size);
-        $bigArray['article']       = $this->articleFactory->convertArrayToObject(reset($parsedArray['articles']));
-        $bigArray['product']       = $this->productFactory->convertArrayToObject(reset($parsedArray['products']));
+        $bigArray['article']       = reset($parsedArray['articles']);
+        $bigArray['product']       = reset($parsedArray['products']);
         $bigArray['size']          = $size;
         $bigArray['quantity']      = $quantity;
-        $bigArray['purchasePrice'] = $purchasePrice;
+        $bigArray['purchasePrice'] = $purchasePrice->getDecimal();
         $bigArray['totalSold']     = $results['totalSold'];
         $bigArray['category']      = $category;
-
+        
         return $this->convertArrayToObject($bigArray);
     }
 
@@ -97,5 +97,33 @@ class SalesItem extends Design implements FactoryInterface
     {
         return implode('|', [$articleID, $size]);
     }
+
+    public function convertObjectToArray($object)
+    {
+        $array = parent::convertObjectToArray($object);
+
+        /** @var \Object\Article $article */
+        $article = $array['article'];
+        /** @var \Object\Product $product */
+        $product = $array['product'];
+        /** @var Currency $purchasePrice */
+        $purchasePrice = $array['purchasePrice'];
+
+        $array['article']       = $this->articleFactory->convertObjectToArray($article);
+        $array['product']       = $this->productFactory->convertObjectToArray($product);
+        $array['purchasePrice'] = $purchasePrice->getDecimal();
+        
+        return $array;
+    }
+
+    public function convertArrayToObject($array)
+    {
+
+        $array['article']       = $this->articleFactory->convertArrayToObject($array['article']);
+        $array['product']       = $this->productFactory->convertArrayToObject($array['product']);
+        $array['purchasePrice'] = Currency::createFromDecimal($array['purchasePrice']);
+        return parent::convertArrayToObject($array);
+    }
+
 
 }
