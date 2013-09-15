@@ -234,7 +234,7 @@
 
         var data = {
             'Command': 'RemoveItem',
-            'ID':      $this.data('id'),
+            'ID':      $this.data('articleid'),
             'Size':    $this.data('size')
         };
 

@@ -113,7 +113,7 @@ class ShoppingCart
         if ($salesItem->getQuantity() <= 0) {
             $this->deleteSalesItem($salesItem->getArticle()->getID(), $salesItem->getSize());
         } else {
-            $this->storageArray['SalesItems'][$salesItem->getID()] = $salesItem;
+            $this->storageArray['SalesItems'][$salesItem->getKey()] = $salesItem;
         }
     }
 

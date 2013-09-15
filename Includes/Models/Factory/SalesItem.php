@@ -32,14 +32,15 @@ class SalesItem extends Design implements FactoryInterface
     }
 
     /**
-     * @param int    $articleID
-     * @param string $size
-     * @param int    $quantity
+     * @param int      $articleID
+     * @param string   $size
+     * @param int      $quantity
+     * @param Currency $purchasePrice **Actually optional**
      *
-     * @return \Object\SalesItem
      * @throws \Exception
+     * @return \Object\SalesItem
      */
-    public function create($articleID = null, $size = null, $quantity = null)
+    public function create($articleID = null, $size = null, $quantity = null, $purchasePrice = null)
     {
 
         $sql       = $this->selectItemSQL
@@ -65,7 +66,9 @@ class SalesItem extends Design implements FactoryInterface
             $results['salesLimit']
         );
 
-        $purchasePrice = $this->settings->getItemCurrentPrice(new Currency($results['baseRetail']), $category);
+        if (is_null($purchasePrice)) {
+            $purchasePrice = $this->settings->getItemCurrentPrice(new Currency($results['baseRetail']), $category);
+        }
 
         if (in_array(strtolower($category), ['vault', 'queue', 'disabled'])) {
             throw new Exception('You can\' sell that shirt!');
@@ -78,7 +81,7 @@ class SalesItem extends Design implements FactoryInterface
 
 
         $bigArray                  = $parsedArray['design'];
-        $bigArray['ID']            = $this->getKey($results['articleID'], $size);
+        $bigArray['key']           = $this->getKey($results['articleID'], $size);
         $bigArray['article']       = $this->articleFactory->convertArrayToObject(reset($parsedArray['articles']));
         $bigArray['product']       = $this->productFactory->convertArrayToObject(reset($parsedArray['products']));
         $bigArray['size']          = $size;
