@@ -9,7 +9,7 @@ $itemsFactory   = new \Factory\Item($database, $settings);
 $designFactory  = new \Factory\Design($database);
 $articleFactory = new \Factory\Article($database);
 $productFactory = new \Factory\Product($database);
-$couponsMapper  = new \Mapper\Coupon($database);
+$couponsFactory = new \Factory\Coupon($database);
 
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -30,7 +30,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'SaveItem':
             $design  = $designFactory->getByID(Sanitize::cleanInteger($_POST['designID']));
             $article = $articleFactory->getByID(Sanitize::cleanInteger($_POST['articleID']));
-            
+
             $design->setName($_POST['name']);
             $article->setDescription($_POST['description']);
             $article->setBaseRetail(new Currency(Sanitize::preserveGivenCharacters($_POST['baseRetail'], '1234567890.')));
@@ -38,19 +38,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $design->setVotes(Sanitize::cleanInteger($_POST['votes']));
             $article->setNumberSold(Sanitize::cleanInteger($_POST['numberSold']));
             $design->setSalesLimit(Sanitize::cleanInteger($_POST['salesLimit']));
-            
+
             $designFactory->persist($design);
             $articleFactory->persist($article);
-            
+
             $response['status']  = 'OK';
             $response['message'] = 'Item Saved!';
             break;
         case 'DeleteItem':
             $article = $articleFactory->getByID(Sanitize::cleanInteger($_POST['articleID']));
             $articleFactory->delete($article);
-            
+
             //todo: try-catch to delete product and design as well
-            
+
             $response['status']  = 'OK';
             $response['message'] = 'Item Deleted!';
             break;
@@ -62,40 +62,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
         case 'AddCoupon':
             $code          = Sanitize::cleanAlphaNumeric($_POST['Code']);
-            $isPercent     = ($_POST['IsPercent'] == 'true' ? true : false);
-            $amount        = Sanitize::preserveGivenCharacters($_POST['Amount'], '1234567890.-');
+            $amount        = Currency::createFromDecimal(Sanitize::preserveGivenCharacters($_POST['Amount'], '1234567890.-'));
             $usesRemaining = Sanitize::cleanInteger($_POST['UsesRemaining']);
 
-            $coupon = new \Entity\Coupon($code);
-            if ($isPercent) {
-                $coupon->makePercent();
-            } else {
-                $coupon->makeFlatAmount();
-            }
-            $coupon->setAmount($amount);
-            $coupon->setUsesRemaining($usesRemaining);
-
-            $couponsMapper->persist($coupon);
+            $couponsFactory->persist($couponsFactory->create($code, $amount, $usesRemaining));
 
             $response['status']  = 'OK';
             $response['command'] = 'refreshPage';
             break;
         case 'UpdateCoupon':
             $code          = Sanitize::cleanAlphaNumeric($_POST['Code']);
-            $isPercent     = ($_POST['IsPercent'] == 'true' ? true : false);
-            $amount        = Sanitize::preserveGivenCharacters($_POST['Amount'], '1234567890.-');
+            $amount        = Currency::createFromDecimal(Sanitize::preserveGivenCharacters($_POST['Amount'], '1234567890.-'));
             $usesRemaining = Sanitize::cleanInteger($_POST['UsesRemaining']);
 
-            $coupon = $couponsMapper->getByCode($code);
-            if ($isPercent) {
-                $coupon->makePercent();
-            } else {
-                $coupon->makeFlatAmount();
-            }
+            $coupon = $couponsFactory->getByCode($code);
             $coupon->setAmount($amount);
             $coupon->setUsesRemaining($usesRemaining);
 
-            $couponsMapper->persist($coupon);
+            $couponsFactory->persist($coupon);
 
             $response['status']  = 'OK';
             $response['message'] = 'Coupon Saved!';
@@ -103,9 +87,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         case 'DeleteCoupon':
             $code = Sanitize::cleanAlphaNumeric($_POST['Code']);
 
-            $coupon = $couponsMapper->getByCode($code);
+            $coupon = $couponsFactory->getByCode($code);
 
-            $couponsMapper->delete($coupon);
+            $couponsFactory->delete($coupon);
 
             $response['status']  = 'OK';
             $response['command'] = 'refreshPage';
@@ -120,6 +104,22 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $spreadshirtItems->getNewItems();
             }
             break;
+        case 'PurgeCache':
+            foreach(new DirectoryIterator('Cache/') as $directory){
+                /** @var $directory DirectoryIterator */
+                if($directory->isDir()  && !$directory->isDot()){
+                    foreach(new DirectoryIterator($directory->getPathname()) as $file){
+                        /** @var $file DirectoryIterator */
+                        if($file->isFile() && $file->getFilename() != '.gitignore' && $file->getFilename() != '.htaccess'){
+                            unlink($file->getPathname());
+                        }
+                    }
+                }
+            }
+
+            $response['status']  = 'OK';
+            $response['command'] = 'refreshPage';
+            break;
         default:
             $response['status']  = 'ERROR';
             $response['message'] = 'Unknown Command.';
@@ -127,22 +127,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
     echo json_encode($response);
 } else {
-    $layout = new Layout($config, 'Admin.tpl', 'Admin Section');
-
-    $layout->assign('startingDisplayDate', $settings->getStartingDisplayDate());
-    $layout->assign('retail', $settings->getRetail()->getDecimal());
-    $layout->assign('salesLimit', $settings->getSalesLimit());
-    $layout->assign('daysApart', $settings->getDaysApart());
-    $layout->assign('level1', $settings->getLevel1()->getDecimal());
-    $layout->assign('level2', $settings->getLevel2()->getDecimal());
-    $layout->assign('level3', $settings->getLevel3()->getDecimal());
-    $layout->assign('cartCallout', $settings->getCartCallout());
-    $layout->assign('coupons', $couponsMapper->listAll());
 
 
-    $items = $itemsFactory->getAll();
+    foreach ($couponsFactory->getAll() as $coupon) {
+        $coupons[] = [
+            'code'          => $coupon->getCode(),
+            'amount'        => $coupon->getAmount()->getNiceFormat(),
+            'usesRemaining' => $coupon->getUsesRemaining()
+        ];
+    }
 
-    foreach ($items as $item) {
+    foreach ($itemsFactory->getAll() as $item) {
         foreach ($item->getArticles() as $article) {
             $product        = $item->getProduct($article->getProductID());
             $displayItems[] = [
@@ -163,7 +158,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
 
-    $layout->assign('items', $displayItems);
 
+    $layout = new Layout($config, 'Admin.tpl', 'Admin Section');
+    $layout->assign('startingDisplayDate', $settings->getStartingDisplayDate());
+    $layout->assign('retail', $settings->getRetail()->getDecimal());
+    $layout->assign('salesLimit', $settings->getSalesLimit());
+    $layout->assign('daysApart', $settings->getDaysApart());
+    $layout->assign('level1', $settings->getLevel1()->getDecimal());
+    $layout->assign('level2', $settings->getLevel2()->getDecimal());
+    $layout->assign('level3', $settings->getLevel3()->getDecimal());
+    $layout->assign('cartCallout', $settings->getCartCallout());
+    $layout->assign('coupons', $coupons);
+    $layout->assign('items', $displayItems);
     $layout->output();
 }

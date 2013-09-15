@@ -34,22 +34,21 @@
         <button onclick="$.post('/Admin', { 'Command': 'ReloadAllItems' }, function() { location.reload(); } )">Clear Out Shirts</button>
     {/if}
     <button id="GetNewArticles">Get new articles from SpreadShirt</button>
+    <button id="PurgeCache">Purge Cache</button>
 
     <h3>Coupons:</h3>
     <table id="Coupons">
         <tr>
             <th class="Code">Code</th>
-            <th class="IsPercent">Is Percent?</th>
-            <th class="Amount">Amount Off</th>
+            <th class="Amount">Amount</th>
             <th class="UsesRemaining">Uses Remaining</th>
             <th class="Buttons"></th>
         </tr>
         {foreach $coupons as $coupon}
-            <tr data-code="{$coupon->getCode()}">
-                <th class="Code">{$coupon->getCode()}</th>
-                <th class="IsPercent"><input type="checkbox" {if $coupon->isPercent()}checked{/if}/></th>
-                <th class="Amount"><input type="number" step=1 value="{$coupon->getAmount()}"/></th>
-                <th class="UsesRemaining"><input type="number" step=1 value="{$coupon->getUsesRemaining()}"/></th>
+            <tr data-code="{$coupon['code']}">
+                <th class="Code">{$coupon['code']}</th>
+                <th class="Amount"><input type="number" step=1 value="{$coupon['amount']}"/></th>
+                <th class="UsesRemaining"><input type="number" step=1 value="{$coupon['usesRemaining']}"/></th>
                 <th class="Buttons">
                     <button class="Save">Save</button>
                     <button class="Delete">Delete</button>
@@ -58,7 +57,6 @@
         {/foreach}
         <tr>
             <th class="Code"><input type="text"/></th>
-            <th class="IsPercent"><input type="checkbox" checked/></th>
             <th class="Amount"><input type="number" step=1/></th>
             <th class="UsesRemaining"><input type="number" step=1/></th>
             <th class="Buttons">

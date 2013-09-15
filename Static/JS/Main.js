@@ -15,6 +15,7 @@
     function attachHandlers(){
         var $adminPage = $('#Admin.Page');
         $adminPage.find('#GetNewArticles').on('click', getNewArticles);
+        $adminPage.find('#PurgeCache').on('click', purgeCache);
         $adminPage.find('#SaveGlobalSettings').on('click', saveGlobalSettings);
         $adminPage.find('.ItemsTable')
             .on('click', '.SaveItem', saveItem)
@@ -50,6 +51,10 @@
     // Admin Page Functions //
     function getNewArticles(){
         sendCommand('/Admin', 'GetNewItems', {'DOIT': 'yes'});
+    }
+    
+    function purgeCache(){
+        sendCommand('/Admin', 'PurgeCache', {'DOIT': 'yes'});
     }
 
     function saveGlobalSettings(event){
@@ -104,7 +109,6 @@
 
         var data = {
             'Code':          $this.find('.Code').find('input').val(),
-            'IsPercent':     $this.find('.IsPercent').find('input[type=checkbox]:checked').attr('type') == 'checkbox',
             'Amount':        $this.find('.Amount').find('input').val(),
             'UsesRemaining': $this.find('.UsesRemaining').find('input').val()
         };
@@ -117,7 +121,6 @@
 
         var data = {
             'Code':          $this.data('code'),
-            'IsPercent':     $this.find('.IsPercent').find('input[type=checkbox]:checked').attr('type') == 'checkbox',
             'Amount':        $this.find('.Amount').find('input').val(),
             'UsesRemaining': $this.find('.UsesRemaining').find('input').val()
         };
