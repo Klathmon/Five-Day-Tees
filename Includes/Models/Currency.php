@@ -24,7 +24,7 @@ class Currency
     
     public static function createFromDecimal($decimal)
     {
-        return new self(self::convertDecimalToCents($decimal));
+        return new self($decimal);
     }
     
     public function getCents()
