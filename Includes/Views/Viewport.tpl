@@ -1,11 +1,10 @@
 <div
         id="InnerViewport"
-        
-        data-maleid="{$maleArticleID}"
-        data-femaleid="{$femaleArticleID}"
-
+        data-malearticleid="{$maleArticleID}"
+        data-femalearticleid="{$femaleArticleID}"
         data-url="{$URLName}"
         >
+    
     <h2 class="Name">{$name}</h2>
 
     <p class="Description">{$description}</p>

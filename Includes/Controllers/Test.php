@@ -6,10 +6,19 @@
 
 echo 'Test Page!';
 
-$settings = new Settings($database, $config);
+for($x = 0; $x != 1000; $x++)
+{
+    try{
+        $cacheCrap = DataCache::fetch('test');
+    }catch(Exception $e){
+        $cacheCrap = [
+            'lol' => 'testing',
+            'RAWR',
+            '4' => 45,
+            'dtobject' => DateTime::createFromFormat('U', time())
+        ];
+        DataCache::store('test', $cacheCrap, '1 hour');
+    }
+}
 
-$salesItemFactory = new \Factory\SalesItem($database, $settings);
-
-$salesItem = $salesItemFactory->create(12101407, 'XL', 1);
-
-var_dump($salesItem);
+var_dump($cacheCrap);

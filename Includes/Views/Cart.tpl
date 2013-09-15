@@ -13,13 +13,13 @@
             <th class="Quantity">Quantity</th>
             <th class="Buttons">&nbsp;</th>
         </tr>
-        {foreach $cartItems as $cartItem}
-            <tr data-id="{$cartItem->item->getID()}" data-size="{$cartItem->getSize()}">
-                <td class="Name">{$cartItem->item->getName()}</td>
-                <td class="Gender">{$cartItem->item->getGender()}</td>
-                <td class="Size">{$cartItem->getSize()}</td>
-                <td class="Price">${number_format($cartItem->getCurrentPrice(), 2)}</td>
-                <td class="Quantity"><input class="Quantity" type="number" min="0" step="1" value="{$cartItem->getQuantity()}"></td>
+        {foreach $salesItems as $salesItem}
+            <tr data-articleid="{$salesItem['articleID']}" data-size="{$salesItem['size']}">
+                <td class="Name">{$salesItem['name']}</td>
+                <td class="Gender">{$salesItem['type']}</td>
+                <td class="Size">{$salesItem['size']}</td>
+                <td class="Price">${$salesItem['price']}</td>
+                <td class="Quantity"><input class="Quantity" type="number" min="0" step="1" value="{$salesItem['quantity']}"></td>
                 <td class="Buttons">
                     <button class="Update" title="Click to update the quantity of this item">Update</button>
                     <button class="Remove" title="Click to remove this item from your cart">Remove</button>
@@ -30,15 +30,11 @@
                 <td colspan="100">You don't have anything in your cart</td>
             </tr>
         {/foreach}
-        {if $disableCoupon == true}
+        {if isset($couponCode)}
             <tr id="CouponLine">
                 <td colspan=3>Coupon Code: {$couponCode}</td>
                 <td colspan=2>
-                    {if $isPercent == true}
-                        {if $Amount > 0}+{/if}{number_format($Amount, 0)}%
-                    {else}
-                        {if $Amount > 0}+{/if}${number_format($Amount, 2)}
-                    {/if}
+                    {$amount}
                 </td>
                 <td>
                     <button id="RemoveCoupon">Remove Coupon</button>
@@ -58,19 +54,19 @@
                 <input
                         type="radio"
                         name="Shipping"
-                        data-id="{$shippingMethod->getID()}"
-                        {if $chosenShippingMethodID == $shippingMethod->getID()}checked{/if}/>
-                {$shippingMethod->getName()} - (${number_format($shippingMethod->calculateShippingPrice($preShippingTotal), 2)})
+                        data-id="{$shippingMethod['ID']}"
+                        {if $chosenShippingMethodID == $shippingMethod['ID']}checked{/if}/>
+                {$shippingMethod['name']} - (${$shippingMethod['price']})
             </label>
         {/foreach}
     </div>
-    {if $disableCoupon == false}
+    {if !isset($couponCode)}
         <div id="CouponsContainer">
             <input type="text" id="CouponCode" placeholder="Coupon Code"/>
             <button id="SubmitCoupon" title="Click to add a coupon">Enter Coupon</button>
         </div>
     {/if}
-    <p id="Total">Total - <span>{$total|default:'$0.00'}</span></p>
+    <p id="Total">Total - <span>${$total}</span></p>
     <button id="EmptyCart" title="Click to empty your cart of all items">Empty Cart</button>
     {if $chosenShippingMethodID == -1}
         <a id="PayPal" title="Please choose a shipping method" class="Disabled">

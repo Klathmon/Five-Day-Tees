@@ -27,7 +27,8 @@ class ShoppingCart
         }
 
         $this->settings         = $settings;
-        $this->salesItemFactory = new \Factory\SalesItem($database, $settings);
+        $this->database         = $database;
+        $this->salesItemFactory = new \Factory\SalesItem($this->database, $settings);
 
         if (!array_key_exists('ShoppingCart', $_SESSION)) {
             /* if the shopping cart array does not exist in the session, initialize it using emptyCart() */
@@ -61,53 +62,29 @@ class ShoppingCart
     {
         $key = $this->salesItemFactory->getKey($articleID, $size);
 
-        return $this->getSalesItemByKey($key);
-    }
-
-    /**
-     * Returns a single SalesItem by it's key
-     *
-     * @param $key
-     *
-     * @return SalesItem
-     * @throws Exception
-     */
-    public function getSalesItemByKey($key)
-    {
         $salesItemArray = $this->getAllSalesItems();
 
         if (array_key_exists($key, $salesItemArray)) {
             return $salesItemArray[$key];
         } else {
-            throw new Exception('No SalesItem with that ID exists');
+            throw new Exception('No SalesItem with that ID and Size exists');
         }
     }
 
     /**
      * @param int    $articleID
      * @param string $size
-     * @param int    $quantity
      */
-    public function addSalesItem($articleID, $size, $quantity)
+    public function addSalesItem($articleID, $size)
     {
-        $salesItem = $this->salesItemFactory->create($articleID, $size, $quantity);
+        try{
+            $salesItem = $this->getSalesItem($articleID, $size);
+            $salesItem->addOne();
+        } catch(Exception $e){
+            $salesItem = $this->salesItemFactory->create($articleID, $size, 1);
+        }
 
         $this->persistSalesItem($salesItem);
-    }
-
-    /**
-     * Saves the given SalesItem to the session
-     * If the quantity is 0 or less then it deletes it (fixes a bug where people could set their quantities to negative)
-     *
-     * @param SalesItem $salesItem
-     */
-    public function persistSalesItem(SalesItem $salesItem)
-    {
-        if ($salesItem->getQuantity() <= 0) {
-            $this->deleteSalesItemByObject($salesItem);
-        }else{
-            $this->storageArray['SalesItems'][$salesItem->getID()] = $salesItem;
-        }
     }
 
     /**
@@ -126,16 +103,17 @@ class ShoppingCart
     }
 
     /**
-     * Deletes the SalesItem by it's Object
+     * Saves the given SalesItem to the session
+     * If the quantity is 0 or less then it deletes it (fixes a bug where people could set their quantities to negative)
      *
      * @param SalesItem $salesItem
      */
-    public function deleteSalesItemByObject($salesItem)
+    public function persistSalesItem(SalesItem $salesItem)
     {
-        $key = $salesItem->getID();
-
-        if (array_key_exists($key, $this->storageArray['SalesItems'])) {
-            unset($this->storageArray['SalesItems'][$key]);
+        if ($salesItem->getQuantity() <= 0) {
+            $this->deleteSalesItem($salesItem->getArticle()->getID(), $salesItem->getSize());
+        } else {
+            $this->storageArray['SalesItems'][$salesItem->getID()] = $salesItem;
         }
     }
 
@@ -154,22 +132,6 @@ class ShoppingCart
             return $coupon;
         } else {
             throw new Exception('No coupon found');
-        }
-    }
-
-    /**
-     * Persist the given coupon to cart
-     *
-     * @param Coupon $coupon
-     *
-     * @throws Exception
-     */
-    public function persistCoupon(Coupon $coupon)
-    {
-        if ($coupon->getUsesRemaining() > 0) {
-            $this->storageArray['Coupon'] = $coupon;
-        } else {
-            throw new Exception('Coupon does not have enough uses left.');
         }
     }
 
@@ -194,6 +156,22 @@ class ShoppingCart
     {
         unset($this->storageArray['Coupon']);
         $this->storageArray['Coupon'] = null;
+    }
+
+    /**
+     * Persist the given coupon to cart
+     *
+     * @param Coupon $coupon
+     *
+     * @throws Exception
+     */
+    public function persistCoupon(Coupon $coupon)
+    {
+        if ($coupon->getUsesRemaining() > 0) {
+            $this->storageArray['Coupon'] = $coupon;
+        } else {
+            throw new Exception('Coupon does not have enough uses left.');
+        }
     }
 
     /**

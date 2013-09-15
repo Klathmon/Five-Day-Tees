@@ -51,7 +51,7 @@
     function getNewArticles(){
         sendCommand('/Admin', 'GetNewItems', {'DOIT': 'yes'});
     }
-    
+
     function saveGlobalSettings(event){
         var $row = $(event.target).closest('TR');
 
@@ -156,7 +156,7 @@
 
         var gender = $this.attr('id');
         var name = $innerViewport.data('url');
-        var id = $innerViewport.data(gender + 'id');
+        var id = $innerViewport.data(gender + 'articleid');
 
         loadViewport(name, id);
     }
@@ -182,7 +182,7 @@
 
         var data = {
             'Command': 'AddItem',
-            'ID':      $this.data(gender + 'id'),
+            'ID':      $this.data(gender + 'articleid'),
             'Size':    $this.find('.Sizes').find('Input[type=radio]:checked').val()
         };
 
@@ -218,7 +218,7 @@
 
         var data = {
             'Command':  'UpdateItem',
-            'ID':       $this.data('id'),
+            'ID':       $this.data('articleid'),
             'Size':     $this.data('size'),
             'Quantity': $this.find('Input.Quantity').val()
         };
