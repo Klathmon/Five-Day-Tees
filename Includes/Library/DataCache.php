@@ -32,6 +32,7 @@ class DataCache
 
     public static function fetch($key)
     {
+        //TODO: Add file read locking here!
         $fileName = self::getFileName($key);
 
         if (!is_readable($fileName)) {
