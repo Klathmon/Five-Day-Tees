@@ -13,6 +13,8 @@ chdir(__DIR__ . '/../');
 
 set_include_path('Includes/');
 
+/** Include the DataCache Class */
+require('Library/DataCache.php');
 
 /** Include and construct the ConfigParser */
 require('ConfigParser.php');
