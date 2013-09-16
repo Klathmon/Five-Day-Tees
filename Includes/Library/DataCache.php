@@ -7,70 +7,82 @@
 
 class DataCache
 {
-    const DIRECTORY = 'Cache/DataCache/';
-    const EXTENSION = '.cache';
+    const FILE_EXTENSION = '.cache';
+    
+    private $directory;
 
-    public static function store($key, $data, $ttl = '1 hour')
+    public function __construct($directoryName)
     {
-        $expiresTime = new DateTime('now');
-        $expiresTime->modify('+' . $ttl);
-
-        $data     = serialize([$data, $expiresTime]);
-        $fileName = self::getFileName($key);
-
-        /* Open the file */
-        $fileHandler = fopen($fileName, 'w');
-        /* Lock the file */
-        flock($fileHandler, LOCK_EX);
-        /* Write to the file */
-        fwrite($fileHandler, $data);
-        /* Unlock the file */
-        flock($fileHandler, LOCK_UN);
-        /* Close the file */
-        fclose($fileHandler);
+        $this->directory = $directoryName;
     }
 
-    public static function fetch($key)
+    public function fetch($key)
     {
-        //TODO: Add file read locking here!
-        $fileName = self::getFileName($key);
+        $file = $this->getFileFromKey($key, 'read');
+        
+        $file->flock(LOCK_SH);
+        $line = $file->fgets();
+        $file->flock(LOCK_UN);
 
-        if (!is_readable($fileName)) {
-            throw new Exception('File does not exist or is not readable');
+        if ($line == '') {
+            throw new Exception('No data exists for that key');
         }
 
-        list($data, $expiresDateTime) = unserialize(file_get_contents($fileName));
+        list($data, $expiresDateTime) = unserialize($line);
 
         if ($expiresDateTime < (new DateTime('now'))) {
-            unlink($fileName);
-            throw new Exception('File is expired');
+            
+            $file->flock(LOCK_EX);
+            $file->ftruncate(0);
+            $file->flock(LOCK_UN);
+            
+            throw new Exception('Cache is expired');
         }
+        
+        unset($file);
 
         return $data;
     }
 
-    public static function delete($key)
+    public function store($key, $value, $ttl = '1 hour')
     {
-        $fileName = self::getFileName($key);
+        $expiresTime = new DateTime('now');
+        $expiresTime->modify('+' . $ttl);
 
-        if (is_writable($fileName)) {
-            unlink($fileName);
-        }
-    }
-    
-    public static function clearCache()
-    {
-        $directory = new DirectoryIterator(self::DIRECTORY);
-        foreach($directory as $file){
-            /** @var $file DirectoryIterator */
-            if($file->isFile()){
-                unlink($file->getPathName());
-            }
-        }
+        $file = $this->getFileFromKey($key, 'write');
+
+        $line = serialize([$value, $expiresTime]);
+
+        $file->flock(LOCK_EX);
+        $file->fwrite($line);
+        $file->flock(LOCK_UN);
+        
+        unset($file);
     }
 
-    private static function getFileName($key)
+    public function delete($key)
     {
-        return self::DIRECTORY . crc32($key) . self::EXTENSION;
+        $file = $this->getFileFromKey($key);
+
+        if ($file->isWritable()) {
+            $file->ftruncate(0);
+        }
+    }
+
+    /**
+     * This function gets the file corresponding to the given key.
+     *
+     * @param string $key
+     * @param string $type
+     *
+     * @return SplFileObject
+     */
+    private function getFileFromKey($key, $type = 'read')
+    {
+        $fileName = $this->directory . md5($key) . self::FILE_EXTENSION;
+
+        $code = ($type == 'read' ? 'r' : 'w+');
+        
+        return new SplFileObject($fileName, $code);
     }
 }

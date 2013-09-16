@@ -6,19 +6,16 @@
 
 echo 'Test Page!';
 
-$settings         = new Settings($database, $config);
-$salesItemFactory = new \Factory\SalesItem($database, $settings);
-$orderItemFactory = new \Factory\OrderItem($database, $settings);
-$shoppingCart = new ShoppingCart($database, $settings);
+$testArray = [
+    'lolwhut' => '2323413',
+    '1234',
+    '9' => DateTime::CreateFromFormat('U', time())
+];
 
-//$shoppingCart->addSalesItem('11897256', 'M');
+$cache = new DataCache('Cache/DataCache/');
 
-//$salesitemArray = $shoppingCart->getAllSalesItems();
+$cache->store('test', $testArray, '1 hour');
 
-//Debug::dump($salesitemArray);
+$testArrayAfter = $cache->fetch('test');
 
-$salesItemArray = $salesItemFactory->create('11897256', 'M', 1);
-
-$array = $salesItemFactory->convertArrayToObject($salesItemArray);
-
-Debug::dump($array);
+Debug::dump($testArrayAfter);
