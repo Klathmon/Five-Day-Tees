@@ -192,7 +192,7 @@
         if(data['Size'] == undefined){
             alert('You need to select a size!');
         }else{
-            $.post('/Cart', data, showCart);
+            $.post('/Cart', data, replaceCart);
         }
     }
 
