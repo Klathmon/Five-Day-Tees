@@ -8,14 +8,15 @@ namespace Factory;
 
 trait SQLTrait
 {
-    protected $selectItemSQL = <<<SQL
-    SELECT
+    protected $selectItemSQL
+        = <<<SQL
+SELECT
     Design.ID AS designID, Design.name, Design.displayDate, Design.designImageURL, Design.salesLimit, Design.votes,
     Article.ID AS articleID, Article.lastUpdated, Article.description, Article.articleImageURL, Article.numberSold, Article.baseRetail,
     Product.ID AS productID, Product.cost, Product.type, Product.sizesAvailable
 
 SQL;
-    
+
     protected $fromDesignSQL
         = <<<SQL
 
@@ -43,8 +44,25 @@ ORDER BY Design.displayDate DESC
 
 SQL;
 
+    protected $selectOrderInfo
+        = <<<SQL
+SELECT 
+    Order.*,
+    Address.ID AS addressID, Address.address1, Address.address2, Address.city, Address.state, Address.zip, Address.country,
+    Customer.ID AS customerID, Customer.paypalPayerID, Customer.firstName, Customer.lastName, Customer.companyName, Customer.phoneNumber, Customer.email, Customer.allowMarketing,
+    Coupon.ID AS couponID, Coupon.code, Coupon.amount, Coupon.usesRemaining
+    
+SQL;
 
+    protected $orderInfoFrom
+        = <<<SQL
 
+FROM Order
+  LEFT JOIN Address ON (Order.addressID = Address.ID)
+  LEFT JOIN Customer ON (Order.customerID = Customer.ID)
+  LEFT JOIN Coupon ON (Order.couponID = Coupon.ID)
+  
+SQL;
 
 
     protected function parseResults($array)

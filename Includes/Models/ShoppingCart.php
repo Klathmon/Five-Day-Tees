@@ -83,8 +83,11 @@ class ShoppingCart
         } catch(Exception $e){
             $salesItem = $this->salesItemFactory->create($articleID, $size, 1);
         }
-
-        $this->persistSalesItem($salesItem);
+        
+        /* Silently ignore it if it's a vault, queue, or disabled */
+        if (!in_array($salesItem->getCategory(), ['vault', 'queue', 'disabled'])) {
+            $this->persistSalesItem($salesItem);
+        }
     }
 
     /**

@@ -70,9 +70,7 @@ class SalesItem extends Design implements FactoryInterface
             $purchasePrice = $this->settings->getItemCurrentPrice(new Currency($results['baseRetail']), $category);
         }
 
-        if (in_array(strtolower($category), ['vault', 'queue', 'disabled'])) {
-            throw new Exception('You can\' sell that shirt!');
-        } elseif (stripos($results['sizesAvailable'], $size) === false) {
+        if (stripos($results['sizesAvailable'], $size) === false) {
             throw new Exception('That size does not exist!');
         }
 
