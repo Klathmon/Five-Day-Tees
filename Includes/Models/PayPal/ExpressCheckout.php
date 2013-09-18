@@ -24,7 +24,7 @@ class ExpressCheckout
         $this->config = $config;
 
         try{
-            $this->curl = new cURL($this->config->getPayPalAPIEndpoint());
+            $this->curl = new cURL($this->config->get('PAYPAL', 'ENDPOINT'));
             $this->curl->setOption(CURLOPT_VERBOSE, 1);
             $this->curl->setOption(CURLOPT_SSL_VERIFYPEER, 2);
             $this->curl->setOption(CURLOPT_CAINFO, $this->config->getBaseDirectory() . 'Config/cacert.pem'); //CA Cert File
@@ -34,10 +34,10 @@ class ExpressCheckout
             throw new Exception('Error starting cURL');
         }
 
-        $this->addParameter('VERSION', $this->config->getPayPalAPIVersion());
-        $this->addParameter('USER', $this->config->getPayPalAPIUsername());
-        $this->addParameter('PWD', $this->config->getPayPalAPIPassword());
-        $this->addParameter('SIGNATURE', $this->config->getPayPalAPISignature());
+        $this->addParameter('VERSION', $this->config->get('PAYPAL', 'API_VERSION'));
+        $this->addParameter('USER', $this->config->get('PAYPAL', 'USERNAME'));
+        $this->addParameter('PWD', $this->config->get('PAYPAL', 'PASSWORD'));
+        $this->addParameter('SIGNATURE', $this->config->get('PAYPAL', 'SIGNATURE'));
     }
 
     public function addParameter($name, $value)
@@ -56,7 +56,7 @@ class ExpressCheckout
 
             $parameters = ['cmd' => '_express-checkout', 'token' => $this->response['TOKEN']];
 
-            $url = $this->config->getPayPalExpressCheckoutURL() . '?' . http_build_query($parameters);
+            $url = $this->config->get('PAYPAL', 'EXPRESS_CHECKOUT_URL') . '?' . http_build_query($parameters);
 
         } else {
             throw new Exception('Error Forwarding to PayPal!  ' . $this->response['L_LONGMESSAGE0']);

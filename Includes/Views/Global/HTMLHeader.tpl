@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta http-equiv="content-type" content="text/html; charset=utf-8"/>
-    <title>{$title} - {$config->getSiteName()}</title>
+    <title>{$title} - {$config->get('SITE_NAME')}</title>
 
     {foreach $cssSheets as $cssURL}
         <link href="{$cssURL}" rel="stylesheet" type="text/css"/>

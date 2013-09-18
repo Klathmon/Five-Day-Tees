@@ -42,7 +42,7 @@ switch ($request->get(0)) {
 require("Controllers/$controller.php");
 
 
-if ($config->debugModeOn()) {
+if ($config->get('DEBUG', 'DEBUGGING')) {
     echo '// Script took ' . (microtime(true) - $timerStart) . ' Seconds to run //<br/>'.
     (memory_get_peak_usage() / 1048576) . " MB of memory used";
 }

@@ -1,7 +1,7 @@
 <!--GOOGLE ANALYTICS-->
 <script type="text/javascript">
     var _gaq = _gaq || [];
-    _gaq.push(["_setAccount", "{$config->getGoogleAnalytics()}"]);
+    _gaq.push(["_setAccount", "{$config->get('GOOGLE', 'ANALYTICS')}"]);
     _gaq.push(["_trackPageview"]);
     _gaq.push(["_setDetectFlash", !1]);
     (function(){

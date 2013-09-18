@@ -95,7 +95,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['command'] = 'refreshPage';
             break;
         case 'ReloadAllItems':
-            if ($config->getMode() == 'DEV') {
+            if ($config->get('MODE') == 'DEV') {
                 $database->query('DELETE FROM Article');
                 $database->query('DELETE FROM Design');
                 $database->query('DELETE FROM Product');

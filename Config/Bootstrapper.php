@@ -21,7 +21,7 @@ require('ConfigParser.php');
 $config = new ConfigParser('Config/config.ini');
 
 /** Include Debug.php if we are in development */
-if ($config->debugModeOn()) {
+if ($config->get('DEBUG', 'DEBUGGING')) {
     include('Library/Debug.php');
     Debug::setEmail('greg@fivedaytees.com');
 }
@@ -30,7 +30,7 @@ if ($config->debugModeOn()) {
 date_default_timezone_set('America/New_York');
 include('Autoloader.php');
 spl_autoload_register('Autoloader');
-if ($config->showErrors()) {
+if ($config->get('DEBUG', 'SHOW_ERRORS')) {
     error_reporting(E_ALL);
 } else {
     error_reporting(0);
@@ -38,7 +38,7 @@ if ($config->showErrors()) {
 
 
 $database = new PDO(
-    "mysql:host={$config->getDatabaseHost()};dbname={$config->getDatabaseName()}",
-    $config->getDatabaseUsername(), $config->getDatabasePassword()
+    "mysql:host={$config->get('DATABASE', 'HOST')};dbname={$config->get('DATABASE', 'NAME')}",
+    $config->get('DATABASE', 'USERNAME'), $config->get('DATABASE', 'PASSWORD')
 );
 $database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);

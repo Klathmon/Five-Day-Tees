@@ -30,7 +30,7 @@
         </tr>
     </table>
 
-    {if $config->getMode() == 'DEV'}
+    {if $config->get('MODE') == 'DEV'}
         <button onclick="$.post('/Admin', { 'Command': 'ReloadAllItems' }, function() { location.reload(); } )">Clear Out Shirts</button>
     {/if}
     <button id="GetNewArticles">Get new articles from SpreadShirt</button>

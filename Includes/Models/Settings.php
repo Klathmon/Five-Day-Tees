@@ -37,7 +37,7 @@ class Settings
 
         $statement = $this->database->prepare('SELECT * FROM Settings WHERE Mode = :Mode LIMIT 1');
 
-        $statement->bindValue(':Mode', $this->config->getMode(), PDO::PARAM_STR);
+        $statement->bindValue(':Mode', $this->config->get('MODE'), PDO::PARAM_STR);
 
         $statement->execute();
 
@@ -64,7 +64,7 @@ class Settings
 SQL
         );
 
-        $statement->bindValue(':Mode', $this->config->getMode(), PDO::PARAM_STR);
+        $statement->bindValue(':Mode', $this->config->get('MODE'), PDO::PARAM_STR);
         $statement->bindValue(':StartingDisplayDate', $this->getStartingDisplayDate()->format('Y-m-d'), PDO::PARAM_STR);
         $statement->bindValue(':Retail', $this->getRetail(), PDO::PARAM_STR);
         $statement->bindValue(':SalesLimit', $this->getSalesLimit(), PDO::PARAM_INT);
