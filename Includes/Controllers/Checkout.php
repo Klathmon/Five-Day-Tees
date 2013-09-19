@@ -51,7 +51,16 @@ switch ($request->get(1)) {
         
         $customerFactory->persist($customer);
         
+        for($x = 0; array_key_exists('L_PAYMENTREQUEST_0_NUMBER' . $x, $response); $x++){
+            $items[] = [
+                'ID' => $response['L_PAYMENTREQUEST_0_NUMBER' . $x],
+                'name' => $response['L_PAYMENTREQUEST_0_NAME' . $x],
+                'quantity' => $response['L_PAYMENTREQUEST_0_QTY' . $x],
+                'amount' => $response['L_PAYMENTREQUEST_0_AMT' . $x],
+            ];
+        }
         
+        var_dump($items);
 
         echo 'IT WORKED!';
 

@@ -35,7 +35,3 @@ $productArray = array(
 );
 
 $orderItem = $orderItemFactory->create(1, $designArray, $articleArray, $productArray, 'M', 1, 17);
-
-$array = $orderItemFactory->convertObjectToArray($orderItem);
-
-Debug::dump($array);

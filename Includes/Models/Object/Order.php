@@ -30,8 +30,6 @@ class Order implements ObjectInterface
     protected $coupon;
     /** @var string */
     protected $paypalCorrelationID;
-    /** @var OrderItem[] */
-    protected $orderItems;
 
     /**
      * @return int
@@ -120,14 +118,4 @@ class Order implements ObjectInterface
     {
         $this->status = $status;
     }
-
-    /**
-     * @return \Object\OrderItem[]
-     */
-    public function getOrderItems()
-    {
-        return $this->orderItems;
-    }
-
-
 }

@@ -48,9 +48,9 @@ SQL;
         = <<<SQL
 SELECT 
     Order.*,
-    Address.ID AS addressID, Address.address1, Address.address2, Address.city, Address.state, Address.zip, Address.country,
-    Customer.ID AS customerID, Customer.paypalPayerID, Customer.firstName, Customer.lastName, Customer.companyName, Customer.phoneNumber, Customer.email, Customer.allowMarketing,
-    Coupon.ID AS couponID, Coupon.code, Coupon.amount, Coupon.usesRemaining
+    Address.ID AS addressIDs, Address.address1, Address.address2, Address.city, Address.state, Address.zip, Address.country,
+    Customer.ID AS customerIDs, Customer.paypalPayerID, Customer.firstName, Customer.lastName, Customer.companyName, Customer.phoneNumber, Customer.email, Customer.allowMarketing,
+    Coupon.ID AS couponIDs, Coupon.code, Coupon.amount, Coupon.usesRemaining
     
 SQL;
 

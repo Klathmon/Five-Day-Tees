@@ -26,7 +26,6 @@ class Order extends FactoryBase implements FactoryInterface
      * @param \Currency           $itemsTotal
      * @param \Object\Coupon      $coupon
      * @param string              $paypalCorrelationID
-     * @param \Object\OrderItem[] $orderItems
      *
      * @return \Object\Order
      */
@@ -39,8 +38,7 @@ class Order extends FactoryBase implements FactoryInterface
         Currency $shippingTotal = null,
         Currency $itemsTotal = null,
         \Object\Coupon $coupon = null,
-        $paypalCorrelationID = null,
-        $orderItems = null
+        $paypalCorrelationID = null
     ){
         $array = [
             'customer'            => $customer,
@@ -51,8 +49,7 @@ class Order extends FactoryBase implements FactoryInterface
             'shippingTotal'       => $shippingTotal,
             'itemsTotal'          => $itemsTotal,
             'coupon'              => $coupon,
-            'paypalCorrelationID' => $paypalCorrelationID,
-            'orderItems'          => $orderItems
+            'paypalCorrelationID' => $paypalCorrelationID
         ];
 
         return parent::convertArrayToObject($array);
@@ -66,6 +63,8 @@ class Order extends FactoryBase implements FactoryInterface
         
         $statement->execute();
         
-        $statement->fetchAll(PDO::FETCH_ASSOC);
+        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
+        
+        \Debug::dump($result);
     }
 }
