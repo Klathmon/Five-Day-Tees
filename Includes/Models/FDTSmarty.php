@@ -30,7 +30,7 @@ class FDTSmarty extends Smarty
      * @param string       $title
      * @param string       $cacheID
      */
-    public function __construct($config, $template, $title = '', $cacheID = null)
+    public function __construct($config, $template, $title = '', $cacheID = NULL)
     {
         parent::__construct();
 
@@ -44,38 +44,42 @@ class FDTSmarty extends Smarty
         $this->setCompileDir('Cache/CompiledTemplates');
         $this->setCacheDir('Cache/CachedTemplates');
 
-        if ($this->config->get('DEBUG', 'DEBUGGING')) {
+        if($this->config->get('DEBUG', 'DEBUGGING')){
             //$this->debugging = true;
-        } else {
-            $this->debugging = false;
+        } else{
+            $this->debugging = FALSE;
         }
 
+        $this->cache_modified_check   = TRUE;
+        $this->use_sub_dirs           = TRUE;
+        $this->compile_locking        = TRUE;
+        $this->cache_locking          = TRUE;
+        $this->direct_access_security = FALSE;
+        $this->locking_timeout        = 10;
+        $this->cache_lifetime         = 3600; //One hour
 
-        if ($this->config->get('DEBUG', 'FORCE_RECOMPILE')) {
+
+        if($this->config->get('DEBUG', 'FORCE_RECOMPILE')){
 
             //force recompile is on, don't use any caching and force a compile each time
-            $this->force_compile  = true;
-            $this->compile_check  = true;
-            $this->cache_lifetime = 0;
-            $this->caching        = Smarty::CACHING_OFF;
+            $this->force_compile = TRUE;
+            $this->compile_check = TRUE;
+            $this->caching       = Smarty::CACHING_OFF;
 
-        } elseif ($this->config->get('DEBUG', 'STATIC_CACHING') && !is_null($this->cacheID)) {
+        } elseif($this->config->get('DEBUG', 'STATIC_CACHING') && !is_null($this->cacheID)){
 
             //Conditions are right, use caching!
-            $this->force_compile  = false;
-            $this->compile_check  = false;
-            $this->cache_lifetime = 3600; //One hour
-            $this->caching        = Smarty::CACHING_LIFETIME_CURRENT;
+            $this->force_compile = FALSE;
+            $this->compile_check = FALSE;
+            $this->caching       = Smarty::CACHING_LIFETIME_CURRENT;
 
-        } else {
+        } else{
 
             //Either caching is turned off, or the $cacheID is not set, so use normal compilation
-            $this->force_compile  = false;
-            $this->compile_check  = true;
-            $this->cache_lifetime = 0;
-            $this->caching        = Smarty::CACHING_OFF;
-            $this->cacheID        = null;
-
+            $this->force_compile = FALSE;
+            $this->compile_check = TRUE;
+            $this->caching       = Smarty::CACHING_OFF;
+            $this->cacheID       = NULL;
         }
     }
 
@@ -98,9 +102,9 @@ class FDTSmarty extends Smarty
         //Display the template!
 
 
-        if (is_null($this->cacheID)) {
+        if(is_null($this->cacheID)){
             parent::display($this->template);
-        } else {
+        } else{
             parent::display($this->template, $this->cacheID);
         }
     }
@@ -112,7 +116,7 @@ class FDTSmarty extends Smarty
      */
     public function addJs($scripts)
     {
-        foreach ((array)$scripts as $script) {
+        foreach((array)$scripts as $script){
             $this->javascripts[] = '/Static/JS/' . $script;
         }
     }
@@ -124,7 +128,7 @@ class FDTSmarty extends Smarty
      */
     public function addCss($sheets)
     {
-        foreach ((array)$sheets as $sheet) {
+        foreach((array)$sheets as $sheet){
             $this->cssSheets[] = '/Static/CSS/' . $sheet;
         }
     }

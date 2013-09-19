@@ -72,8 +72,8 @@ class SpreadshirtItems
     public function getNewItems($amount = 200, $startingNumber = null)
     {
         /* Get the information to build the URL */
-        $spreadURL = $this->config->getSpreadAPIURL();
-        $shopID    = $this->config->getSpreadShopID();
+        $spreadURL = $this->config->get('SPREADSHIRT', 'API_URL');
+        $shopID    = $this->config->get('SPREADSHIRT', 'SHOP_ID');
 
         $url = "{$spreadURL}shops/{$shopID}/articles?";
 
@@ -251,7 +251,7 @@ class SpreadshirtItems
             $DOMDocument = $this->XMLDocumentCache[$url];
         } else {
             $DOMDocument               = new DOMDocument('1.0', 'UTF-8');
-            $DOMDocument->formatOutput = ($this->config->debugModeOn() ? true : false);
+            $DOMDocument->formatOutput = ($this->config->get('DEBUG', 'DEBUGGING') ? true : false);
             $DOMDocument->load($url);
 
             $this->XMLDocumentCache[$url] = $DOMDocument;

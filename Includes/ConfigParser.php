@@ -41,8 +41,6 @@ class ConfigParser
                 }
             }
         }
-        
-        var_dump($this->configArray);
     }
     
     public function get($section, $key = null)

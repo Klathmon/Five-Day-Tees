@@ -12,8 +12,8 @@ $productFactory = new \Factory\Product($database);
 $couponsFactory = new \Factory\Coupon($database);
 
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
-    switch ($_POST['Command']) {
+if($_SERVER['REQUEST_METHOD'] === 'POST'){
+    switch($_POST['Command']){
         case 'SaveGlobals':
             $settings->setStartingDisplayDate(DateTime::createFromFormat('Y-m-d', $_POST['StartingDisplayDate']));
             $settings->setRetail(new Currency(Sanitize::preserveGivenCharacters($_POST['Retail'], '1234567890.')));
@@ -95,27 +95,26 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $response['command'] = 'refreshPage';
             break;
         case 'ReloadAllItems':
-            if ($config->get('MODE') == 'DEV') {
-                $database->query('DELETE FROM Article');
-                $database->query('DELETE FROM Design');
-                $database->query('DELETE FROM Product');
+            if($config->get('MODE') == 'DEV'){
+                $database->query('DELETE FROM article');
+                $database->query('DELETE FROM design');
+                $database->query('DELETE FROM product');
 
                 $spreadshirtItems = new \SpreadShirt\SpreadShirtItems($database, $config);
                 $spreadshirtItems->getNewItems();
             }
             break;
         case 'PurgeCache':
-            foreach(new DirectoryIterator('Cache/') as $directory){
-                /** @var $directory DirectoryIterator */
-                if($directory->isDir()  && !$directory->isDot()){
-                    foreach(new DirectoryIterator($directory->getPathname()) as $file){
-                        /** @var $file DirectoryIterator */
-                        if($file->isFile() && $file->getFilename() != '.gitignore' && $file->getFilename() != '.htaccess'){
-                            unlink($file->getPathname());
-                        }
-                    }
+            /* Clear the DataCache Cache */
+            foreach(new DirectoryIterator('Cache/DataCache') as $file){
+                /** @var $file DirectoryIterator */
+                if($file->isFile() && $file->getFilename() != '.gitignore' && $file->getFilename() != '.htaccess'){
+                    unlink($file->getPathname());
                 }
             }
+            $smartyTemp = new FDTSmarty($config, '');
+            $smartyTemp->clearCompiledTemplate();
+            $smartyTemp->clearAlLCache();
 
             $response['status']  = 'OK';
             $response['command'] = 'refreshPage';
@@ -126,10 +125,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             break;
     }
     echo json_encode($response);
-} else {
+} else{
 
 
-    foreach ($couponsFactory->getAll() as $coupon) {
+    foreach($couponsFactory->getAll() as $coupon){
         $coupons[] = [
             'code'          => $coupon->getCode(),
             'amount'        => $coupon->getAmount()->getNiceFormat(),
@@ -137,8 +136,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         ];
     }
 
-    foreach ($itemsFactory->getAll() as $item) {
-        foreach ($item->getArticles() as $article) {
+    foreach($itemsFactory->getAll() as $item){
+        foreach($item->getArticles() as $article){
             $product        = $item->getProduct($article->getProductID());
             $displayItems[] = [
                 'designID'       => $item->getID(),
