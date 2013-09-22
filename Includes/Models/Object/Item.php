@@ -6,73 +6,54 @@
 
 namespace Object;
 
-class Item extends Design implements ObjectInterface
+class Item implements ObjectInterface
 {
-    /** @var Article[] */
-    protected $articles;
-    /** @var Product[] */
-    protected $products;
+    /** @var string */
+    protected $ID;
+    /** @var Article */
+    protected $article;
+    /** @var Product */
+    protected $product;
+    /** @var Design */
+    protected $design;
+    /** @var int */
+    protected $totalSold;
 
-    /**
-     * @return \Object\Article[]
-     */
-    public function getArticles()
+    public function getID()
     {
-        return $this->articles;
+        return $this->ID;
     }
 
     /**
-     * @return \Object\Product[]
+     * @return \Object\Article
      */
-    public function getProducts()
+    public function article()
     {
-        return $this->products;
+        return $this->article;
     }
 
     /**
-     * @param $ID
-     *
-     * @return Article
+     * @return \Object\Design
      */
-    public function getArticle($ID)
+    public function design()
     {
-        return $this->articles[$ID];
+        return $this->design;
     }
 
     /**
-     * @param $ID
-     *
-     * @return Product
+     * @return \Object\Product
      */
-    public function getProduct($ID)
+    public function product()
     {
-        return $this->products[$ID];
+        return $this->product;
     }
 
     /**
-     * @return Article
+     * @return int
      */
-    public function getFirstArticle()
+    public function getTotalSold()
     {
-        //Okay, this is terra-bad, but it's how i'm doing it now.
-        //the first article will always be female (unless a female doesn't exist in which case it will pick the first available semi-randomly)
-        $productID = null;
-        foreach ($this->products as $product) {
-            if ($product->getType() == 'female') {
-                $productID = $product->getID();
-            }
-        }
-        foreach ($this->articles as $article) {
-            if ($article->getProductID() == $productID) {
-                $returnArticle = $article;
-            }
-        }
-
-        if ($productID === null) {
-            $returnArticle = reset($this->articles);
-        }
-
-        return $returnArticle;
+        return $this->totalSold;
     }
 
     /**
@@ -80,7 +61,7 @@ class Item extends Design implements ObjectInterface
      */
     public function getURLName()
     {
-        return urlencode(str_replace(' ', '_', $this->getName()));
+        return urlencode(str_replace(' ', '_', $this->design()->getName()));
     }
 
     /**
@@ -89,20 +70,5 @@ class Item extends Design implements ObjectInterface
     public function getPermalink()
     {
         return "//" . $_SERVER['HTTP_HOST'] . '/Item/' . $this->getURLName();
-    }
-
-    /**
-     * Returns the total number sold for this design/Item
-     * 
-     * @return int
-     */
-    public function getTotalSold()
-    {
-        $totalSold = 0;
-        foreach ($this->getArticles() as $article) {
-            $totalSold += $article->getNumberSold();
-        }
-
-        return $totalSold;
     }
 }

@@ -10,21 +10,37 @@ use \Currency;
 
 class Product implements ObjectInterface
 {
-    /** @var int */
-    protected $ID;
+    /** @var string */
+    protected $productID;
+    /** @var string */
+    protected $size;
     /** @var Currency */
     protected $cost;
     /** @var string */
     protected $type;
-    /** @var string[] */
-    protected $sizesAvailable;
 
     /**
      * @return int
      */
     public function getID()
     {
-        return $this->ID;
+        return $this->getProductID() . $this->getSize();
+    }
+
+    /**
+     * @return string
+     */
+    public function getProductID()
+    {
+        return $this->productID;
+    }
+
+    /**
+     * @return \string
+     */
+    public function getSize()
+    {
+        return $this->size;
     }
 
     /**
@@ -36,20 +52,10 @@ class Product implements ObjectInterface
     }
 
     /**
-     * @return \string[]
-     */
-    public function getSizesAvailable()
-    {
-        return $this->sizesAvailable;
-    }
-
-    /**
      * @return string
      */
     public function getType()
     {
         return $this->type;
     }
-    
-    
 }

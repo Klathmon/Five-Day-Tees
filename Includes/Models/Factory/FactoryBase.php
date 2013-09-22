@@ -7,6 +7,7 @@
 namespace Factory;
 
 use PDO;
+use PDOStatement;
 use ReflectionClass;
 use ReflectionMethod;
 use ReflectionProperty;
@@ -28,48 +29,28 @@ abstract class FactoryBase
     }
 
     /**
-     * Returns one object from the given ID
-     *
-     * @param int $ID
-     *
-     * @throws \Exception
-     *
-     * @return object
-     */
-    public function getByID($ID)
-    {
-        $statement = $this->database->prepare('SELECT * FROM ' . $this->className . ' WHERE ID=:ID LIMIT 1');
-        $statement->bindValue(':ID', $ID, PDO::PARAM_INT);
-        $statement->execute();
-
-        $array = $statement->fetch(PDO::FETCH_ASSOC);
-
-        if ($array === false) {
-            throw new \Exception('No object with that ID exists in the database');
-        }
-        
-        return $this->convertArrayToObject($array);
-    }
-
-    /**
      * Returns all of the objects from the database.
-     * 
-     * @return array
+     *
+     * @return object[]
      * @throws \Exception
      */
     public function getAll()
     {
         $rows = $this->database->query('SELECT * FROM ' . $this->className)->fetchAll(PDO::FETCH_ASSOC);
 
-        if ($rows === false) {
-            throw new \Exception('No objects exist in the database');
-        }
-        
-        foreach($rows as $row){
-            $returnArray[] = $this->convertArrayToObject($row);
-        }
-        
-        return $returnArray;
+        return $this->parseSQLResult($rows);
+    }
+
+    /**
+     * Create a new object. This object will not exist in the database until persisted
+     *
+     * @param array $array
+     *
+     * @return object
+     */
+    public function create($array)
+    {
+        return $this->convertArrayToObject($array);
     }
 
     /**
@@ -89,15 +70,23 @@ abstract class FactoryBase
     }
 
     /**
-     * Saves an object to the database in it's entirety, returns the entities ID for linking purposes
-     *
+     * Persists an object to the database
+     * 
      * @param object $object
-     *
-     * @return int
      */
     public function persist($object)
     {
-        $array     = $this->convertObjectToArray($object);
+        $this->save($this->convertObjectToArray($object));
+        return $this->database->lastInsertID();
+    }
+
+    /**
+     * "Upserts" an object into the database.
+     * 
+     * @param array $array The array of columns to upsert
+     */
+    public function save($array)
+    {
         $setValues = '';
 
         foreach ($array as $name => $value) {
@@ -118,29 +107,16 @@ abstract class FactoryBase
         }
 
         $statement->execute();
-
-        $ID = $object->getID();
-        if ($ID === null) {
-            //Set the ID of the object to it's new value from the database
-            $ID         = (int)$this->database->lastInsertID();
-            $reflection = new \ReflectionClass($object);
-            $propertyID = $reflection->getProperty('ID');
-            $propertyID->setAccessible(true);
-            $propertyID->setValue($object, $ID);
-        }
-
-        return $ID;
     }
 
     /**
-     * Converts an object to an array of the objects protected properties
-     * *NOTE* Override this function in each child class to convert data from PHP classes to MySQL datatypes
+     * Converts an object's protected properties to an array
      *
      * @param object $object
      *
      * @return array
      */
-    protected function convertObjectToArray($object)
+    public function convertObjectToArray($object)
     {
         $reflection = new ReflectionClass($object);
 
@@ -154,16 +130,8 @@ abstract class FactoryBase
 
         return $array;
     }
-
-    /**
-     * Converts an array full of protected properties to an object
-     * *NOTE* Override this function in each child class to convert data from MySQL datatypes to PHP classes
-     *
-     * @param array $array
-     *
-     * @return object
-     */
-    protected function convertArrayToObject($array)
+    
+    public function convertArrayToObject($array)
     {
         $reflection = new ReflectionClass($this->objectNamespace . $this->className);
         $object     = $reflection->newInstance();
@@ -175,7 +143,40 @@ abstract class FactoryBase
                 $property->setValue($object, $value);
             }
         }
-
+        
         return $object;
+    }
+
+    /**
+     * @param PDOStatement $statement
+     *
+     * @return \object[]
+     */
+    protected function executeAndParse($statement)
+    {
+        $statement->execute();
+
+        return $this->parseSQLResult($statement->fetchAll(PDO::FETCH_ASSOC));
+    }
+
+    /**
+     * Converts an array of SQL results to an object
+     *
+     * @param array $array
+     *
+     * @throws \Exception
+     * @return object[]
+     */
+    protected function parseSQLResult($array)
+    {
+        if ($array === false || $array == []) {
+            throw new \Exception('No data in returned array');
+        }
+        
+        foreach($array as $row){
+            $returnArray[] = $this->convertArrayToObject($row);
+        }
+
+        return $returnArray;
     }
 }

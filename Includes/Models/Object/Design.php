@@ -12,7 +12,7 @@ use \DateTime;
 class Design implements ObjectInterface
 {
     /** @var int */
-    protected $ID;
+    protected $designID;
     /** @var string */
     protected $name;
     /** @var DateTime */
@@ -29,7 +29,15 @@ class Design implements ObjectInterface
      */
     public function getID()
     {
-        return $this->ID;
+        return $this->designID;
+    }
+
+    /**
+     * @return int
+     */
+    public function getDesignID()
+    {
+        return $this->designID;
     }
 
     /**

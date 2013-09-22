@@ -8,36 +8,28 @@ namespace Factory;
 
 use DateTime;
 use PDO;
+use Traits\SQLStatements;
 
 class Design extends FactoryBase implements FactoryInterface
 {
 
     /**
-     * Create a new object. This object will not exist in the database until persisted
+     * Returns one object from the given ID
      *
      * @param int $ID
-     * @param string $name
-     * @param DateTime $displayDate
-     * @param string $designImageURL
-     * @param int $salesLimit
-     * @param int $votes
+     *
+     * @throws \Exception
      *
      * @return \Object\Design
      */
-    public function create($ID = null, $name = null, $displayDate = null, $designImageURL = null, $salesLimit = null, $votes = null)
+    public function getByID($ID)
     {
-        $array = [
-            'ID' => $ID,
-            'name' => $name,
-            'displayDate' => $displayDate,
-            'designImageURL' => $designImageURL,
-            'salesLimit' => $salesLimit,
-            'votes' => $votes,
-        ];
+        $statement = $this->database->prepare('SELECT * FROM Design WHERE designID=:ID LIMIT 1');
+        $statement->bindValue(':ID', $ID);
 
-        return parent::convertArrayToObject($array);
+        return $this->executeAndParse($statement)[0];
     }
-
+    
     /**
      * @param string $name
      *
@@ -48,26 +40,16 @@ class Design extends FactoryBase implements FactoryInterface
     {
         $statement = $this->database->prepare('SELECT * FROM Design WHERE name=:name LIMIT 1');
         $statement->bindValue(':name', $name, PDO::PARAM_STR);
-        $statement->execute();
-
-        $array = $statement->fetch(PDO::FETCH_ASSOC);
-
-        if ($array === false) {
-            throw new \Exception('No object with that ID exists in the database');
-        } else {
-            $design = $this->convertArrayToObject($array);
-        }
         
-        return $design;
+        return $this->executeAndParse($statement)[0];
     }
 
     public function convertObjectToArray($object)
     {
         $array = parent::convertObjectToArray($object);
         
-        /** @var DateTime $displayDate */
-        $displayDate = $array['displayDate'];
-        $array['displayDate'] = $displayDate->format('Y-m-d');
+        /** @var DateTime[] $array */
+        $array['displayDate'] = $array['displayDate']->format('Y-m-d');
         
         return $array;
     }

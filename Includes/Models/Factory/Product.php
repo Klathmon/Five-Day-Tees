@@ -7,49 +7,60 @@
 namespace Factory;
 
 use Currency;
+use PDO;
 
 class Product extends FactoryBase implements FactoryInterface
 {
 
+
     /**
-     * Create a new object. This object will not exist in the database until persisted
+     * Returns all the objects from the given ID
      *
-     * @param int      $ID
-     * @param Currency $cost
-     * @param string   $type
-     * @param string[] $sizesAvailable
+     * @param string $ID
      *
-     * @return \Object\Product
+     * @throws \Exception
+     *
+     * @return \Object\Product[]
      */
-    public function create($ID = null, $cost = null, $type = null, $sizesAvailable = null)
+    public function getByID($ID)
     {
-        $array = [
-            'ID'             => $ID,
-            'cost'           => $cost,
-            'type'           => $type,
-            'sizesAvailable' => $sizesAvailable
-        ];
-
-        return parent::convertArrayToObject($array);
+        $statement = $this->database->prepare('SELECT * FROM Product WHERE productID=:ID LIMIT 1');
+        $statement->bindValue(':ID', $ID);
+        
+        return $this->executeAndParse($statement);
     }
+    
+    
+    public function getByKey($productID, $size)
+    {
+        $sql = <<<SQL
+SELECT * FROM Product WHERE productID=:productID AND size=:size LIMIT 1
+SQL;
+        
+        $statement = $this->database->prepare($sql);
+        
+        $statement->bindValue(':productID', $productID, PDO::PARAM_STR);
+        $statement->bindValue(':size', $size, PDO::PARAM_STR);
 
+        return $this->executeAndParse($statement)[0];
+
+    }
+    
     public function convertObjectToArray($object)
     {
         $array = parent::convertObjectToArray($object);
-
-        /** @var Currency $cost */
-        $cost                    = $array['cost'];
-        $array['cost']           = $cost->getDecimal();
-        $array['sizesAvailable'] = implode(',', $array['sizesAvailable']);
-
+        
+        /** @var Currency[] $array */
+        $array['cost'] = $array['cost']->getDecimal();
+        
         return $array;
     }
 
     public function convertArrayToObject($array)
     {
-        $array['cost']           = new Currency($array['cost']);
-        $array['sizesAvailable'] = explode(',', $array['sizesAvailable']);
-
+        $array['cost'] = Currency::createFromDecimal($array['cost']);
+        
         return parent::convertArrayToObject($array);
     }
+
 }

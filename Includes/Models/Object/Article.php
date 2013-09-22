@@ -6,17 +6,15 @@
 
 namespace Object;
 
-use Currency;
+use \Currency;
 use \DateTime;
 
 class Article implements ObjectInterface
 {
-    /** @var int */
-    protected $ID;
+    /** @var string */
+    protected $articleID;
     /** @var int */
     protected $designID;
-    /** @var int */
-    protected $productID;
     /** @var DateTime */
     protected $lastUpdated;
     /** @var string */
@@ -33,23 +31,15 @@ class Article implements ObjectInterface
      */
     public function getID()
     {
-        return $this->ID;
+        return $this->articleID;
     }
 
     /**
-     * @return int
+     * @return string
      */
-    public function getDesignID()
+    public function getArticleID()
     {
-        return $this->designID;
-    }
-
-    /**
-     * @return int
-     */
-    public function getProductID()
-    {
-        return $this->productID;
+        return $this->articleID;
     }
 
     /**

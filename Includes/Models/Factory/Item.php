@@ -7,30 +7,26 @@
 namespace Factory;
 
 use Exception;
+use Settings;
 use PDO;
 use \Factory\Design;
 use \Factory\Article;
 use \Factory\Product;
-use Settings;
+use Traits\SQLStatements;
 
-/**
- * Class Item
- *
- * This class is a "Wrapper" for a few classes. It represents a distinct Design and all it's associated information (Articles and Products)
- * This is mainly used for displaying "previews" of all the shirts in our system (for example, the store page)
- */
-class Item extends Design implements FactoryInterface
+class Item extends FactoryBase implements FactoryInterface
 {
-    use SQLTrait;
-    
+
+    use SQLStatements;
+
     /** @var Settings */
     protected $settings;
     /** @var Article */
     protected $articleFactory;
     /** @var Product */
     protected $productFactory;
-
-
+    /** @var Design */
+    protected $designFactory;
 
 
     public function __construct(PDO $database, Settings $settings)
@@ -39,31 +35,34 @@ class Item extends Design implements FactoryInterface
         $this->settings       = $settings;
         $this->articleFactory = new Article($database);
         $this->productFactory = new Product($database);
+        $this->designFactory  = new Design($database);
     }
 
     /**
-     * @param int $designID
+     * @param string $ID
      *
      * @throws \Exception
      * @return \Object\Item
      */
-    public function getByID($designID)
+    public function getByID($ID)
     {
-        $sql = $this->selectItemSQL . $this->fromDesignSQL . 'WHERE Design.ID=:ID';
+        list($articleID, $productID, $designID, $size) = $this->getPartsFromID($ID);
+
+        $sql = $this->SQLItemSelect . <<<SQL
+WHERE articleID=:articleID 
+  AND productID=:productID 
+  AND designID=:designID 
+  AND size=:size
+LIMIT 1
+SQL;
 
         $statement = $this->database->prepare($sql);
-        $statement->bindValue(':ID', $designID, PDO::PARAM_INT);
-        $statement->execute();
-        
-        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
-        
-        if($result == false){
-            throw new Exception('There are no items with that ID');
-        }
+        $statement->bindValue(':articleID', $articleID, PDO::PARAM_STR);
+        $statement->bindValue(':productID', $productID, PDO::PARAM_STR);
+        $statement->bindValue(':designID', $designID, PDO::PARAM_INT);
+        $statement->bindValue(':size', $size, PDO::PARAM_STR);
 
-        $array = $this->parseResults($result);
-
-        return $this->convertArrayToObject(reset($array));
+        return $this->executeAndParse($statement);
 
     }
 
@@ -71,74 +70,70 @@ class Item extends Design implements FactoryInterface
      * @param string $name
      *
      * @throws \Exception
-     * @return \Object\Item
+     * @return \Object\Item[]
      */
     public function getByName($name)
     {
-        $sql = $this->selectItemSQL . $this->fromDesignSQL . 'WHERE Design.name = :name';
+        $sql = $this->SQLItemSelect . 'WHERE name=:name';
 
         $statement = $this->database->prepare($sql);
         $statement->bindValue(':name', $name, PDO::PARAM_STR);
-        $statement->execute();
 
-        $result = $statement->fetchAll(PDO::FETCH_ASSOC);
-
-        if($result == false){
-            throw new Exception('There are no items with that Name');
-        }
-
-        $array = $this->parseResults($result);
-
-        return $this->convertArrayToObject(reset($array));
+        return $this->executeAndParse($statement);
     }
 
     /**
-     * @return \Object\Item[]
-     */
-    public function getAll()
-    {
-        $parsedArray = $this->parseResults($this->database->query($this->selectItemSQL . $this->fromDesignSQL . $this->orderByDisplayDateSQL)->fetchAll(PDO::FETCH_ASSOC));
-
-        foreach ($parsedArray as $itemArray) {
-            $items[] = $this->convertArrayToObject($itemArray);
-        }
-
-        return $items;
-    }
-
-    /**
-     * @param int $start
-     * @param int $limit
+     * @param bool $preview
      *
      * @return \Object\Item[]
      */
-    public function getQueue($start = 0, $limit = 100)
+    public function getAll($preview = true)
     {
-        $statement = $this->database->prepare(
-            $this->selectItemSQL . $this->fromDesignSQL . 'WHERE Design.displayDate >= :FutureDate ' . $this->orderByDisplayDateSQL . 'Limit :Start, :Amount'
-        );
+        $sql = $this->SQLItemSelect;
+        if ($preview) {
+            $sql .= ' GROUP BY Design.designID';
+        }
+        $sql .= $this->SQLItemSelectSuffix;
+
+        $statement = $this->database->prepare($sql);
+
+        return $this->executeAndParse($statement);
+    }
+
+    /**
+     * @param bool $preview
+     *
+     * @return \Object\Item[]
+     */
+    public function getQueue($preview = true)
+    {
+        $sql = $this->SQLItemSelect . 'WHERE displayDate >= :FutureDate';
+        if ($preview) {
+            $sql .= ' GROUP BY Design.designID';
+        }
+        $sql .= $this->SQLItemSelectSuffix;
+        $statement = $this->database->prepare($sql);
 
         $futureDate = $this->settings->getFeaturedDates()[3];
 
         $statement->bindValue('FutureDate', $futureDate->format('Y-m-d'));
-        $statement->bindValue('Start', $start, PDO::PARAM_INT);
-        $statement->bindValue('Amount', $limit, PDO::PARAM_INT);
 
-        $statement->execute();
-
-        foreach ($this->parseResults($statement->fetchAll(PDO::FETCH_ASSOC)) as $itemArray) {
-            $items[] = $this->convertArrayToObject($itemArray);
-        }
-
-        return $items;
+        return $this->executeAndParse($statement);
     }
 
     /**
+     * @param bool $preview if true, it will only return one of each design
+     *
      * @return \Object\Item[]
      */
-    public function getFeatured()
+    public function getFeatured($preview = true)
     {
-        $statement = $this->database->prepare($this->selectItemSQL . $this->fromDesignSQL . 'WHERE Design.displayDate > :PastDate AND Design.displayDate < :FutureDate' . $this->orderByDisplayDateSQL);
+        $sql = $this->SQLItemSelect . 'WHERE displayDate > :PastDate AND displayDate < :FutureDate';
+        if ($preview) {
+            $sql .= ' GROUP BY Design.designID';
+        }
+        $sql .= $this->SQLItemSelectSuffix;
+        $statement = $this->database->prepare($sql);
 
         $dates = $this->settings->getFeaturedDates();
 
@@ -149,127 +144,107 @@ class Item extends Design implements FactoryInterface
         $statement->bindValue('PastDate', $pastDate->format('Y-m-d'));
         $statement->bindValue('FutureDate', $futureDate->format('Y-m-d'));
 
-        $statement->execute();
-
-        foreach ($this->parseResults($statement->fetchAll(PDO::FETCH_ASSOC)) as $itemArray) {
-            $items[] = $this->convertArrayToObject($itemArray);
-        }
-
-        return $items;
+        return $this->executeAndParse($statement);
     }
 
     /**
-     * @param int $start
-     * @param int $limit
+     * @param bool $preview
      *
      * @return \Object\Item[]
      */
-    public function getStore($start = 0, $limit = 50)
+    public function getStore($preview = true)
     {
-        $query     = $this->selectItemSQL . $this->fromDesignSQL . $this->itemCountJoinSQL
-            . 'WHERE Design.displayDate <= :PastDate AND itemsSold.totalSold < Design.salesLimit' . $this->orderByDisplayDateSQL . 'Limit :Start, :Amount';
-        $statement = $this->database->prepare($query);
+
+        $sql = $this->SQLItemSelect . 'WHERE displayDate <= :PastDate AND totalSold < salesLimit';
+        if ($preview) {
+            $sql .= ' GROUP BY Design.designID';
+        }
+        $sql .= $this->SQLItemSelectSuffix;
+        $statement = $this->database->prepare($sql);
 
         $pastDate = $this->settings->getFeaturedDates()[0];
 
         $statement->bindValue('PastDate', $pastDate->format('Y-m-d'));
-        $statement->bindValue('Start', $start, PDO::PARAM_INT);
-        $statement->bindValue('Amount', $limit, PDO::PARAM_INT);
 
-        $statement->execute();
-
-        foreach ($this->parseResults($statement->fetchAll(PDO::FETCH_ASSOC)) as $itemArray) {
-            $items[] = $this->convertArrayToObject($itemArray);
-        }
-
-        return $items;
+        return $this->executeAndParse($statement);
     }
 
     /**
-     * @param int $start
-     * @param int $limit
+     * @param bool $preview
      *
      * @return \Object\Item[]
      */
-    public function getVault($start = 0, $limit = 50)
+    public function getVault($preview = true)
     {
-        $query     = $this->selectItemSQL . $this->fromDesignSQL . $this->itemCountJoinSQL
-            . 'WHERE itemsSold.totalSold >= Design.salesLimit' . $this->orderByDisplayDateSQL . 'Limit :Start, :Amount';
-        $statement = $this->database->prepare($query);
-
-        $statement->bindValue('Start', $start, PDO::PARAM_INT);
-        $statement->bindValue('Amount', $limit, PDO::PARAM_INT);
-
-        $statement->execute();
-
-        foreach ($this->parseResults($statement->fetchAll(PDO::FETCH_ASSOC)) as $itemArray) {
-            $items[] = $this->convertArrayToObject($itemArray);
+        $sql = $this->SQLItemSelect . 'WHERE totalSold >= salesLimit';
+        if ($preview) {
+            $sql .= ' GROUP BY Design.designID';
         }
+        $sql .= $this->SQLItemSelectSuffix;
+        $statement = $this->database->prepare($sql);
 
-        return $items;
+        return $this->executeAndParse($statement);
     }
 
-    public function persist($object)
+    public function save($array)
     {
-
-        foreach ($object->getArticles() as $article) {
-            $this->articleFactory->persist($article);
-        }
-
-        foreach ($object->getProducts() as $product) {
-            $this->productFactory->persist($product);
-        }
-
-
-        parent::persist($object);
+        $this->articleFactory->save($array['article']);
+        $this->productFactory->save($array['product']);
+        $this->designFactory->save($array['design']);
     }
 
-    /** Stub, don't use */
-    public function create(){ }
+    public function convertObjectToArray($object)
+    {
+        $array = parent::convertObjectToArray($object);
 
-    /** Stub, don't use */
-    public function convertObjectToArray($object){ }
+        $array['article'] = $this->articleFactory->convertObjectToArray($array['article']);
+        $array['product'] = $this->productFactory->convertObjectToArray($array['product']);
+        $array['design']  = $this->designFactory->convertObjectToArray($array['design']);
+
+        return $array;
+    }
 
     public function convertArrayToObject($array)
     {
-        $itemArray = $array['design'];
-        
-        foreach ($array['articles'] as $articleArray) {
-            $itemArray['articles'][$articleArray['ID']] = $this->articleFactory->convertArrayToObject($articleArray);
-        }
+        $returnArray['article']   = $this->articleFactory->create($array);
+        $returnArray['product']   = $this->productFactory->create($array);
+        $returnArray['design']    = $this->designFactory->create($array);
+        $returnArray['ID']        = $this->getIDFromParts(
+            $returnArray['article']->getID(),
+            $returnArray['product']->getProductID(),
+            $returnArray['design']->getID(),
+            $returnArray['product']->getSize()
+        );
+        $returnArray['totalSold'] = $array['totalSold'];
 
-        foreach ($array['products'] as $productArray) {
-            $itemArray['products'][$productArray['ID']] = $this->productFactory->convertArrayToObject($productArray);
-        }
-        
-        return parent::convertArrayToObject($itemArray);
+
+        return parent::convertArrayToObject($returnArray);
     }
 
-    protected function parseResults($array)
+    /**
+     * Gets an Item's ID from it's associated parts
+     *
+     * @param string $articleID
+     * @param string $productID
+     * @param string $designID
+     * @param string $size
+     *
+     * @return string
+     */
+    public function getIDFromParts($articleID, $productID, $designID, $size)
     {
-        $return = [];
+        return implode('|', [$articleID, $productID, $designID, $size]);
+    }
 
-        foreach ($array as $row) {
-            $return[$row['designID']]['design']['ID']                                   = $row['designID'];
-            $return[$row['designID']]['design']['name']                                 = $row['name'];
-            $return[$row['designID']]['design']['displayDate']                          = $row['displayDate'];
-            $return[$row['designID']]['design']['designImageURL']                       = $row['designImageURL'];
-            $return[$row['designID']]['design']['salesLimit']                           = $row['salesLimit'];
-            $return[$row['designID']]['design']['votes']                                = $row['votes'];
-            $return[$row['designID']]['articles'][$row['articleID']]['ID']              = $row['articleID'];
-            $return[$row['designID']]['articles'][$row['articleID']]['designID']        = $row['designID'];
-            $return[$row['designID']]['articles'][$row['articleID']]['productID']       = $row['productID'];
-            $return[$row['designID']]['articles'][$row['articleID']]['lastUpdated']     = $row['lastUpdated'];
-            $return[$row['designID']]['articles'][$row['articleID']]['description']     = $row['description'];
-            $return[$row['designID']]['articles'][$row['articleID']]['articleImageURL'] = $row['articleImageURL'];
-            $return[$row['designID']]['articles'][$row['articleID']]['numberSold']      = $row['numberSold'];
-            $return[$row['designID']]['articles'][$row['articleID']]['baseRetail']      = $row['baseRetail'];
-            $return[$row['designID']]['products'][$row['productID']]['ID']              = $row['productID'];
-            $return[$row['designID']]['products'][$row['productID']]['cost']            = $row['cost'];
-            $return[$row['designID']]['products'][$row['productID']]['type']            = $row['type'];
-            $return[$row['designID']]['products'][$row['productID']]['sizesAvailable']  = $row['sizesAvailable'];
-        }
-
-        return $return;
+    /**
+     * Returns an array of parts from an ID
+     *
+     * @param string $ID
+     *
+     * @return string[]
+     */
+    public function getPartsFromID($ID)
+    {
+        return explode('|', $ID);
     }
 }
