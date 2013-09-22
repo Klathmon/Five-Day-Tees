@@ -10,6 +10,6 @@ $settings         = new Settings($database, $config);
 
 $factory = new \Factory\Item($database, $settings);
 
-$item = $factory->getStore(true);
+$item = $factory->getAll(true);
 
 var_dump($item);

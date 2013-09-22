@@ -24,7 +24,7 @@ use Settings;
  *
  * This is the SpreadshirtItems class that deals with pulling in item information from Spreadshirt to our Database
  */
-class SpreadshirtItems
+class SpreadShirtItems
 {
     /** @var PDO */
     private $database;
@@ -69,7 +69,7 @@ class SpreadshirtItems
      * @param int $amount
      * @param int $startingNumber
      */
-    public function getNewItems($amount = 200, $startingNumber = null)
+    public function getNewItems($amount = 250, $startingNumber = null)
     {
         /* Get the information to build the URL */
         $spreadURL = $this->config->get('SPREADSHIRT', 'API_URL');
@@ -129,17 +129,16 @@ class SpreadshirtItems
             /* This Article doesn't exist, or needs to be updated. So create it from spreadshirt! */
 
             /* First, get the associated product and design (creating them if necessary) */
-            $product = $this->getProduct($articleElement);
-            $design  = $this->getDesign($articleElement);
+            $products = $this->getProducts($articleElement);
+            $design   = $this->getDesign($articleElement);
 
             $designID    = $design->getID();
-            $productID   = $product->getID();
             $lastUpdated = DateTime::createFromFormat('U', time());
-            $description = (isset($articleElement->getElementsByTagName('description')->item(0)->nodeValue) ? 
+            $description = (isset($articleElement->getElementsByTagName('description')->item(0)->nodeValue) ?
                 $articleElement->getElementsByTagName('description')->item(0)->nodeValue : '');
             $numberSold  = 0;
-            $baseRetail  = ($product->getCost()->getCents() <= $this->settings->getRetail()->getCents() ? $this->settings->getRetail()
-                : $product->getCost());
+            $baseRetail  = ($products[0]->getCost()->getCents() <= $this->settings->getRetail()->getCents() ? $this->settings->getRetail()
+                : $products[0]->getCost());
 
             //There is probably a better way to do this, but i don't really care at this point.
             $resources = $articleElement->getElementsByTagName('resource');
@@ -150,54 +149,74 @@ class SpreadshirtItems
                     $articleImageURL = str_replace(['http:', 'https:'], '', $resource->getAttributeNS($this->namespaces['xlink'], 'href'));
                 }
             }
-            
+
             $article = $this->articleFactory->create(
-                $articleID,
-                $designID,
-                $productID,
-                $lastUpdated,
-                $description,
-                $articleImageURL,
-                $numberSold,
-                $baseRetail
+                [
+                    'articleID'       => $articleID,
+                    'designID'        => $designID,
+                    'lastUpdated'     => $lastUpdated->format('Y-m-d H:i:s'),
+                    'description'     => $description,
+                    'articleImageURL' => $articleImageURL,
+                    'numberSold'      => $numberSold,
+                    'baseRetail'      => $baseRetail->getDecimal()
+                ]
             );
-            
+
             $this->articleFactory->persist($article);
+
+            $statement = $this->database->prepare('INSERT INTO Article_Product VALUES (:articleID, :productID, :size)');
+
+            foreach ($products as $product) {
+                $statement->bindValue(':articleID', $articleID, PDO::PARAM_STR);
+                $statement->bindValue(':productID', $product->getProductID(), PDO::PARAM_STR);
+                $statement->bindValue(':size', $product->getSize(), PDO::PARAM_STR);
+                $statement->execute();
+            }
+
         }
     }
 
     /**
      * @param DOMElement $articleElement
      *
-     * @return \Object\Product
+     * @return \Object\Product[]
      */
-    private function getProduct($articleElement)
+    private function getProducts($articleElement)
     {
         /* Fetch the Product Document and ProductID */
         $productDocument = $this->getProductDocumentFromArticle($articleElement);
         $productID       = $productDocument->documentElement->getAttribute('id');
+        $sizesNode       = $productDocument->getElementsByTagName('sizes')->item(0);
 
-        /* Try to get the product, if it throws an exception then create it */
-        try{
-            $product = $this->productFactory->getByID($productID);
-        } catch(Exception $e){
-            $productName = $productDocument->getElementsByTagName('name')->item(0)->nodeValue;
-            $sizesNode   = $productDocument->getElementsByTagName('sizes')->item(0);
+        /** @var DOMElement $sizesNode */
+        foreach ($sizesNode->getElementsByTagName('size') as $sizeNode) {
+            /** @var DOMElement $sizeNode */
+            $size = $sizeNode->getElementsByTagName('name')->item(0)->nodeValue;
 
-            $type = (stripos($productName, 'Women') !== false ? 'female' : 'male');
-            $cost = new Currency($articleElement->getElementsByTagName('vatIncluded')->item(0)->nodeValue);
+            /* Try to get the product, if it throws an exception then create it */
+            try{
+                $product = $this->productFactory->getByKey($productID, $size);
+            } catch(Exception $e){
+                //This product does not exist...
+                $productName = $productDocument->getElementsByTagName('name')->item(0)->nodeValue;
 
-            /** @var DOMElement $sizesNode */
-            foreach ($sizesNode->getElementsByTagName('size') as $sizeNode) {
-                /** @var DOMElement $sizeNode */
-                $sizesAvailable[] = $sizeNode->getElementsByTagName('name')->item(0)->nodeValue;
+                $type = (stripos($productName, 'Women') !== false ? 'female' : 'male');
+                $cost = new Currency($articleElement->getElementsByTagName('vatIncluded')->item(0)->nodeValue);
+
+                $product = $this->productFactory->create(
+                    [
+                        'productID' => $productID,
+                        'size'      => $size,
+                        'cost'      => $cost->getDecimal(),
+                        'type'      => $type
+                    ]
+                );
+                $this->productFactory->persist($product);
             }
-
-            $product = $this->productFactory->create($productID, $cost, $type, $sizesAvailable);
-            $this->productFactory->persist($product);
+            $products[] = $product;
         }
 
-        return $product;
+        return $products;
     }
 
     /**
@@ -228,8 +247,21 @@ class SpreadshirtItems
                 }
             }
 
-            $design = $this->designFactory->create(null, $name, $displayDate, $designImageURL, $salesLimit, $votes);
-            $this->designFactory->persist($design);
+            $design = $this->designFactory->create(
+                [
+                    'articleID'      => null,
+                    'name'           => $name,
+                    'displayDate'    => $displayDate->format('Y-m-d'),
+                    'designImageURL' => $designImageURL,
+                    'salesLimit'     => $salesLimit,
+                    'votes'          => $votes
+                ]
+            );
+            $designID = $this->designFactory->persist($design);
+            
+            /* The persisted object does not have an ID, so get the ID from the persist statement and re-select the design with the ID included */
+            /* It's dumb i know, but the fix for this is a pain in the ass and won't provide much benefit */
+            $design = $this->designFactory->getByID($designID);
         }
 
         return $design;

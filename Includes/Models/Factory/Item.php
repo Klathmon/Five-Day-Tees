@@ -83,7 +83,7 @@ SQL;
     }
 
     /**
-     * @param bool $preview
+     * @param bool $preview **NOTE** preview acts differently here, it displays all distinct articles (ignoring copies for each size)
      *
      * @return \Object\Item[]
      */
@@ -91,7 +91,7 @@ SQL;
     {
         $sql = $this->SQLItemSelect;
         if ($preview) {
-            $sql .= ' GROUP BY Design.designID';
+            $sql .= ' GROUP BY Article.articleID';
         }
         $sql .= $this->SQLItemSelectSuffix;
 
