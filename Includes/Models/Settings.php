@@ -101,7 +101,7 @@ SQL
      */
     public function getLastDate()
     {
-        $sql = 'SELECT MAX(DisplayDate) FROM Design';
+        $sql = 'SELECT MAX(date) FROM Article';
 
         $statement = $this->database->query($sql);
 

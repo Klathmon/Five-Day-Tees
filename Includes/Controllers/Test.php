@@ -6,22 +6,22 @@
 
 echo 'Test Page!';
 
-/*
-$settings         = new Settings($database, $config);
+$settings = new Settings($database, $config);
 
-$spread = new \SpreadShirt\SpreadShirtItems($database, $config);
+$factory = new \Article\Factory($database, $settings);
 
-$spread->getNewItems();
-*/
 
-$cache->smartFetch('key', function(){
-    $data = time();
-    
-    return $data;
-}, '1 hour');
+$array['name']            = 'Test Shirt';
+$array['date']            = (new DateTime('now'))->format('Y-m-d');
+$array['articleImageURL'] = 'http://lolwhut.com';
+$array['salesLimit']      = 100;
+$array['votes']           = 0;
 
-$string = (string) PHP_INT_MAX;
 
-$length = strlen(PHP_INT_MAX);
 
-echo "<br/>" . $length . "<br/>";
+$entity = $factory->createFromData($array);
+
+Debug::dump($entity);
+
+
+//$factory->persistToDatabase($entity);

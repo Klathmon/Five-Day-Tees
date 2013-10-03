@@ -27,6 +27,7 @@ switch ($request->get(0)) {
     case 'Contact':
     case 'Cart':
     case 'Checkout':
+    case 'SpreadShirt':
         $controller = $request->get(0);
         break;
     case '':
