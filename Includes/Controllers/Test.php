@@ -6,10 +6,22 @@
 
 echo 'Test Page!';
 
+/*
 $settings         = new Settings($database, $config);
 
-$factory = new \Factory\Item($database, $settings);
+$spread = new \SpreadShirt\SpreadShirtItems($database, $config);
 
-$item = $factory->getAll(true);
+$spread->getNewItems();
+*/
 
-var_dump($item);
+$cache->smartFetch('key', function(){
+    $data = time();
+    
+    return $data;
+}, '1 hour');
+
+$string = (string) PHP_INT_MAX;
+
+$length = strlen(PHP_INT_MAX);
+
+echo "<br/>" . $length . "<br/>";

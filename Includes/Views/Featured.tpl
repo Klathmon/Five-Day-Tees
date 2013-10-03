@@ -11,7 +11,7 @@
 
     <div class="ItemsContainer">
         {foreach $items as $item}
-            <div class="Item {if $item@iteration == 3}Selected{/if}" data-linkname="{$item['URLName']}">
+            <div class="Item {if $item@iteration == 3}Selected{/if}" data-id="{$item['ID']}">
                 <img
                         class="Preview"
                         src="{$item['designImageURL']}"

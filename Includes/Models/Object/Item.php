@@ -18,6 +18,8 @@ class Item implements ObjectInterface
     protected $design;
     /** @var int */
     protected $totalSold;
+    /** @var string */
+    protected $category;
 
     public function getID()
     {
@@ -54,6 +56,14 @@ class Item implements ObjectInterface
     public function getTotalSold()
     {
         return $this->totalSold;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCategory()
+    {
+        return $this->category;
     }
 
     /**

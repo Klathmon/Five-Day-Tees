@@ -1,8 +1,5 @@
 <div
         id="InnerViewport"
-        data-malearticleid="{$maleArticleID}"
-        data-femalearticleid="{$femaleArticleID}"
-        data-url="{$URLName}"
         >
     
     <h2 class="Name">{$name}</h2>
@@ -17,28 +14,23 @@
     <p class="Price"><span class="Number">${$price}</span> + Shipping</p>
 
     <div class="Genders">
-        <input
+        {foreach $types as $typeName => $typeID}
+            <input 
                 type="radio"
                 name="gender"
-                value="male"
-                id="male"
-                {if $type == 'male'}checked{/if}
-                />
-        <label for="male">Male</label>
-        <input
-                type="radio"
-                name="gender"
-                value="female"
-                id="female"
-                {if $type == 'female'}checked{/if}
-                />
-        <label for="female">Female</label>
+                value="{$typeName}"
+                id="{$typeName}"
+                data-id="{$typeID}"
+                {if $typeName == $type}checked{/if}
+            />
+            <label for="{$typeName}">{$typeName|capitalize}</label>
+        {/foreach}
     </div>
 
     <div class="Sizes">
-        {foreach $sizesAvailable as $size}
-            <input type="radio" name="size" value="{$size}" id="{$size}"/>
-            <label for="{$size}">{$size}</label>
+        {foreach $sizes as $sizeName => $sizeID}
+            <input type="radio" name="size" value="{$sizeName}" id="{$sizeName}" data-id="{$sizeID}"/>
+            <label for="{$sizeName}">{$sizeName|upper}</label>
         {/foreach}
     </div>
 

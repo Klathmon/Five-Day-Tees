@@ -65,6 +65,24 @@ SQL;
         return $this->executeAndParse($statement);
 
     }
+    /**
+     * @param string $ID
+     *
+     * @throws \Exception
+     * @return \Object\Item[]
+     */
+    public function getAssociatedByID($ID)
+    {
+        $designID = $this->getPartsFromID($ID)[2];
+
+        $sql = $this->SQLItemSelect . ' WHERE designID=:designID ' . $this->SQLItemSelectSuffix;
+
+        $statement = $this->database->prepare($sql);
+        $statement->bindValue(':designID', $designID, PDO::PARAM_INT);
+
+        return $this->executeAndParse($statement);
+
+    }
 
     /**
      * @param string $name
@@ -216,6 +234,11 @@ SQL;
             $returnArray['product']->getSize()
         );
         $returnArray['totalSold'] = $array['totalSold'];
+        $returnArray['category']  = $this->settings->getItemCategory(
+            $returnArray['design']->getDisplayDate(),
+            $returnArray['totalSold'],
+            $returnArray['design']->getSalesLimit()
+        );
 
 
         return parent::convertArrayToObject($returnArray);

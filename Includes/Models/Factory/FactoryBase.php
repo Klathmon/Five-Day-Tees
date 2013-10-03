@@ -155,8 +155,10 @@ abstract class FactoryBase
     protected function executeAndParse($statement)
     {
         $statement->execute();
-
-        return $this->parseSQLResult($statement->fetchAll(PDO::FETCH_ASSOC));
+        
+        $rows = $statement->fetchAll(PDO::FETCH_ASSOC);
+        
+        return $this->parseSQLResult($rows);
     }
 
     /**

@@ -12,16 +12,15 @@ if (!$layout->isPageCached()) {
     $settings    = new Settings($database, $config);
     $itemsFactory = new \Factory\Item($database, $settings);
 
-    $items = $itemsFactory->getVault();
+    $items = $itemsFactory->getVault(true);
 
     foreach($items as $item){
-        $category = $settings->getItemCategory($item->getDisplayDate(), $item->getTotalSold(), $item->getSalesLimit());
         $itemsDisplay[] = [
-            'URLName' => $item->getURLName(),
-            'name' => $item->getName(),
-            'description' => $item->getFirstArticle()->getDescription(),
-            'price' => $settings->getItemCurrentPrice($item->getFirstArticle()->getBaseRetail(), $category)->getNiceFormat(),
-            'designImageURL' => $item->getFormattedDesignImage(150, 150, 'jpg')
+            'ID' => $item->getID(),
+            'name' => $item->design()->getName(),
+            'description' => $item->article()->getDescription(),
+            'price' => $settings->getItemCurrentPrice($item->article()->getBaseRetail(), $item->getCategory())->getNiceFormat(),
+            'designImageURL' => $item->design()->getFormattedDesignImage(150, 150, 'jpg')
         ];
     }
 

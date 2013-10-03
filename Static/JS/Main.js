@@ -27,7 +27,8 @@
 
         $('.ItemsContainer').on('click', '.Item:not(.Selected)', itemClicked);
 
-        $('#Viewport').on('click', '.Genders INPUT[type=radio]', genderClicked)
+        $('#Viewport').on('click', '.Genders INPUT[type=radio]', changeViewport)
+            .on('click', '.Sizes INPUT[type=radio]', changeViewport)
             .on('click', '#AddToCart', addToCart);
 
         $('#CartButton').on('click', showCart);
@@ -150,28 +151,22 @@
         $this.addClass('Selected');
 
         /* Load the viewport */
-        loadViewport($this.data('linkname'));
+        loadViewport($this.data('id'));
     }
 
-    function genderClicked(event){
+    function changeViewport(event){
         var $this = $(event.target);
-        var $innerViewport = $this.closest('#InnerViewport');
 
-        var gender = $this.attr('id');
-        var name = $innerViewport.data('url');
-        var id = $innerViewport.data(gender + 'articleid');
+        var id = $this.data('id');
+        
+        console.log(id);
 
-        loadViewport(name, id);
+        loadViewport(id);
     }
 
-    function loadViewport(name, id){
-        id = id || 0;
+    function loadViewport(id){
 
-        var url = '/Viewport/' + name;
-
-        if(id != 0){
-            url += '/' + id;
-        }
+        var url = '/Viewport/' + id;
 
         $.get(url, function(data){
             $('#Viewport').html(data);
