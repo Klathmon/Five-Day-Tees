@@ -17,10 +17,12 @@ switch ($request->get(0)) {
     case 'Test':
         $controller = 'Test';
         break;
-    case 'Admin':
     case 'Featured':
     case 'Store':
     case 'Vault':
+        $controller = 'Page';
+        break;
+    case 'Admin':
     case 'Viewport':
     case 'Item':
     case 'FAQ':
