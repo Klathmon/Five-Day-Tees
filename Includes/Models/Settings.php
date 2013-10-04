@@ -119,7 +119,7 @@ SQL
      */
     public function getRetail()
     {
-        return new Currency($this->data['Retail']);
+        return Currency::createFromDecimal($this->data['Retail']);
     }
 
     /**
@@ -167,7 +167,7 @@ SQL
      */
     public function getLevel1()
     {
-        return new Currency($this->data['Level1']);
+        return Currency::createFromDecimal($this->data['Level1']);
     }
 
     /**
@@ -183,7 +183,7 @@ SQL
      */
     public function getLevel2()
     {
-        return new Currency($this->data['Level2']);
+        return Currency::createFromDecimal($this->data['Level2']);
     }
 
     /**
@@ -199,7 +199,7 @@ SQL
      */
     public function getLevel3()
     {
-        return new Currency($this->data['Level3']);
+        return Currency::createFromDecimal($this->data['Level3']);
     }
 
     /**
@@ -234,7 +234,7 @@ SQL
             case 'Default':
             case 'Queue':
             default:
-                $currentPrice = new Currency(999.99);
+                $currentPrice = Currency::createFromDecimal(999.99);
                 break;
         }
 

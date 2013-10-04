@@ -43,6 +43,8 @@ class FDTSmarty extends Smarty
         $this->setTemplateDir(get_include_path() . 'Views/');
         $this->setCompileDir('Cache/CompiledTemplates');
         $this->setCacheDir('Cache/CachedTemplates');
+        
+        $this->registerPlugin('function', 'currency', ['\\SmartyPlugins\\Currency', 'output'], true, ['amount']);
 
         if($this->config->get('DEBUG', 'DEBUGGING')){
             //$this->debugging = true;
