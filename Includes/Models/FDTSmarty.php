@@ -53,7 +53,6 @@ class FDTSmarty extends Smarty
         }
 
         $this->cache_modified_check   = TRUE;
-        $this->use_sub_dirs           = TRUE;
         $this->compile_locking        = TRUE;
         $this->cache_locking          = TRUE;
         $this->direct_access_security = FALSE;

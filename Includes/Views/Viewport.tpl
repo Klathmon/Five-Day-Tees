@@ -1,43 +1,52 @@
-<div
-        id="InnerViewport"
-        >
-    
-    <h2 class="Name">{$name}</h2>
+<div id="InnerViewport" data-encodedname="{$primary->getEncodedName()}">
 
-    <p class="Description">{$description}</p>
+    <h2 class="Name">{$primary->getArticle()->getName()}</h2>
+
+    <p class="Description">{$primary->getProduct()->getDescription()}</p>
 
     <div class="FullImages">
-        <img src="{$articleImageURL}" alt="{$name} - {$description}" class="Primary" height=450 width=400/>
-        <img src="{$secondaryArticleImageURL}" alt="{$name} - {$secondaryDescription}" class="Secondary" height=450 width=400/>
+        {foreach ['Primary' => $primary, 'Secondary' => $secondary] as $class => $item}
+            <img
+                    src="{$item->getProduct()->getFormattedImage(450,450,'png')}"
+                    alt="{$item->getArticle()->getName()} - {$item->getProduct()->getDescription()}"
+                    class="{$class}"
+                    height=450
+                    width=450
+                    />
+        {/foreach}
     </div>
 
-    <p class="Price"><span class="Number">${$price}</span> + Shipping</p>
+    <p class="Price"><span class="Number">{currency amount=$primary->getCurrentPrice()}</span> + Shipping</p>
 
     <div class="Genders">
-        {foreach $types as $typeName => $typeID}
-            <input 
-                type="radio"
-                name="gender"
-                value="{$typeName}"
-                id="{$typeName}"
-                data-id="{$typeID}"
-                {if $typeName == $type}checked{/if}
-            />
-            <label for="{$typeName}">{$typeName|capitalize}</label>
+        {foreach [$primary, $secondary] as $item}
+            <input
+                    type="radio"
+                    name="gender"
+                    value="{$item->getProduct()->getType()}"
+                    id="{$item->getProduct()->getType()}"
+                    data-id="{$item->getID()}"
+                    {if $primary == $item}checked{/if}
+                    />
+            <label for="{$item->getProduct()->getType()}">{$item->getProduct()->getType()|capitalize}</label>
         {/foreach}
     </div>
 
     <div class="Sizes">
-        {foreach $sizes as $sizeName => $sizeID}
-            <input type="radio" name="size" value="{$sizeName}" id="{$sizeName}" data-id="{$sizeID}"/>
-            <label for="{$sizeName}">{$sizeName|upper}</label>
-        {/foreach}
+        {html_radios 
+            name='size'
+            values=$primary->getProduct()->getSizes()
+            output=$primary->getProduct()->getSizes()
+            labels=true
+            label_ids=true
+        }
     </div>
 
     <button id="AddToCart">Add To Cart</button>
 
     <div class="Social">
-        <div class="GPlus" data-href="{$permalink}" data-callback="plusone" data-annotation="inline" data-width="300"></div>
-        <div class="Facebook" data-href="{$permalink}" data-send="false" data-width="300" data-show-faces="true"></div>
+        <div class="GPlus" data-href="{$primary->getPermalink()}" data-callback="plusone" data-annotation="inline"
+             data-width="300"></div>
+        <div class="Facebook" data-href="{$primary->getPermalink()}" data-send="false" data-width="300" data-show-faces="true"></div>
     </div>
 </div>

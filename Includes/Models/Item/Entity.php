@@ -62,4 +62,14 @@ class Entity extends \Abstracts\Entity
     {
         return $this->category;
     }
+    
+    public function getEncodedName()
+    {
+        return urlencode($this->getArticle()->getName());
+    }
+    
+    public function getPermalink()
+    {
+        return '/Shirt/' . $this->getEncodedName();
+    }
 }

@@ -5,14 +5,17 @@
     <div id="Viewport">
         {* Load the Current shirt here via ajax... *}
     </div>
-    
+
     {html_image file='/Static/Images/Layout/Topper.png' id='TopperBottom'}
 
     <h2>{$subHeader}</h2>
 
     <div class="ItemsContainer">
         {foreach $items as $item}
-            <div class="Item {if $item@iteration == 3}Selected{/if}" data-id="{$item->getArticle()->getID()}">
+            <div
+                    class="Item {if $ID == 'Featured' && $item@iteration == 3}Selected{elseif $ID != 'Featured' && $item@iteration == 1}Selected{/if}"
+                    data-encodedname="{$item->getEncodedName()}"
+                    >
                 <img
                         class="Preview"
                         src="{$item->getArticle()->getFormattedImage(150, 150, 'jpg')}"

@@ -57,6 +57,24 @@ SQL;
         return $this->executeAndParse($statement)[0];
     }
 
+    /**
+     * @param string $name
+     *
+     * @return \Item\Entity[]
+     */
+    public function getByNameFromDatabase($name)
+    {
+        $statement = $this->database->prepare(
+            $this->sqlSelect . ' WHERE name=:name'
+        );
+
+        $statement->bindValue(':name', $name);
+
+        $statement->execute();
+
+        return $this->executeAndParse($statement);
+    }
+
     public function getAllFromDatabase()
     {
         $statement = $this->database->prepare($this->sqlSelect);
@@ -129,7 +147,7 @@ SQL;
     public function getIDFromParts($array)
     {
         return implode(
-            '|',
+            '-',
             [
                 $array['articleID'],
                 $array['productID']
@@ -139,7 +157,7 @@ SQL;
 
     public function getPartsFromID($ID)
     {
-        $array = explode('|', $ID);
+        $array = explode('-', $ID);
 
         return [
             'articleID' => $array[0],
@@ -161,7 +179,7 @@ SQL;
             $temp['totalSold']    = $row['totalSold'];
             $temp['category']     = $this->settings->getItemCategory($temp['article']->getDate(), $temp['totalSold'], $temp['article']->getSalesLimit());
             $temp['currentPrice'] = $this->settings->getItemCurrentPrice($temp['product']->getRetail(), $temp['category']);
-            
+
             $returnArray[] = $this->convertArrayToObject($temp);
         }
 

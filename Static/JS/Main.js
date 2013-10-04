@@ -9,7 +9,7 @@
         attachHandlers();
 
         //Load the first element
-        loadViewport($('.Item.Selected').data('linkname'));
+        loadViewport($('.Item.Selected').data('encodedname'));
     });
 
     function attachHandlers(){
@@ -28,7 +28,6 @@
         $('.ItemsContainer').on('click', '.Item:not(.Selected)', itemClicked);
 
         $('#Viewport').on('click', '.Genders INPUT[type=radio]', changeViewport)
-            .on('click', '.Sizes INPUT[type=radio]', changeViewport)
             .on('click', '#AddToCart', addToCart);
 
         $('#CartButton').on('click', showCart);
@@ -151,22 +150,25 @@
         $this.addClass('Selected');
 
         /* Load the viewport */
-        loadViewport($this.data('id'));
+        loadViewport($this.data('encodedname'));
     }
 
     function changeViewport(event){
         var $this = $(event.target);
 
+        var encodedName = $this.closest('#InnerViewport').data('encodedname');
         var id = $this.data('id');
-        
-        console.log(id);
 
-        loadViewport(id);
+        loadViewport(encodedName, id);
     }
 
-    function loadViewport(id){
+    function loadViewport(encodedName, id){
 
-        var url = '/Viewport/' + id;
+        var url = '/Viewport/' + encodedName;
+        
+        if(id != undefined){
+            url += '/' + id;
+        }
 
         $.get(url, function(data){
             $('#Viewport').html(data);
@@ -176,11 +178,11 @@
     function addToCart(event){
         var $this = $(event.target).closest('#InnerViewport');
 
-        var gender = $this.find('.Genders').find('Input[type=radio]:checked').attr('ID').toLowerCase();
+        var id = $this.find('.Genders').find('Input[type=radio]:checked').data('id');
 
         var data = {
             'Command': 'AddItem',
-            'ID':      $this.data(gender + 'articleid'),
+            'ID':      id,
             'Size':    $this.find('.Sizes').find('Input[type=radio]:checked').val()
         };
 
