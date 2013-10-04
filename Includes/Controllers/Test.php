@@ -8,12 +8,11 @@ echo 'Test Page!';
 
 $settings = new Settings($database, $config);
 
-$factory = new \Item\Factory($database, $settings);
+$factory = new \ShippingMethod\Factory($database);
 
+$entities = $factory->getAllFromDatabase();
 
-$items = $factory->getFeaturedFromDatabase();
-
-Debug::dump($items);
+Debug::dump($entities);
 
 
 //$factory->persistToDatabase($entity);
