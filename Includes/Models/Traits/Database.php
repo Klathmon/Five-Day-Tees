@@ -6,6 +6,7 @@
 
 namespace Traits;
 
+use Abstracts\Entity;
 use PDO;
 use PDOStatement;
 
@@ -16,7 +17,6 @@ use PDOStatement;
  */
 trait Database
 {
-    
     public function getByIDFromDatabase($ID)
     {
         $statement = $this->database->prepare('SELECT * FROM ' . $this->namespace . ' WHERE ' . $this->identifier . '=:ID LIMIT 1');
@@ -36,7 +36,7 @@ trait Database
 
         return $this->executeAndParse($statement);
     }
-    
+
     public function deleteFromDatabase($entity)
     {
         /** @var \Abstracts\Entity $entity */

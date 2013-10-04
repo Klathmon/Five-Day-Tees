@@ -54,7 +54,7 @@ abstract class Factory
 
         return $array;
     }
-
+    
     protected function convertArrayToObject($array)
     {
         $reflection = new ReflectionClass('\\' . $this->namespace . '\\' . $this->className);
