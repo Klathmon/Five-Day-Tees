@@ -6,6 +6,8 @@
 
 namespace Item;
 
+use Currency;
+
 class Entity extends \Abstracts\Entity
 {
     /** @var string */
@@ -14,6 +16,12 @@ class Entity extends \Abstracts\Entity
     protected $article;
     /** @var \Product\Entity */
     protected $product;
+    /** @var int */
+    protected $totalSold;
+    /** @var string */
+    protected $category;
+    /** @var Currency */
+    protected $currentPrice;
 
     /**
      * @return \Article\Entity
@@ -29,5 +37,29 @@ class Entity extends \Abstracts\Entity
     public function getProduct()
     {
         return $this->product;
+    }
+
+    /**
+     * @return \Currency
+     */
+    public function getCurrentPrice()
+    {
+        return $this->currentPrice;
+    }
+
+    /**
+     * @return int
+     */
+    public function getTotalSold()
+    {
+        return $this->totalSold;
+    }
+
+    /**
+     * @return string
+     */
+    public function getCategory()
+    {
+        return $this->category;
     }
 }

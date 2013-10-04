@@ -95,5 +95,8 @@ class Entity extends \Abstracts\Entity
         $this->votes = $votes;
     }
     
-    
+    public function getFormattedImage($x, $y, $format = 'png')
+    {
+        return $this->getArticleImageURl() . ",width=$x,height=$y,mediaType=$format";
+    }
 }

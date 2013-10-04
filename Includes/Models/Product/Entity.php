@@ -125,5 +125,8 @@ class Entity extends \Abstracts\Entity
         $this->sold = $sold;
     }
 
-    
+    public function getFormattedImage($x, $y, $format = 'png')
+    {
+        return $this->getProductImageURl() . ",width=$x,height=$y,mediaType=$format";
+    }
 }

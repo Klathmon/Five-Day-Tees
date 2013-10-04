@@ -8,20 +8,12 @@ echo 'Test Page!';
 
 $settings = new Settings($database, $config);
 
-$factory = new \Article\Factory($database, $settings);
+$factory = new \Item\Factory($database, $settings);
 
 
-$array['name']            = 'Test Shirt';
-$array['date']            = (new DateTime('now'))->format('Y-m-d');
-$array['articleImageURL'] = 'http://lolwhut.com';
-$array['salesLimit']      = 100;
-$array['votes']           = 0;
+$items = $factory->getFeaturedFromDatabase();
 
-
-
-$entity = $factory->createFromData($array);
-
-Debug::dump($entity);
+Debug::dump($items);
 
 
 //$factory->persistToDatabase($entity);
