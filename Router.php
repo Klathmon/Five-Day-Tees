@@ -17,6 +17,7 @@ switch ($request->get(0)) {
     case 'Test':
         $controller = 'Test';
         break;
+    case '':
     case 'Featured':
     case 'Store':
     case 'Vault':
@@ -31,9 +32,6 @@ switch ($request->get(0)) {
     case 'Checkout':
     case 'SpreadShirt':
         $controller = $request->get(0);
-        break;
-    case '':
-        $controller = 'Featured';
         break;
     case 'robots.txt':
         $controller = 'Robotstxt';

@@ -23,7 +23,7 @@
 
                 <h3 class="Name">{$item->getArticle()->getName()}</h3>
 
-                <p class="Price">${$item->getCurrentPrice()->getNiceFormat()}</p>
+                <p class="Price">{currency amount=$item->getCurrentPrice()}</p>
             </div>
         {/foreach}
     </div>

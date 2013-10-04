@@ -12,11 +12,6 @@ class Currency
     /** @var int */
     private $cents;
     
-    public function __construct($decimal)
-    {
-        $this->cents = self::convertDecimalToCents($decimal);
-    }
-    
     public static function createFromCents($cents)
     {
         return new self(self::convertCentsToDecimal($cents));
@@ -36,10 +31,11 @@ class Currency
     {
         return self::convertCentsToDecimal($this->cents);
     }
-    
-    public function getNiceFormat()
+
+
+    private function __construct($decimal)
     {
-        return number_format($this->getDecimal(), 2);
+        $this->cents = self::convertDecimalToCents($decimal);
     }
     
     private static function convertCentsToDecimal($cents)
