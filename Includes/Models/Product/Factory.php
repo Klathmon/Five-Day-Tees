@@ -64,7 +64,7 @@ class Factory extends \Abstracts\Factory
             $array['description']     = (isset($articleElement->getElementsByTagName('description')->item(0)->nodeValue) ? $articleElement->getElementsByTagName('description')->item(0)->nodeValue : '');
             $array['productImageURL'] = $productImageURL;
             $array['cost']            = $articleElement->getElementsByTagName('vatIncluded')->item(0)->nodeValue;
-            $array['retail']          = (Currency::createFromDecimal($array['cost'])->getCents() <= $this->settings->getRetail()->getCents() ? $this->settings->getRetail()->getCents() : $array['cost']);
+            $array['retail']          = (Currency::createFromDecimal($array['cost'])->getCents() <= $this->settings->getRetail()->getCents() ? $this->settings->getRetail()->getDecimal() : $array['cost']);
             $array['sold']            = 0;
             $array['type']            = (stripos($productDocument->getElementsByTagName('name')->item(0)->nodeValue, 'Women') !== false ? 'female' : 'male');
             $array['sizes']           = implode(',', $sizes);
