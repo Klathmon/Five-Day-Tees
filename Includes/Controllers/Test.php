@@ -8,8 +8,14 @@ echo 'Test Page!<br/>';
 
 $settings = new Settings($database, $config);
 
-$cart = new \ShoppingCart($database, $settings);
+$factory = new \Address\Factory($database);
 
-$cart->addCartItemByItemIDAndSize('SywqyUzOSfV0sTU2USsoyk8pTS4BcgwNLSzNzc0MAA==', 'M');
+$entity = $factory->createFromPaypal([
+        'PAYMENTREQUEST_0_SHIPTOSTREET' => '123 FakeStreet',
+        'PAYMENTREQUEST_0_SHIPTOCITY' => 'Garnet Hill',
+        'PAYMENTREQUEST_0_SHIPTOSTATE' => 'ZA',
+        'PAYMENTREQUEST_0_SHIPTOZIP' => '19065',
+        'PAYMENTREQUEST_0_SHIPTOCOUNTRYNAME' => 'United States',
+    ]);
 
-Debug::dump($cart);
+Debug::dump($entity);
