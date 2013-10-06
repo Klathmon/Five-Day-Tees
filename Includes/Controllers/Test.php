@@ -8,14 +8,13 @@ echo 'Test Page!<br/>';
 
 $settings = new Settings($database, $config);
 
-$factory = new \Address\Factory($database);
+$factory = new \Customer\Factory($database);
 
 $entity = $factory->createFromPaypal([
-        'PAYMENTREQUEST_0_SHIPTOSTREET' => '123 FakeStreet',
-        'PAYMENTREQUEST_0_SHIPTOCITY' => 'Garnet Hill',
-        'PAYMENTREQUEST_0_SHIPTOSTATE' => 'ZA',
-        'PAYMENTREQUEST_0_SHIPTOZIP' => '19065',
-        'PAYMENTREQUEST_0_SHIPTOCOUNTRYNAME' => 'United States',
+        'PAYERID' => '123456789',
+        'FIRSTNAME' => 'Gregory',
+        'LASTNAME' => 'Benner',
+        'EMAIL' => 'gregbenner1@gmail.com',
     ]);
 
 Debug::dump($entity);
