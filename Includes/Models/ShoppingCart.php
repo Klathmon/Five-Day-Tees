@@ -1,228 +1,165 @@
 <?php
-
 /**
  * Created by: Gregory Benner.
  * Date: 9/4/13
  */
 
-use \Entity\CartItem;
-use \Entity\Coupon;
-use \Entity\ShippingMethod;
-
 class ShoppingCart
 {
-    /** @var Settings */
-    private $settings;
-    /** @var array */
-    public $sessionArray;
+    /** @var \CartItem\Entity[] */
+    private $cartItems;
+    /** @var \Coupon\Entity */
+    private $coupon;
+    /** @var \ShippingMethod\Entity */
+    private $shippingMethod;
 
-    public function __construct(Settings $settings)
+    /** @var Settings */
+    protected $settings;
+    /** @var \CartItem\Factory */
+    protected $cartItemFactory;
+
+    public function __construct(PDO $database, Settings $settings)
     {
-        if (session_id() == '') {
+        if (session_status() !== PHP_SESSION_ACTIVE) {
             session_start();
         }
 
-        $this->settings = $settings;
+        foreach (['cartItems', 'coupon', 'shippingMethod'] as $name) {
+            $this->$name = (isset($_SESSION[get_class($this)][$name]) ? $_SESSION[get_class($this)][$name] : null);
+        }
 
-        if (!array_key_exists('ShoppingCart', $_SESSION)) {
-            // if the shopping cart array does not exist in the session, initialize it using emptyCart()
-            $this->emptyCart();
-        } else {
-            //The cart element exists, bring it into the object
-            $this->sessionArray = $_SESSION['ShoppingCart'];
+        $this->settings        = $settings;
+        $this->cartItemFactory = new \CartItem\Factory($database, $settings);
+    }
+
+    public function __destruct()
+    {
+        foreach (['cartItems', 'coupon', 'shippingMethod'] as $name) {
+            $_SESSION[get_class($this)][$name] = $this->$name;
         }
     }
 
-    /**
-     * Returns an array of cart items
-     *
-     * @return \Entity\CartItem[]
-     *
-     * @throws Exception
-     */
-    public function getCartItems()
-    {
-        if (array_key_exists('CartItems', $this->sessionArray)) {
-            return $this->sessionArray['CartItems'];
-        } else {
-            throw new Exception('CartItem array does not exist');
-        }
-    }
-
-    /**
-     * Returns a single cart item by it's ID
-     *
-     * @param string $ID This is actually the Item's ID + the size (ex: 164XL or $ID . $size)
-     *
-     * @return CartItem;
-     *
-     * @throws Exception
-     */
-    public function getByID($ID)
-    {
-        if (array_key_exists($ID, $this->sessionArray['CartItems'])) {
-            return $this->sessionArray['CartItems'][$ID];
-        } else {
-            throw new Exception('CartItem does not exist');
-        }
-    }
-
-    /**
-     * Deletes the given cart item
-     *
-     * @param CartItem $cartItem
-     */
-    public function deleteCartItem(CartItem $cartItem)
-    {
-        if (array_key_exists($cartItem->getID(), $this->sessionArray['CartItems'])) {
-            unset($this->sessionArray['CartItems'][$cartItem->getID()]);
-        }
-    }
-
-    /**
-     * Persist a cart item to the session array
-     *
-     * @param CartItem $cartItem
-     */
-    public function persist(CartItem $cartItem)
-    {
-        $this->sessionArray['CartItems'][$cartItem->getID()] = $cartItem;
-    }
-
-    /**
-     * Empties the shopping cart of everything. Items, coupons, and shipping stuff.
-     */
     public function emptyCart()
     {
-        $this->sessionArray = ['CartItems' => [], 'Coupon' => null, 'ShippingMethod' => null];
+        foreach (['cartItems', 'coupon', 'shippingMethod'] as $name) {
+            $this->$name = null;
+            $_SESSION[get_class($this)][$name] = null;
+        }
     }
 
-    /**
-     * Returns the given coupon, if there is none throws an exception
-     *
-     * @return Coupon;
-     *
-     * @throws Exception
-     */
+
+    public function getCartItems()
+    {
+        return $this->cartItems;
+    }
+
+    public function getCartItemByID($ID)
+    {
+        if (isset($this->cartItems[$ID])) {
+            return $this->cartItems[$ID];
+        } else {
+            throw new Exception('No CartItem with that ID in the Cart');
+        }
+    }
+
+    public function addCartItemByItemIDAndSize($itemID, $size)
+    {
+        $IDParts         = $this->cartItemFactory->getPartsFromID($itemID);
+        $IDParts['size'] = $size;
+        $ID              = $this->cartItemFactory->getIDFromParts($IDParts);
+
+        try{
+            $cartItem = $this->getCartItemByID($ID);
+            $cartItem->setQuantity($cartItem->getQuantity() + 1);
+        } catch(Exception $e){
+            $cartItem = $this->cartItemFactory->getByIDFromDatabase($ID);
+        }
+
+        /* Throw an exception it if it's a vault, queue, or disabled */
+        if (in_array($cartItem->getCategory(), ['vault', 'queue', 'disabled'])) {
+            throw new Exception('That item cannot be sold');
+        } else {
+            $this->persistCartItem($cartItem);
+        }
+    }
+
+    public function persistCartItem(\CartItem\Entity $cartItem)
+    {
+        if ($cartItem->getQuantity() <= 0) {
+            $this->deleteCartItem($cartItem->getID());
+        } else {
+            $this->cartItems[$cartItem->getID()] = $cartItem;
+        }
+    }
+
+    public function deleteCartItem($ID)
+    {
+        if (array_key_exists($ID, $this->cartItems)) {
+            unset($this->cartItems[$ID]);
+        }
+    }
+
+
     public function getCoupon()
     {
-        if (array_key_exists('Coupon', $this->sessionArray)) {
-            $coupon = $this->sessionArray['Coupon'];
-            if (!is_null($coupon)) {
-                return $coupon;
-            } else {
-                throw new Exception('No coupon found');
-            }
-        } else {
-            throw new Exception('No coupon found');
-        }
+        return $this->coupon;
     }
 
-    /**
-     * Set the coupon to the given entity
-     *
-     * @param Coupon $coupon
-     *
-     * @throws Exception
-     */
-    public function setCoupon(Coupon $coupon)
+    public function setCoupon(\Coupon\Entity $coupon)
     {
-        if ($coupon->getUsesRemaining() > 0) {
-            $this->sessionArray['Coupon'] = $coupon;
-        } else {
-            throw new Exception('Coupon does not have enough uses left.');
+        if($coupon->getUsesRemaining() <= 0){
+            throw new Exception('That coupon cannot be used any more');
+        }else{
+            $this->coupon = $coupon;
         }
     }
 
-    /**
-     * Delete the coupon from this shopping cart
-     */
     public function deleteCoupon()
     {
-        $this->sessionArray['Coupon'] = null;
-        unset($this->sessionArray['Coupon']);
+        $this->coupon = null;
     }
 
-    /**
-     * Returns the exact amount that the coupon discounts from the cart
-     *
-     * @return float|int
-     */
-    public function getCouponDiscount()
-    {
-        try{
-            $coupon = $this->getCoupon();
-            if ($coupon->isPercent()) {
-                $percentage = $coupon->getAmount() / 100;
 
-                $discount = ($this->getSubtotal() * $percentage) * -1;
-            } else {
-                $amount = $coupon->getAmount();
-
-                $discount = $amount * -1;
-            }
-        } catch(Exception $e){
-            $discount = 0;
-        }
-
-        return $discount;
-    }
-
-    /**
-     * Set the shipping method
-     *
-     * @param ShippingMethod $shippingMethod
-     */
-    public function setShippingMethod(ShippingMethod $shippingMethod)
-    {
-        $this->sessionArray['ShippingMethod'] = $shippingMethod;
-    }
-
-    /**
-     * Returns the Shipping Method selected
-     *
-     * @return \Entity\ShippingMethod
-     *
-     * @throws Exception
-     */
     public function getShippingMethod()
     {
-        if (array_key_exists('ShippingMethod', $this->sessionArray)) {
-            $shippingMethod = $this->sessionArray['ShippingMethod'];
-            if (!is_null($shippingMethod)) {
-                return $shippingMethod;
-            } else {
-                throw new Exception('No Shipping Method found', 1);
-            }
-        } else {
-            throw new Exception('No Shipping Method found', 1);
-        }
+        return $this->shippingMethod;
     }
 
-    /**
-     * Removes the current shipping method from the cart
-     */
+    public function setShippingMethod($shippingMethod)
+    {
+        $this->shippingMethod = $shippingMethod;
+    }
+
     public function deleteShippingMethod()
     {
-        $this->sessionArray['ShippingMethod'] = null;
-        unset($this->sessionArray['ShippingMethod']);
+        $this->shippingMethod = null;
+    }
+
+
+    public function getCouponAmount()
+    {
+        if (!is_null($this->coupon)) {
+            return $this->coupon->getAmount();
+        } else {
+            return Currency::createFromCents(0);
+        }
     }
 
     /**
      * Returns the SubTotal.
      * The SubTotal is the sum of the cart items and nothing else (no coupons or shipping stuff)
      *
-     * @return float|int
+     * @return Currency
      */
     public function getSubtotal()
     {
-        $subtotal = 0;
+        $subtotal = Currency::createFromCents(0);
 
-        foreach ($this->getCartItems() as $cartItem) {
-            /** @var \Entity\CartItem $cartItem */
-            $itemTotal = $this->settings->getItemCurrentPrice($cartItem->item) * $cartItem->getQuantity();
+        foreach ((array)$this->cartItems as $cartItem) {
+            /** @var \CartItem\Entity $cartItem */
+            $itemTotalCents = $cartItem->getCurrentPrice()->getCents() * $cartItem->getQuantity();
 
-            $subtotal += $itemTotal;
+            $subtotal = Currency::createFromCents($subtotal->getCents() + $itemTotalCents);
         }
 
         return $subtotal;
@@ -230,43 +167,31 @@ class ShoppingCart
 
     /**
      * Returns the SubTotal (before shipping is calculated)
+     * This includes the Subtotal, and the coupon discount
      *
-     * @return float|int
+     * @return Currency
      */
     public function getPreShippingTotal()
     {
-        return $this->getSubtotal() + $this->getCouponDiscount();
+        return Currency::createFromCents($this->getSubtotal()->getCents() + $this->getCouponAmount()->getCents());
     }
 
     /**
      * Returns the full total for the cart, shipping, coupons, and items all included
      *
-     * @return float|int
+     * @throws Exception
+     * @return Currency
      */
     public function getFinalTotal()
     {
         $subtotal = $this->getPreShippingTotal();
 
-        try{
-            $shipping = $this->getShippingMethod()->calculateShippingPrice($subtotal);
-        } catch(Exception $e){
-            if ($e->getCode() == 2) {
-                throw new Exception('Total Price Too High!');
-            } else {
-                $shipping = 0;
-            }
+        if (!is_null($this->shippingMethod)) {
+            $shippingCurrency = $this->shippingMethod->calculateShippingPrice($subtotal);
+        } else {
+            $shippingCurrency = Currency::createFromCents(0);
         }
 
-        return $subtotal + $shipping;
-    }
-
-    /**
-     * Save the state of this cart to the session array on destruction
-     */
-    public function __destruct()
-    {
-        $_SESSION['ShoppingCart'] = [];
-
-        $_SESSION['ShoppingCart'] = $this->sessionArray;
+        return Currency::createFromCents($subtotal->getCents() + $shippingCurrency->getCents());
     }
 }

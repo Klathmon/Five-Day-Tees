@@ -37,7 +37,7 @@ class Settings
 
         $statement = $this->database->prepare('SELECT * FROM Settings WHERE Mode = :Mode LIMIT 1');
 
-        $statement->bindValue(':Mode', $this->config->getMode(), PDO::PARAM_STR);
+        $statement->bindValue(':Mode', $this->config->get('MODE'), PDO::PARAM_STR);
 
         $statement->execute();
 
@@ -64,7 +64,7 @@ class Settings
 SQL
         );
 
-        $statement->bindValue(':Mode', $this->config->getMode(), PDO::PARAM_STR);
+        $statement->bindValue(':Mode', $this->config->get('MODE'), PDO::PARAM_STR);
         $statement->bindValue(':StartingDisplayDate', $this->getStartingDisplayDate()->format('Y-m-d'), PDO::PARAM_STR);
         $statement->bindValue(':Retail', $this->getRetail(), PDO::PARAM_STR);
         $statement->bindValue(':SalesLimit', $this->getSalesLimit(), PDO::PARAM_INT);
@@ -96,92 +96,145 @@ SQL
         $this->data['StartingDisplayDate'] = $data->format('Y-m-d');;
     }
 
+    /**
+     * @return DateTime
+     */
+    public function getLastDate()
+    {
+        $sql = 'SELECT MAX(date) FROM Article';
+
+        $statement = $this->database->query($sql);
+
+        $result = $statement->fetch(PDO::FETCH_NUM)[0];
+
+        if (is_null($result)) {
+            return $this->getStartingDisplayDate();
+        } else {
+            return DateTime::createFromFormat('Y-m-d', $result);
+        }
+    }
+
+    /**
+     * @return Currency
+     */
     public function getRetail()
     {
-        return $this->data['Retail'];
+        return Currency::createFromDecimal($this->data['Retail']);
     }
 
+    /**
+     * @param Currency $retail
+     */
     public function setRetail($retail)
     {
-        $this->data['Retail'] = $retail;
+        $this->data['Retail'] = $retail->getDecimal();
     }
 
+    /**
+     * @return int
+     */
     public function getSalesLimit()
     {
         return $this->data['SalesLimit'];
     }
 
+    /**
+     * @param int $salesLimit
+     */
     public function setSalesLimit($salesLimit)
     {
         $this->data['SalesLimit'] = $salesLimit;
     }
 
+    /**
+     * @return int
+     */
     public function getDaysApart()
     {
         return $this->data['DaysApart'];
     }
 
+    /**
+     * @param int $daysApart
+     */
     public function setDaysApart($daysApart)
     {
         $this->data['DaysApart'] = $daysApart;
     }
 
+    /**
+     * @return Currency
+     */
     public function getLevel1()
     {
-        return $this->data['Level1'];
+        return Currency::createFromDecimal($this->data['Level1']);
     }
 
+    /**
+     * @param Currency $amount
+     */
     public function setLevel1($amount)
     {
-        $this->data['Level1'] = $amount;
+        $this->data['Level1'] = $amount->getDecimal();
     }
 
+    /**
+     * @return Currency
+     */
     public function getLevel2()
     {
-        return $this->data['Level2'];
+        return Currency::createFromDecimal($this->data['Level2']);
     }
 
+    /**
+     * @param Currency $amount
+     */
     public function setLevel2($amount)
     {
-        $this->data['Level2'] = $amount;
+        $this->data['Level2'] = $amount->getDecimal();
     }
 
+    /**
+     * @return Currency
+     */
     public function getLevel3()
     {
-        return $this->data['Level3'];
+        return Currency::createFromDecimal($this->data['Level3']);
     }
 
+    /**
+     * @param Currency $amount
+     */
     public function setLevel3($amount)
     {
-        $this->data['Level3'] = $amount;
+        $this->data['Level3'] = $amount->getDecimal();
     }
 
     /**
      * Returns the item's current price based on it's category
      *
-     * @param \Entity\Item $item
+     * @param Currency $baseRetail
+     * @param string   $category
      *
-     * @return double
+     * @return Currency
      */
-    public function getItemCurrentPrice($item)
+    public function getItemCurrentPrice($baseRetail, $category)
     {
-        $currentPrice = $item->getRetail();
-
-        switch ($item->getCategory()) {
+        switch ($category) {
             case 'Level1':
-                $currentPrice += $this->getLevel1();
+                $currentPrice = Currency::createFromCents($baseRetail->getCents() + $this->getLevel1()->getCents());
                 break;
             case 'Level2':
-                $currentPrice += $this->getLevel2();
+                $currentPrice = Currency::createFromCents($baseRetail->getCents() + $this->getLevel2()->getCents());
                 break;
             case 'Level3':
-                $currentPrice += $this->getLevel3();
+                $currentPrice = Currency::createFromCents($baseRetail->getCents() + $this->getLevel3()->getCents());
                 break;
             case 'Vault':
             case 'Default':
             case 'Queue':
             default:
-                $currentPrice = '999.99';
+                $currentPrice = Currency::createFromDecimal(999.99);
                 break;
         }
 
@@ -189,7 +242,7 @@ SQL
     }
 
     /**
-     * This will return the item's "Category"
+     * This will return the item's "Category" based on the design and article
      * Return Values can be:
      * Queue    In the queue. (Treat items in this category as non-existent to the user)
      * Disabled Items not ready to be sold yet, but can be viewed by the user
@@ -198,21 +251,26 @@ SQL
      * Level3   In the store, the highest price items
      * Vault    Similar to disabled, When a item's total sold is >= the sales limit
      *
-     * @param \Entity\Item $item
+     *
+     * @param DateTime $displayDate
+     * @param int      $totalSold
+     * @param int      $salesLimit
      *
      * @return string
      */
-    public function getItemCategory($item)
+    public function getItemCategory($displayDate, $totalSold, $salesLimit)
     {
+
         $dates       = $this->getFeaturedDates();
-        $displayDate = $item->getDisplayDate()->format('z');
+        $displayDate = $displayDate->format('z');
 
         $oldestDate = $dates[0]->format('z');
         $olderDate  = $dates[1]->format('z');
         $newerDate  = $dates[2]->format('z');
         $newestDate = $dates[3]->format('z');
 
-        if ($item->getTotalSold() >= $item->getSalesLimit()) {
+
+        if ($totalSold >= $salesLimit) {
             $category = 'Vault';
         } elseif ($displayDate <= $oldestDate) {
             $category = 'Level3';
@@ -249,16 +307,27 @@ SQL
         return [$oldestDate, $olderDate, $newerDate, $newestDate];
     }
 
+    /**
+     * @param string $nameEncoded
+     *
+     * @return string
+     */
     public function decodeName($nameEncoded)
     {
         return urldecode(str_replace('_', ' ', $nameEncoded));
     }
 
+    /**
+     * @return string
+     */
     public function getCartCallout()
     {
         return $this->data['CartCallout'];
     }
 
+    /**
+     * @param string $cartCallout
+     */
     public function setCartCallout($cartCallout)
     {
         $this->data['CartCallout'] = $cartCallout;

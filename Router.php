@@ -17,20 +17,21 @@ switch ($request->get(0)) {
     case 'Test':
         $controller = 'Test';
         break;
-    case 'Admin':
+    case '':
     case 'Featured':
     case 'Store':
     case 'Vault':
+        $controller = 'Page';
+        break;
+    case 'Admin':
     case 'Viewport':
     case 'Item':
     case 'FAQ':
     case 'Contact':
     case 'Cart':
     case 'Checkout':
+    case 'SpreadShirt':
         $controller = $request->get(0);
-        break;
-    case '':
-        $controller = 'Featured';
         break;
     case 'robots.txt':
         $controller = 'Robotstxt';
@@ -42,7 +43,7 @@ switch ($request->get(0)) {
 require("Controllers/$controller.php");
 
 
-if ($config->debugModeOn()) {
+if ($config->get('DEBUG', 'DEBUGGING')) {
     echo '// Script took ' . (microtime(true) - $timerStart) . ' Seconds to run //<br/>'.
     (memory_get_peak_usage() / 1048576) . " MB of memory used";
 }

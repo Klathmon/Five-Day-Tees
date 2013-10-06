@@ -21,6 +21,7 @@ class Layout
      * @param ConfigParser $config
      * @param string       $template
      * @param string       $title
+     * @param string       $cacheID
      */
     public function __construct($config, $template, $title, $cacheID = null)
     {
@@ -32,6 +33,15 @@ class Layout
         $this->page->addJs('Main.js');
 
         $this->page->assign('mainTemplate', $template);
+
+        if($config->get('DEBUG', 'DEBUGGING')){
+            $this->page->assign('jQueryVersions', ['1.11.0-beta1', '2.1.0-beta1']);
+            $this->page->assign('minified', '');
+        }else{
+            $this->page->assign('jQueryVersions', ['1.10.2', '2.0.3']);
+            $this->page->assign('minified', '.min');
+        }
+
     }
 
     public function output()

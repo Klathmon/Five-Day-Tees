@@ -2,18 +2,20 @@
  * Created By: Gregory Benner
  * Date: 8/25/13
  */
-(function(){
+(function () {
     // DOM Loaded //
-    $(function(){
+    $(function () {
         //Attach All Handlers
         attachHandlers();
 
         //Load the first element
-        loadViewport($('.Item.Selected').data('linkname'));
+        loadViewport($('.Item.Selected').data('encodedname'));
     });
 
-    function attachHandlers(){
+    function attachHandlers() {
         var $adminPage = $('#Admin.Page');
+        $adminPage.find('#GetNewArticles').on('click', getNewArticles);
+        $adminPage.find('#PurgeCache').on('click', purgeCache);
         $adminPage.find('#SaveGlobalSettings').on('click', saveGlobalSettings);
         $adminPage.find('.ItemsTable')
             .on('click', '.SaveItem', saveItem)
@@ -25,7 +27,8 @@
 
         $('.ItemsContainer').on('click', '.Item:not(.Selected)', itemClicked);
 
-        $('#Viewport').on('click', '.Genders INPUT[type=radio]', genderClicked)
+        $('#Viewport').on('click', '.Genders INPUT[type=radio]', changeViewport)
+            .on('click', '.Sizes LABEL', changeSize)
             .on('click', '#AddToCart', addToCart);
 
         $('#CartButton').on('click', showCart);
@@ -39,15 +42,23 @@
             .on('click', '#Cart #RemoveCoupon', removeCouponFromCart)
             .on('click', '#Cart #SubmitCoupon', addCouponToCart)
             .on('click', '#Cart #Shipping input[type=radio]', setShipping)
-            .on('keyup', '#Cart #CouponsContainer #CouponCode', function(event){
-                if(event.keyCode == 13){
+            .on('keyup', '#Cart #CouponsContainer #CouponCode', function (event) {
+                if (event.keyCode == 13) {
                     addCouponToCart(event)
                 }
             });
     }
 
     // Admin Page Functions //
-    function saveGlobalSettings(event){
+    function getNewArticles() {
+        sendCommand('/Admin', 'GetNewItems', {'DOIT': 'yes'});
+    }
+
+    function purgeCache() {
+        sendCommand('/Admin', 'PurgeCache', {'DOIT': 'yes'});
+    }
+
+    function saveGlobalSettings(event) {
         var $row = $(event.target).closest('TR');
 
         var data = {};
@@ -63,62 +74,62 @@
         sendCommand('/Admin', 'SaveGlobals', data);
     }
 
-    function saveItem(event){
+    function saveItem(event) {
         var $row = $(event.target).closest('TR');
 
         var data = {};
-        data['ID'] = $row.data('id');
-        data['Name'] = $row.find('#Name').val();
-        data['Description'] = $row.find('#Description').val();
-        data['Retail'] = $row.find('#Retail').val();
-        data['DisplayDate'] = $row.find('#DisplayDate').val();
-        data['Votes'] = $row.find('#Votes').val();
-        data['Sold'] = $row.find('#Sold').val();
-        data['SalesLimit'] = $row.find('#SalesLimit').val();
+        data['designID'] = $row.data('designid');
+        data['articleID'] = $row.data('articleid');
+        data['productID'] = $row.data('productsid');
+        data['name'] = $row.find('#Name').val();
+        data['description'] = $row.find('#Description').val();
+        data['baseRetail'] = $row.find('#Retail').val();
+        data['displayDate'] = $row.find('#DisplayDate').val();
+        data['votes'] = $row.find('#Votes').val();
+        data['numberSold'] = $row.find('#Sold').val();
+        data['salesLimit'] = $row.find('#SalesLimit').val();
 
         sendCommand('/Admin', 'SaveItem', data);
     }
 
-    function deleteItem(event){
+    function deleteItem(event) {
         var $row = $(event.target).closest('TR');
 
-        var data = {'ID': $row.data('id')};
+        var data = {'articleID': $row.data('articleid')};
         var name = $row.find('#Name').val();
 
         var okay = confirm('Are you sure you want to delete ' + name + '?');
 
-        if(okay){
+        if (okay) {
             sendCommand('/Admin', 'DeleteItem', data);
         }
     }
 
-    function addCoupon(event){
+    function addCoupon(event) {
         var $this = $(event.target).closest('TR');
 
         var data = {
-            'Code':          $this.find('.Code').find('input').val(),
-            'IsPercent':     $this.find('.IsPercent').find('input[type=checkbox]:checked').attr('type') == 'checkbox',
-            'Amount':        $this.find('.Amount').find('input').val(),
+            'Code': $this.find('.Code').find('input').val(),
+            'Amount': $this.find('.Amount').find('input').val(),
             'UsesRemaining': $this.find('.UsesRemaining').find('input').val()
         };
 
         sendCommand('/Admin', 'AddCoupon', data);
     }
 
-    function updateCoupon(event){
+    function updateCoupon(event) {
         var $this = $(event.target).closest('TR');
 
         var data = {
-            'Code':          $this.data('code'),
-            'IsPercent':     $this.find('.IsPercent').find('input[type=checkbox]:checked').attr('type') == 'checkbox',
-            'Amount':        $this.find('.Amount').find('input').val(),
+            'Code': $this.data('code'),
+            'Amount': $this.find('.Amount').find('input').val(),
             'UsesRemaining': $this.find('.UsesRemaining').find('input').val()
         };
 
         sendCommand('/Admin', 'UpdateCoupon', data);
     }
 
-    function deleteCoupon(event){
+    function deleteCoupon(event) {
         var $this = $(event.target).closest('TR');
 
         var data = {
@@ -130,7 +141,7 @@
 
 
     // Viewport Functions //
-    function itemClicked(event){
+    function itemClicked(event) {
         var $this = $(event.target).closest('.Item');
 
         /* Remove all .Selected classes in the ItemsContainer */
@@ -140,65 +151,70 @@
         $this.addClass('Selected');
 
         /* Load the viewport */
-        loadViewport($this.data('linkname'));
+        loadViewport($this.data('encodedname'));
     }
 
-    function genderClicked(event){
+    function changeViewport(event) {
         var $this = $(event.target);
-        var $innerViewport = $this.closest('#InnerViewport');
 
-        var gender = $this.attr('id');
-        var name = $innerViewport.data('url');
-        var id = $innerViewport.data(gender + 'id');
+        var encodedName = $this.closest('#InnerViewport').data('encodedname');
+        var id = $this.data('id');
 
-        loadViewport(name, id);
+        loadViewport(encodedName, id);
     }
 
-    function loadViewport(name, id){
-        id = id || 0;
+    function changeSize(event) {
+        var $this = $(event.target);
 
-        var url = '/Viewport/' + name;
+        $this.closest('.Sizes').find('LABEL').removeClass('checked');
 
-        if(id != 0){
+        $this.parent('label').addClass('checked');
+    }
+
+    function loadViewport(encodedName, id) {
+
+        var url = '/Viewport/' + encodedName;
+
+        if (id != undefined) {
             url += '/' + id;
         }
 
-        $.get(url, function(data){
+        $.get(url, function (data) {
             $('#Viewport').html(data);
         });
     }
 
-    function addToCart(event){
+    function addToCart(event) {
         var $this = $(event.target).closest('#InnerViewport');
 
-        var gender = $this.find('.Genders').find('Input[type=radio]:checked').attr('ID').toLowerCase();
+        var itemID = $this.find('.Genders').find('Input[type=radio]:checked').data('id');
 
         var data = {
             'Command': 'AddItem',
-            'ID':      $this.data(gender + 'id'),
-            'Size':    $this.find('.Sizes').find('Input[type=radio]:checked').val()
+            'itemID': itemID,
+            'size': $this.find('.Sizes').find('Label.checked Input[type=radio]').val()
         };
 
-        if(data['Size'] == undefined){
+        if (data['size'] == undefined) {
             alert('You need to select a size!');
-        }else{
-            $.post('/Cart', data, showCart);
+        } else {
+            $.post('/Cart', data, displayCart);
         }
     }
 
 
     // Cart Functions //
-    function emptyCart(){
+    function emptyCart() {
 
         $.post('/Cart', {'Command': 'EmptyCart'}, replaceCart);
     }
 
-    function setShipping(event){
+    function setShipping(event) {
         var $this = $(event.target).closest('#Shipping').find('Input[type=radio]:checked');
 
         var data = {
             "Command": 'SetShipping',
-            "ID":      $this.data('id')
+            "ID": $this.data('id')
         };
 
         console.log(data);
@@ -206,80 +222,79 @@
         $.post('/Cart', data, replaceCart);
     }
 
-    function updateItem(event){
+    function updateItem(event) {
         var $this = $(event.target).closest('TR');
 
         var data = {
-            'Command':  'UpdateItem',
-            'ID':       $this.data('id'),
-            'Size':     $this.data('size'),
+            'Command': 'UpdateItem',
+            'ID': $this.data('id'),
             'Quantity': $this.find('Input.Quantity').val()
         };
 
         $.post('/Cart', data, replaceCart);
     }
 
-    function removeItem(event){
+    function removeItem(event) {
         var $this = $(event.target).closest('TR');
 
         var data = {
             'Command': 'RemoveItem',
-            'ID':      $this.data('id'),
-            'Size':    $this.data('size')
+            'ID': $this.data('id')
         };
 
         $.post('/Cart', data, replaceCart);
     }
 
-    function addCouponToCart(event){
+    function addCouponToCart(event) {
         var $this = $(event.target).closest('#CouponsContainer');
 
         var data = {
             'Command': 'AddCouponToCart',
-            'Code':    $this.find('#CouponCode').val()
+            'Code': $this.find('#CouponCode').val()
         };
 
         $.post('/Cart', data, replaceCart);
     }
 
-    function removeCouponFromCart(event){
+    function removeCouponFromCart() {
         $.post('/Cart', {'Command': 'RemoveCouponFromCart'}, replaceCart);
     }
 
-    function showCart(){
-
-        $.get('/Cart', function(data){
-
-            /* Hide any other carts that may have gotten their way in here before showing this one */
-            hideCart(true);
-
-            /* Create the container in memory, add everything to it, and then fade it in */
-            $('<div>')
-                .attr('id', 'CartContainer')
-                .html(data)
-                .append(
-                    $('<div>')
-                        .attr('id', 'CartBackdrop')
-                        .on('click', hideCart)
-                )
-                .hide()
-                .appendTo($('body'))
-                .fadeIn(200);
-        });
+    function showCart() {
+        $.get('/Cart', displayCart);
     }
 
-    function hideCart(skipAnimation){
+    function hideCart(skipAnimation) {
         var $cartContainer = $('#CartContainer');
-        if(skipAnimation === true){
+        if (skipAnimation === true) {
             $cartContainer.remove();
-        }else{
-            $cartContainer.fadeOut(200, function(){
+        } else {
+            $cartContainer.fadeOut(200, function () {
                 $(this).remove();
             });
         }
     }
 
-    function replaceCart(data){
+    function displayCart(data) {
+
+        /* Hide any other carts that may have gotten their way in here before showing this one */
+        hideCart(true);
+
+        /* Create the container in memory, add everything to it, and then fade it in */
+        $('<div>')
+            .attr('id', 'CartContainer')
+            .html(data)
+            .append(
+                $('<div>')
+                    .attr('id', 'CartBackdrop')
+                    .on('click', hideCart)
+            )
+            .hide()
+            .appendTo($('body'))
+            .fadeIn(200);
+    }
+
+    function replaceCart(data) {
         var $container = $('#CartContainer');
 
         $container.find('#Cart').remove();
@@ -289,19 +304,19 @@
 
 
     // Helper Functions //
-    function sendCommand(url, command, data){
+    function sendCommand(url, command, data) {
 
         data['Command'] = command;
 
-        $.post(url, data, function(returnData){
+        $.post(url, data, function (returnData) {
             var obj = $.parseJSON(returnData);
-            if(obj['command'] == 'refreshPage'){
+            if (obj['command'] == 'refreshPage') {
                 location.reload();
-            }else if(obj['status'] == 'OK'){
+            } else if (obj['status'] == 'OK') {
                 alert(obj['message']);
-            }else if(obj['status'] == 'ERROR'){
+            } else if (obj['status'] == 'ERROR') {
                 alert('ERROR! ' + obj['message']);
-            }else{
+            } else {
                 alert('Unknown Error!');
             }
         });
