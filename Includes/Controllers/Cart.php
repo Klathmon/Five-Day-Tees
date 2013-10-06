@@ -4,9 +4,6 @@
  * Date: 8/31/13
  */
 
-//TODO: Start here, get the viewport and main.js to send the correct information to the Cart.php file and refactor that so it works with the new Cart Model
-
-
 $sizeSanitizeCharacters = 'ALMNSX';
 
 $settings              = new Settings($database, $config);
