@@ -64,7 +64,8 @@ class FDTSmarty extends Smarty
             //force recompile is on, don't use any caching and force a compile each time
             $this->force_compile = TRUE;
             $this->compile_check = TRUE;
-            $this->caching       = Smarty::CACHING_OFF;
+            $this->cache_lifetime = 0; //Still build cache, but don't use it.
+            $this->caching       = Smarty::CACHING_LIFETIME_CURRENT;
 
         } elseif($this->config->get('DEBUG', 'STATIC_CACHING') && !is_null($this->cacheID)){
 
