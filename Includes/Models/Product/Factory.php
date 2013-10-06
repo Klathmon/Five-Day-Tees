@@ -31,7 +31,7 @@ class Factory extends \Abstracts\Factory
      * @param DOMDocument $productDocument
      * @param int         $articleID
      *
-     * @return object
+     * @return Entity
      */
     public function createFromSpreadshirt($articleElement, $productDocument, $articleID)
     {
