@@ -46,13 +46,13 @@ SQL;
         $this->productFactory = new \Product\Factory($this->database, $this->settings);
     }
 
-    public function getByItemIDFromDatabase($ID)
+    public function getByIDFromDatabase($ID)
     {
         $statement = $this->database->prepare(
             $this->sqlSelect . ' WHERE articleID=:articleID AND productID =:productID LIMIT 1'
         );
 
-        $IDs = $this->getPartsFromItemID($ID);
+        $IDs = $this->getPartsFromID($ID);
 
         $statement->bindValue(':articleID', $IDs['articleID']);
         $statement->bindValue(':productID', $IDs['productID']);
@@ -62,11 +62,6 @@ SQL;
         return $this->executeAndParse($statement)[0];
     }
 
-    /**
-     * @param string $name
-     *
-     * @return \Item\Entity[]
-     */
     public function getByNameFromDatabase($name)
     {
         $statement = $this->database->prepare(
@@ -91,25 +86,17 @@ SQL;
 
     public function persistToDatabase($entity){ }
 
-    public function getItemIDFromParts($array)
+    public function getIDFromParts($array)
     {
-        return implode(
-            $this->IDSeperator,
-            [
-                $array['articleID'],
-                $array['productID']
-            ]
-        );
+        sort($array);
+        return base64_encode(gzdeflate(http_build_query($array), 9));
     }
 
-    public function getPartsFromItemID($ID)
+    public function getPartsFromID($ID)
     {
-        $array = explode($this->IDSeperator, $ID);
+        parse_str(gzinflate(base64_decode($ID)), $output);
 
-        return [
-            'articleID' => $array[0],
-            'productID' => $array[1]
-        ];
+        return $output;
     }
 
     final protected function convertObjectToArray($entity)
@@ -119,19 +106,16 @@ SQL;
 
     protected function convertArrayToObject($array, $passThru = [])
     {
-        $temp['itemID']       = $this->getItemIDFromParts(
-            [
-                'articleID' => $array['articleID'],
-                'productID' => $array['productID']
-            ]
+        $temp['itemID']       = $this->getIDFromParts(
+            ['articleID' => $array['articleID'], 'productID' => $array['productID']]
         );
         $temp['article']      = $this->articleFactory->createFromData($array);
         $temp['product']      = $this->productFactory->createFromData($array);
         $temp['totalSold']    = $array['totalSold'];
         $temp['category']     = $this->settings->getItemCategory($temp['article']->getDate(), $temp['totalSold'], $temp['article']->getSalesLimit());
         $temp['currentPrice'] = $this->settings->getItemCurrentPrice($temp['product']->getRetail(), $temp['category']);
-        
-        
+
+
         $temp = array_merge($temp, $passThru);
 
         return parent::convertArrayToObject($temp);
