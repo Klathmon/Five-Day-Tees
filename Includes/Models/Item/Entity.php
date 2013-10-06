@@ -26,7 +26,7 @@ abstract class Entity extends \Abstracts\Entity
     /**
      * @return string
      */
-    public function getItemID()
+    final public function getItemID()
     {
         return $this->itemID;
     }
