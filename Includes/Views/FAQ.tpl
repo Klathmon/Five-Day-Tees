@@ -77,7 +77,7 @@
 
         <p>
             All orders are shipped out within 1 - 2 days of receipt of payment.<br/>
-            We currently offer <!--three-->two shipping methods:
+            We currently offer {count($shippingMethods)} shipping methods:
         </p>
         <table>
             <thead>
