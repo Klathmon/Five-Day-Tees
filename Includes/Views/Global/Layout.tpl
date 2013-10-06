@@ -1,4 +1,4 @@
-{include 'Global/HTMLHeader.tpl'}
+{include 'Global/HTMLHeader.tpl' inline}
 
 <!--suppress ALL -->
 <header>
@@ -28,4 +28,4 @@
     {include $mainTemplate}
 </article>
 
-{include 'Global/HTMLFooter.tpl'}
+{include 'Global/HTMLFooter.tpl' inline}
