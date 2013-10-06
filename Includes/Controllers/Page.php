@@ -12,10 +12,13 @@ if (!$layout->isPageCached()) {
     //If the page is cached, then skip all of this because it's not needed or used
     $settings    = new Settings($database, $config);
     $itemFactory = new \DisplayItem\Factory($database, $settings);
+
+    $layout->assign('ID', $category);
     
     switch($category){
         case '':
         case 'Featured':
+            $layout->assign('ID', 'Featured');
             $layout->assign('subHeader', 'Featured Shirts:');
             $items = $itemFactory->getFeaturedFromDatabase();
             break;
@@ -29,7 +32,6 @@ if (!$layout->isPageCached()) {
             break;
     }
 
-    $layout->assign('ID', $category);
     $layout->assign('items', $items);
 }
 

@@ -13,7 +13,8 @@
     <div class="ItemsContainer">
         {foreach $items as $item}
             <div
-                    class="Item {if $ID == 'Featured' && $item@iteration == 3}Selected{elseif $ID != 'Featured' && $item@iteration == 1}Selected{/if}"
+                    {* TODO: Fix "Featured" item iteration back to 3 once it's filled up again *}
+                    class="Item {if $ID == 'Featured' && $item@iteration == 1}Selected{elseif $ID != 'Featured' && $item@iteration == 1}Selected{/if}"
                     data-encodedname="{$item->getEncodedName()}"
                     >
                 <img
