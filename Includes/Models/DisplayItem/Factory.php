@@ -72,16 +72,6 @@ class Factory extends \Item\Factory
         $this->productFactory->persistToDatabase($entity->getProduct());
     }
 
-    public function getIDFromParts($array)
-    {
-        return $this->getItemIDFromParts($array);
-    }
-
-    public function getPartsFromID($ID)
-    {
-        return $this->getPartsFromItemID($ID);
-    }
-
     protected function convertArrayToObject($array, $passThru = null)
     {
         $passThru['displayitemID'] = $this->getIDFromParts(
@@ -93,6 +83,4 @@ class Factory extends \Item\Factory
 
         return parent::convertArrayToObject($array, $passThru);
     }
-
-
 }
