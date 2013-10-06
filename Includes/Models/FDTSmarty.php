@@ -3,7 +3,6 @@
  * Created by: Gregory Benner.
  * Date: 8/25/13
  */
-require('Library/Smarty/3.1.14/Smarty.class.php');
 
 /**
  * Class FDTSmarty

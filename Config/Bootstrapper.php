@@ -42,3 +42,6 @@ $database = new PDO(
     $config->get('DATABASE', 'USERNAME'), $config->get('DATABASE', 'PASSWORD')
 );
 $database->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+
+require('Library/Smarty/3.1.15/Smarty.class.php');
