@@ -12,7 +12,7 @@ $template = new FDTSmarty($config, 'Viewport.tpl', 'Viewport', $name . $ID);
 
 if (!$template->isPageCached()) {
     $settings    = new Settings($database, $config);
-    $itemFactory = new \Item\Factory($database, $settings);
+    $itemFactory = new \DisplayItem\Factory($database, $settings);
 
     /* Try to grab the shirt from the database, if it fails, forward the user to /404 */
     try{

@@ -11,7 +11,7 @@ $layout = new Layout($config, 'Page.tpl', $category, 'Page_' . $category);
 if (!$layout->isPageCached()) {
     //If the page is cached, then skip all of this because it's not needed or used
     $settings    = new Settings($database, $config);
-    $itemFactory = new \Item\Factory($database, $settings);
+    $itemFactory = new \DisplayItem\Factory($database, $settings);
     
     switch($category){
         case '':

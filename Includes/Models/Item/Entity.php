@@ -8,7 +8,7 @@ namespace Item;
 
 use Currency;
 
-class Entity extends \Abstracts\Entity
+abstract class Entity extends \Abstracts\Entity
 {
     /** @var string */
     protected $itemID;
@@ -22,6 +22,14 @@ class Entity extends \Abstracts\Entity
     protected $category;
     /** @var Currency */
     protected $currentPrice;
+
+    /**
+     * @return string
+     */
+    public function getItemID()
+    {
+        return $this->itemID;
+    }
 
     /**
      * @return \Article\Entity
@@ -61,15 +69,5 @@ class Entity extends \Abstracts\Entity
     public function getCategory()
     {
         return $this->category;
-    }
-    
-    public function getEncodedName()
-    {
-        return urlencode($this->getArticle()->getName());
-    }
-    
-    public function getPermalink()
-    {
-        return '/Shirt/' . $this->getEncodedName();
     }
 }

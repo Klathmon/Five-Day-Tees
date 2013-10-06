@@ -8,9 +8,9 @@ echo 'Test Page!';
 
 $settings = new Settings($database, $config);
 
-$factory = new \ShippingMethod\Factory($database);
+$factory = new \DisplayItem\Factory($database, $settings);
 
-$entities = $factory->getAllFromDatabase();
+$entities = $factory->getStoreFromDatabase();
 
 Debug::dump($entities);
 

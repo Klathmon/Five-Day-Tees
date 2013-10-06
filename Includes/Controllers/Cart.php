@@ -10,8 +10,8 @@
 $sizeSanitizeCharacters = 'ALMNSX';
 
 $settings              = new Settings($database, $config);
-$shoppingCart          = new ShoppingCart($database, $settings);
-$shippingMethodFactory = new \Factory\ShippingMethod($database);
+//$shoppingCart          = new ShoppingCart($database, $settings);
+$shippingMethodFactory = new \ShippingMethod\Factory($database);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 

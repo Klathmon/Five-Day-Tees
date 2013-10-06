@@ -6,10 +6,13 @@
 
 namespace Item;
 
+use Exception;
 use Interfaces\Item;
+use ReflectionClass;
+use ReflectionProperty;
 use Traits\Database;
 
-class Factory extends \Abstracts\Factory implements Item
+abstract class Factory extends \Abstracts\Factory implements Item
 {
     use Database;
 
@@ -20,7 +23,9 @@ class Factory extends \Abstracts\Factory implements Item
     /** @var \Product\Factory */
     protected $productFactory;
 
-    private $sqlSelect = <<<SQL
+    protected $IDSeperator = '-';
+
+    protected $sqlSelect = <<<SQL
 SELECT Article.*, Product.*, itemsSold.totalSold 
     FROM Article 
     LEFT JOIN Product USING (articleID) 
@@ -41,13 +46,13 @@ SQL;
         $this->productFactory = new \Product\Factory($this->database, $this->settings);
     }
 
-    public function getByIDFromDatabase($ID)
+    public function getByItemIDFromDatabase($ID)
     {
         $statement = $this->database->prepare(
             $this->sqlSelect . ' WHERE articleID=:articleID AND productID =:productID LIMIT 1'
         );
 
-        $IDs = $this->getPartsFromID($ID);
+        $IDs = $this->getPartsFromItemID($ID);
 
         $statement->bindValue(':articleID', $IDs['articleID']);
         $statement->bindValue(':productID', $IDs['productID']);
@@ -82,72 +87,14 @@ SQL;
         return $this->executeAndParse($statement);
     }
 
-    public function getQueueFromDatabase()
-    {
-        $statement = $this->database->prepare($this->sqlSelect . ' WHERE date >= :FutureDate GROUP BY Article.articleID ORDER BY date DESC');
+    public function deleteFromDatabase($entity){ }
 
-        $futureDate = $this->settings->getFeaturedDates()[3];
+    public function persistToDatabase($entity){ }
 
-        $statement->bindValue('FutureDate', $futureDate->format('Y-m-d'));
-
-        return $this->executeAndParse($statement);
-    }
-
-    public function getFeaturedFromDatabase()
-    {
-        $statement = $this->database->prepare($this->sqlSelect . ' WHERE date > :PastDate AND date < :FutureDate GROUP BY Article.articleID ORDER BY date DESC');
-
-        $dates = $this->settings->getFeaturedDates();
-
-        $pastDate   = $dates[0];
-        $futureDate = $dates[3];
-
-        $statement->bindValue('PastDate', $pastDate->format('Y-m-d'));
-        $statement->bindValue('FutureDate', $futureDate->format('Y-m-d'));
-
-        return $this->executeAndParse($statement);
-    }
-
-    public function getStoreFromDatabase()
-    {
-        $statement = $this->database->prepare($this->sqlSelect . ' WHERE date <= :PastDate AND totalSold < salesLimit GROUP BY Article.articleID ORDER BY date DESC');
-
-        $pastDate = $this->settings->getFeaturedDates()[0];
-
-        $statement->bindValue('PastDate', $pastDate->format('Y-m-d'));
-
-        return $this->executeAndParse($statement);
-    }
-
-    public function getVaultFromDatabase()
-    {
-        $statement = $this->database->prepare($this->sqlSelect . ' WHERE totalSold >= salesLimit GROUP BY Article.articleID ORDER BY date DESC');
-
-        return $this->executeAndParse($statement);
-    }
-
-    /**
-     * @param \Item\Entity $entity
-     */
-    public function deleteFromDatabase($entity)
-    {
-        $this->articleFactory->deleteFromDatabase($entity->getArticle());
-        $this->productFactory->deleteFromDatabase($entity->getProduct());
-    }
-
-    /**
-     * @param \Item\Entity $entity
-     */
-    public function persistToDatabase($entity)
-    {
-        $this->articleFactory->persistToDatabase($entity->getArticle());
-        $this->productFactory->persistToDatabase($entity->getProduct());
-    }
-
-    public function getIDFromParts($array)
+    public function getItemIDFromParts($array)
     {
         return implode(
-            '-',
+            $this->IDSeperator,
             [
                 $array['articleID'],
                 $array['productID']
@@ -155,9 +102,9 @@ SQL;
         );
     }
 
-    public function getPartsFromID($ID)
+    public function getPartsFromItemID($ID)
     {
-        $array = explode('-', $ID);
+        $array = explode($this->IDSeperator, $ID);
 
         return [
             'articleID' => $array[0],
@@ -165,24 +112,30 @@ SQL;
         ];
     }
 
-    protected function parseDatabaseResult($array)
+    final protected function convertObjectToArray($entity)
     {
-        foreach ($array as $row) {
-            $temp['itemID']       = $this->getIDFromParts(
-                [
-                    'articleID' => $row['articleID'],
-                    'productID' => $row['productID']
-                ]
-            );
-            $temp['article']      = $this->articleFactory->createFromData($row);
-            $temp['product']      = $this->productFactory->createFromData($row);
-            $temp['totalSold']    = $row['totalSold'];
-            $temp['category']     = $this->settings->getItemCategory($temp['article']->getDate(), $temp['totalSold'], $temp['article']->getSalesLimit());
-            $temp['currentPrice'] = $this->settings->getItemCurrentPrice($temp['product']->getRetail(), $temp['category']);
-
-            $returnArray[] = $this->convertArrayToObject($temp);
-        }
-
-        return $returnArray;
+        throw new Exception('Can\'t convert Items (or their derivitives) to Arrays');
     }
+
+    protected function convertArrayToObject($array, $passThru = [])
+    {
+        $temp['itemID']       = $this->getItemIDFromParts(
+            [
+                'articleID' => $array['articleID'],
+                'productID' => $array['productID']
+            ]
+        );
+        $temp['article']      = $this->articleFactory->createFromData($array);
+        $temp['product']      = $this->productFactory->createFromData($array);
+        $temp['totalSold']    = $array['totalSold'];
+        $temp['category']     = $this->settings->getItemCategory($temp['article']->getDate(), $temp['totalSold'], $temp['article']->getSalesLimit());
+        $temp['currentPrice'] = $this->settings->getItemCurrentPrice($temp['product']->getRetail(), $temp['category']);
+        
+        
+        $temp = array_merge($temp, $passThru);
+
+        return parent::convertArrayToObject($temp);
+    }
+
+
 }
