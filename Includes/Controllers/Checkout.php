@@ -17,7 +17,11 @@ switch ($request->get(1)) {
         $response = $orderDetails->getCheckoutDetails();
 
         Debug::dump($response); //TODO Remove this!
+        
+        echo var_export($response);
 
+        die();
+        
         $addressFactory = new \Factory\Address($database);
 
         $address = $addressFactory->fetchOrCreate(

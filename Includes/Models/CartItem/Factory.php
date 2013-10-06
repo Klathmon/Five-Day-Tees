@@ -14,23 +14,15 @@ class Factory extends \Item\Factory
 
     /**
      * @param string $ID
+     * @param array  $passThru
      *
      * @return Entity
      */
-    public function getByIDFromDatabase($ID)
+    public function getByIDFromDatabase($ID, $passThru = null)
     {
-        $statement = $this->database->prepare(
-            $this->sqlSelect . ' WHERE articleID=:articleID AND productID =:productID LIMIT 1'
-        );
+        $passThru['size'] = $this->getPartsFromID($ID)['size'];
 
-        $IDs = $this->getPartsFromID($ID);
-
-        $statement->bindValue(':articleID', $IDs['articleID']);
-        $statement->bindValue(':productID', $IDs['productID']);
-
-        $statement->execute();
-
-        return $this->executeAndParse($statement, ['size' => $this->getPartsFromID($ID)['size']])[0];
+        return parent::getByIDFromDatabase($ID, $passThru);
     }
 
     protected function convertArrayToObject($array, $passThru = null)
@@ -39,10 +31,13 @@ class Factory extends \Item\Factory
             [
                 'articleID' => $array['articleID'],
                 'productID' => $array['productID'],
-                'size' => $passThru['size']
+                'size'      => $passThru['size']
             ]
         );
-        $passThru['quantity'] = 1;
+        
+        if(!isset($passThru['quantity'])){
+            $passThru['quantity']   = 1;
+        }
 
         return parent::convertArrayToObject($array, $passThru);
     }

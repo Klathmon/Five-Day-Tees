@@ -17,7 +17,7 @@ use PDOStatement;
  */
 trait Database
 {
-    public function getByIDFromDatabase($ID)
+    public function getByIDFromDatabase($ID, $passThru = null)
     {
         $statement = $this->database->prepare('SELECT * FROM ' . $this->namespace . ' WHERE ' . $this->identifier . '=:ID LIMIT 1');
 
@@ -25,7 +25,7 @@ trait Database
 
         $statement->execute();
 
-        return $this->executeAndParse($statement)[0];
+        return $this->executeAndParse($statement, $passThru)[0];
     }
 
     public function getAllFromDatabase()

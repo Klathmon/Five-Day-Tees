@@ -46,7 +46,7 @@ SQL;
         $this->productFactory = new \Product\Factory($this->database, $this->settings);
     }
 
-    public function getByIDFromDatabase($ID)
+    public function getByIDFromDatabase($ID, $passThru = null)
     {
         $statement = $this->database->prepare(
             $this->sqlSelect . ' WHERE articleID=:articleID AND productID =:productID LIMIT 1'
@@ -59,7 +59,7 @@ SQL;
 
         $statement->execute();
 
-        return $this->executeAndParse($statement)[0];
+        return $this->executeAndParse($statement, $passThru)[0];
     }
 
     public function getByNameFromDatabase($name)
