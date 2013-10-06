@@ -36,7 +36,7 @@ class RequestParser
         if ($position === null) {
             return $this->pathArray;
         } else {
-            return (array_key_exists($position, $this->pathArray) ? $this->pathArray[$position] : null);
+            return (array_key_exists($position, $this->pathArray) ? urldecode($this->pathArray[$position]) : null);
         }
     }
 

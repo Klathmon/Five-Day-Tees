@@ -6,30 +6,50 @@
 
 class ConfigParser
 {
-    private $configVariables = [];
+    private $configArray = [];
 
     public function __construct($configFile)
     {
-        if (is_file($configFile)) {
-            $array = file($configFile, FILE_SKIP_EMPTY_LINES);
+        $file = new SplFileObject($configFile, 'r');
 
-            foreach ($array as $line) {
-                if ($line[0] != '#') {
+        $currentSection = null;
+        
+        foreach($file as $lineNumber => $line){
+            if($line[0] === ' ' || $line[0] === '#' || $line[0] === ';' || $line[0] === "\n"){
+                //Skip this line
+            }else{
+                if($line[0] === '['){
+                    //It's a section, so set the current section
+                    $currentSection = strtoupper(trim($line, " \t\n\r\0[]"));
+                }else{
+                    //It's a line with stuff in it
                     list($name, $value) = explode('=', $line, 2);
-
-                    $temp[strtoupper(trim($name))] = trim($value);
+                    $name = strtoupper(trim($name));
+                    $value = trim($value);
+                    
+                    if(strtoupper($value) === 'TRUE'){
+                        $value = true;
+                    }elseif(strtoupper($value) === 'FALSE'){
+                        $value = false;
+                    }
+                    
+                    if(is_null($currentSection)){
+                        $this->configArray[$name] = $value;
+                    }else{
+                        $this->configArray[$currentSection][$name] = $value;
+                    }
                 }
             }
-
-            $this->configVariables = $temp;
-        } else {
-            throw new Exception('Config file not found!');
         }
     }
-
-    public function getMode()
+    
+    public function get($section, $key = null)
     {
-        return $this->configVariables['MODE'];
+        if(is_null($key)){
+            return $this->configArray[strtoupper($section)];
+        }else{
+            return $this->configArray[strtoupper($section)][strtoupper($key)];
+        }
     }
 
     public function getProtocol()
@@ -41,115 +61,8 @@ class ConfigParser
         }
     }
 
-    public function getDatabaseHost()
-    {
-        return $this->configVariables['DATABASE_HOST'];
-    }
-
-    public function getDatabaseName()
-    {
-        return $this->configVariables['DATABASE_NAME'];
-    }
-
-    public function getDatabaseUsername()
-    {
-        return $this->configVariables['DATABASE_USERNAME'];
-    }
-
-    public function getDatabasePassword()
-    {
-        return $this->configVariables['DATABASE_PASSWORD'];
-    }
-
-    public function getSpreadAPIURL()
-    {
-        return $this->configVariables['SPREAD_API_URL'];
-    }
-
-    public function getSpreadShopID()
-    {
-        return $this->configVariables['SPREAD_SHOP_ID'];
-    }
-
     public function getBaseDirectory()
     {
         return getcwd() . '/';
     }
-
-    public function getSiteName()
-    {
-        return $this->configVariables['SITE_NAME'];
-    }
-
-    public function getGoogleAnalytics()
-    {
-        return $this->configVariables['GOOGLE_ANALYTICS'];
-    }
-
-    public function getPayPalAPIVersion()
-    {
-        return $this->configVariables['PAYPAL_API_VERSION'];
-    }
-
-    public function getPayPalAPIUsername()
-    {
-        return $this->configVariables['PAYPAL_USERNAME'];
-    }
-
-    public function getPayPalAPIPassword()
-    {
-        return $this->configVariables['PAYPAL_PASSWORD'];
-    }
-
-    public function getPayPalAPISignature()
-    {
-        return $this->configVariables['PAYPAL_SIGNATURE'];
-    }
-
-    public function getPayPalAPIEndpoint()
-    {
-        return $this->configVariables['PAYPAL_ENDPOINT'];
-    }
-
-    public function getPayPalExpressCheckoutURL()
-    {
-        return $this->configVariables['PAYPAL_EXPRESS_CHECKOUT_URL'];
-    }
-
-    public function showErrors()
-    {
-        if (strtoupper($this->configVariables['SHOW_ERRORS']) == 'TRUE') {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public function debugModeOn()
-    {
-        if (strtoupper($this->configVariables['DEBUGGING']) == 'TRUE') {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public function useStaticCaching()
-    {
-        if (strtoupper($this->configVariables['STATIC_CACHING']) == 'TRUE') {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
-    public function forceRecompile()
-    {
-        if (strtoupper($this->configVariables['FORCE_RECOMPILE']) == 'TRUE') {
-            return true;
-        } else {
-            return false;
-        }
-    }
-
 }

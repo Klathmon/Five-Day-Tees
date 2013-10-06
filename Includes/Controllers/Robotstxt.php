@@ -6,7 +6,7 @@
 
 $output = 'User-agent: *'. PHP_EOL;
 
-if($config->getMode() != 'LIVE'){
+if($config->get('MODE') != 'LIVE'){
     $output .= 'Disallow: /' . PHP_EOL;
 }else{
     $output .= 'Disallow: ' . PHP_EOL;

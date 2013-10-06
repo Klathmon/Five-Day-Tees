@@ -1,61 +1,52 @@
-<div
-        id="InnerViewport"
-        {if $primaryItem->getGender() == 'male'}
-            data-maleid="{$primaryItem->getID()}"
-        {else}
-            data-femaleid="{$primaryItem->getID()}"
-        {/if}
-        {if $secondaryItem->getGender() == 'male'}
-            data-maleid="{$secondaryItem->getID()}"
-        {else}
-            data-femaleid="{$secondaryItem->getID()}"
-        {/if}
+<div id="InnerViewport" data-encodedname="{$primary->getEncodedName()}">
 
-        data-url="{$primaryItem->getURL()}"
-        >
-    <h2 class="Name">{$primaryItem->getName()}</h2>
+    <h2 class="Name">{$primary->getArticle()->getName()}</h2>
 
-    <p class="Description">{$primaryItem->getDescription()}</p>
+    <p class="Description">{$primary->getProduct()->getDescription()}</p>
 
     <div class="FullImages">
-        <img src="{$primaryItem->getFormattedProductImage(400,450,'png')}" alt="{$primaryItem->getName()} - {$primaryItem->getDescription()}"
-             class="Primary"/>
-        <img src="{$secondaryItem->getFormattedProductImage(400,450,'png')}" alt="{$secondaryItem->getName()} - {$secondaryItem->getDescription()}"
-             class="Secondary"/>
+        {foreach ['Primary' => $primary, 'Secondary' => $secondary] as $class => $item}
+            <img
+                    src="{$item->getProduct()->getFormattedImage(450,450,'png')}"
+                    alt="{$item->getArticle()->getName()} - {$item->getProduct()->getDescription()}"
+                    class="{$class}"
+                    height=450
+                    width=450
+                    />
+        {/foreach}
     </div>
 
-    <p class="Price"><span class="Number">${number_format($settings->getItemCurrentPrice($primaryItem), 2)}</span> + Shipping</p>
+    <p class="Price"><span class="Number">{currency amount=$primary->getCurrentPrice()}</span> + Shipping</p>
 
     <div class="Genders">
-        <input
-                type="radio"
-                name="gender"
-                value="male"
-                id="male"
-                {if $primaryItem->getGender() == 'male'}checked{/if}
-                />
-        <label for="male">Male</label>
-        <input
-                type="radio"
-                name="gender"
-                value="female"
-                id="female"
-                {if $primaryItem->getGender() == 'female'}checked{/if}
-                />
-        <label for="female">Female</label>
+        {foreach [$primary, $secondary] as $item}
+            <input
+                    type="radio"
+                    name="gender"
+                    value="{$item->getProduct()->getType()}"
+                    id="{$item->getProduct()->getType()}"
+                    data-id="{$item->getID()}"
+                    {if $primary == $item}checked{/if}
+                    />
+            <label for="{$item->getProduct()->getType()}">{$item->getProduct()->getType()|capitalize}</label>
+        {/foreach}
     </div>
 
     <div class="Sizes">
-        {foreach $primaryItem->getSizesAvailable() as $size}
-            <input type="radio" name="size" value="{$size}" id="{$size}"/>
-            <label for="{$size}">{$size}</label>
-        {/foreach}
+        {html_radios 
+            name='size'
+            values=$primary->getProduct()->getSizes()
+            output=$primary->getProduct()->getSizes()
+            labels=true
+            label_ids=true
+        }
     </div>
 
     <button id="AddToCart">Add To Cart</button>
 
     <div class="Social">
-        <div class="GPlus" data-href="{$primaryItem->getPermalink()}" data-callback="plusone" data-annotation="inline" data-width="300"></div>
-        <div class="Facebook" data-href="{$primaryItem->getPermalink()}" data-send="false" data-width="300" data-show-faces="true"></div>
+        <div class="GPlus" data-href="{$primary->getPermalink()}" data-callback="plusone" data-annotation="inline"
+             data-width="300"></div>
+        <div class="Facebook" data-href="{$primary->getPermalink()}" data-send="false" data-width="300" data-show-faces="true"></div>
     </div>
 </div>

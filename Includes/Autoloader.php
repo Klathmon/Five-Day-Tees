@@ -15,10 +15,5 @@ function Autoloader($className)
 
     if (is_file(get_include_path() . $fileName)) {
         include $fileName;
-    } else {
-        switch ($className) {
-            default:
-                //throw new Exception('Class ' . $className . ' cannot be loaded!');
-        }
     }
 }

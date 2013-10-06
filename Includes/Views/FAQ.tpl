@@ -45,7 +45,8 @@
         <p>
             <span>Dafaq is a vault?</span><br/>
             That’s where old designs go to die when we run out of stock. They are fed bread, water and tortured with
-            fire. If you go there and vote for the shirts we release them back into the store! But beware- the shirts have
+            fire. If you go there and vote for the shirts we release them back into the store! But beware- the shirts
+            have
             gone mad from being in captivity and come back all new and different... like they’ve been bitten by a
             werewolf or something.
         </p>
@@ -76,40 +77,51 @@
 
         <p>
             All orders are shipped out within 1 - 2 days of receipt of payment.<br/>
-            We currently offer <!--three-->two shipping methods:
+            We currently offer {count($shippingMethods)} shipping methods:
         </p>
         <table>
-            <tr>
-                <th>Type</th>
-                <th>Estimated Time</th>
-                <th>$0 - $50</th>
-                <th>$50 - $100</th>
-                <th>$100 - $150</th>
-            </tr>
-            <tr>
-                <td>Standard
-                <td>4 - 8 Business Days
-                <td>$4.50
-                <td>$7.00
-                <td>$9.50
-            </tr>
-            <tr>
-                <td>Premium
-                <td>3 - 5 Business Days
-                <td>$11.99
-                <td>$15.99
-                <td>$17.99
-            </tr>
-            <!--<tr>
-                <td>Next Day Express
-                <td>1 - 2 Business Days
-                <td>$29.99
-                <td>$41.99
-                <td>$53.99
-            </tr>-->
+            <thead>
+                <tr>
+                    <th>Type</th>
+                    <th>Estimated Time</th>
+                    <th>
+                        $0 - 
+                        {currency amount=$shippingMethods[0]->getTier1PriceLimit()}
+                    </th>
+                    <th>
+                        {currency amount=$shippingMethods[0]->getTier1PriceLimit() add=Currency::createFromCents(1)} -
+                        {currency amount=$shippingMethods[0]->getTier2PriceLimit()}
+                    </th>
+                    <th>
+                        {currency amount=$shippingMethods[0]->getTier2PriceLimit() add=Currency::createFromCents(1)} -
+                        {currency amount=$shippingMethods[0]->getTier3PriceLimit()}
+                    </th>
+                </tr>
+            </thead>
+            <tbody>
+                {foreach $shippingMethods as $shippingMethod}
+                    <tr>
+                        <td>{$shippingMethod->getName()}</td>
+                        <td>
+                            {$shippingMethod->getEstimatedDaysLow()} -
+                            {$shippingMethod->getEstimatedDaysHigh()}
+                            Business Days
+                        </td>
+                        <td>
+                            {currency amount=$shippingMethod->getTier1Cost()}
+                        </td>
+                        <td>
+                            {currency amount=$shippingMethod->getTier2Cost()}
+                        </td>
+                        <td>
+                            {currency amount=$shippingMethod->getTier3Cost()}
+                        </td>
+                    </tr>
+                {/foreach}
+            </tbody>
         </table>
         <p>
-            For orders over $150 please contact us before placing your order. To get the details read our terms of
+            For orders over {currency amount=$shippingMethods[0]->getTier3PriceLimit()} please contact us before placing your order. To get the details read our terms of
             agreement.<br/>
             <span>*Please Note, we cannot ship to PO Boxes or APO Addresses</span>
         </p>
@@ -120,8 +132,10 @@
 
         <p>
             If your merchandise does arrive defective, we ask that you contact us within 2 weeks to coordinate an
-            acceptable solution. Please include your order number and a detailed explanation of the problem – a picture is
-            always a good idea. Include size exchange or color exchange info. We can’t resell anything but we can offer you a
+            acceptable solution. Please include your order number and a detailed explanation of the problem – a picture
+            is
+            always a good idea. Include size exchange or color exchange info. We can’t resell anything but we can offer
+            you a
             store credit.
         </p>
     </div>
@@ -131,7 +145,8 @@
 
         <p>
             Because we make each shirt to order - all orders are final, however, we want to be as ‘helpful’ as we
-            can. If you make a mistake with your order, contact us and we will see what we can reasonably do to help you get
+            can. If you make a mistake with your order, contact us and we will see what we can reasonably do to help you
+            get
             the shirt you want. We can’t resell anything but we can offer you a store credit. (Did I just repeat
             myself?)
         </p>

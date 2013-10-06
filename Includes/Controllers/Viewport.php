@@ -4,33 +4,33 @@
  * Date: 8/28/13
  */
 
-$template = new FDTSmarty($config, 'Viewport.tpl', 'Viewport', $request->getFullURI());
+$name = $request->get(1);
+$ID   = $request->get(2);
+
+$template = new FDTSmarty($config, 'Viewport.tpl', 'Viewport', $name . $ID);
 
 
 if (!$template->isPageCached()) {
     $settings    = new Settings($database, $config);
-    $itemsMapper = new \Mapper\Item($database, $config);
+    $itemFactory = new \DisplayItem\Factory($database, $settings);
 
-    $items = $itemsMapper->getByName($settings->decodeName($request->get(1)));
+    /* Try to grab the shirt from the database, if it fails, forward the user to /404 */
+    try{
+        $items = $itemFactory->getByNameFromDatabase($name);
 
-    //We are good! shirts are okay to display!
-
-    $template->assign('settings', $settings);
-
-    /* If there is no default ID set, set it to the first shirt's ID */
-    $defaultID = (!is_null($request->get(2)) ? Sanitize::cleanInteger($request->get(2)) : $items[0]->getID());
-
-    foreach ($items as $item) {
-        if ($item->getID() == $defaultID) {
-            $template->assign('primaryItem', $item);
-        } else {
-            $template->assign('secondaryItem', $item);
+        foreach ($items as $item) {
+            if (($ID == '' && $item->getProduct()->getType() == 'male') || $item->getID() == $ID) {
+                //Primary item here
+                $template->assign('primary', $item);
+            } else {
+                //Secondary item here
+                $template->assign('secondary', $item);
+            }
         }
+    } catch(Exception $e){
+        header('/404');
+        die();
     }
-
-    if ($items !== false && $items[0]->getCategory() != 'Queue') {
-        $template->output();
-    }
-} else {
-    $template->output();
 }
+
+$template->output();
