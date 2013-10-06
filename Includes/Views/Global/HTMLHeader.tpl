@@ -8,11 +8,14 @@
         <link href="{$cssURL}" rel="stylesheet" type="text/css"/>
     {/foreach}
 
+    
     <!--[if lt IE 9]>
-    <script defer src="//ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/{$jQueryVersions[0]}/jquery{$minified}.js"></script>
+    <script>window.jQuery || document.write('<script src="/Static/JS/jQuery/jquery-{$jQueryVersions[0]}{$minified}.js"><\/script>')</script>
     <![endif]-->
     <!--[if gte IE 9]><!-->
-    <script defer src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js"></script>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/{$jQueryVersions[1]}/jquery{$minified}.js"></script>
+    <script>window.jQuery || document.write('<script src="/Static/JS/jQuery/jquery-{$jQueryVersions[1]}{$minified}.js"><\/script>')</script>
     <!--<![endif]-->
 
     {foreach $javascripts as $scriptURL}
