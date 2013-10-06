@@ -14,6 +14,8 @@ class Entity extends \Item\Entity
     protected $cartitemID;
     /** @var string */
     protected $size;
+    /** @var int */
+    protected $quantity;
 
     /**
      * @return string
@@ -38,5 +40,19 @@ class Entity extends \Item\Entity
 
     }
 
+    /**
+     * @return int
+     */
+    public function getQuantity()
+    {
+        return $this->quantity;
+    }
 
+    /**
+     * @param int $quantity
+     */
+    public function setQuantity($quantity)
+    {
+        $this->quantity = $quantity;
+    }
 }

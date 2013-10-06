@@ -8,18 +8,8 @@ echo 'Test Page!<br/>';
 
 $settings = new Settings($database, $config);
 
-$factory = new \DisplayItem\Factory($database, $settings);
+$cart = new \ShoppingCart($database, $settings);
 
-//$entities = $factory->getStoreFromDatabase();
+$cart->addCartItemByItemIDAndSize('SywqyUzOSfV0sTU2USsoyk8pTS4BcgwNLSzNzc0MAA==', 'M');
 
-//Debug::dump($entities);
-
-$array = ['articleID' => '1231153', 'productID' => 'whut!'];
-$first = base64_encode(gzdeflate(http_build_query($array), 9));
-parse_str(gzinflate(base64_decode($first)), $second);
-
-echo $first . "<br/>";
-Debug::dump($second);
-
-
-//$factory->persistToDatabase($entity);
+Debug::dump($cart);

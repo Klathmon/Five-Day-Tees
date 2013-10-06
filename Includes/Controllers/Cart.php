@@ -10,30 +10,25 @@
 $sizeSanitizeCharacters = 'ALMNSX';
 
 $settings              = new Settings($database, $config);
-//$shoppingCart          = new ShoppingCart($database, $settings);
 $shippingMethodFactory = new \ShippingMethod\Factory($database);
+$shoppingCart          = new ShoppingCart($database, $settings);
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     switch ($_POST['Command']) {
         case 'AddItem':
-            $ID   = Sanitize::cleanInteger($_POST['ID']);
-            $size = Sanitize::preserveGivenCharacters($_POST['Size'], $sizeSanitizeCharacters);
-            $shoppingCart->addSalesItem($ID, $size);
+            $size   = Sanitize::preserveGivenCharacters($_POST['size'], $sizeSanitizeCharacters);
+            $shoppingCart->addCartItemByItemIDAndSize($_POST['itemID'], $size);
             break;
         case 'RemoveItem':
-            $ID   = Sanitize::cleanInteger($_POST['ID']);
-            $size = Sanitize::preserveGivenCharacters($_POST['Size'], $sizeSanitizeCharacters);
-            $shoppingCart->deleteSalesItem($ID, $size);
+            $shoppingCart->deleteCartItem($_POST['ID']);
             break;
         case 'UpdateItem':
-            $ID       = Sanitize::cleanInteger($_POST['ID']);
-            $size     = Sanitize::preserveGivenCharacters($_POST['Size'], $sizeSanitizeCharacters);
             $quantity = Sanitize::cleanInteger($_POST['Quantity']);
 
             try{
-                $salesItem = $shoppingCart->getSalesItem($ID, $size);
-                $salesItem->setQuantity($quantity);
+                $cartItem = $shoppingCart->getCartItemByID($_POST['ID']);
+                $cartItem->setQuantity($quantity);
             } catch(Exception $e){
                 //Silently skip if someone tries to update an item that's not in their cart, or something else goes wrong.
             }
@@ -44,7 +39,9 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         case 'AddCouponToCart':
             $couponCode = Sanitize::cleanAlphaNumeric($_POST['Code']);
             try{
-                $shoppingCart->setCoupon($couponCode);
+                $couponFactory = new \Coupon\Factory($database);
+                $coupon        = $couponFactory->getByCodeFromDatabase($couponCode);
+                $shoppingCart->setCoupon($coupon);
             } catch(Exception $e){
                 //Silently skip if someone tries to add a coupon that doesn't exist or has no more uses
             }
@@ -55,7 +52,8 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         case 'SetShipping':
             $ID = Sanitize::cleanInteger($_POST['ID']);
             try{
-                $shoppingCart->setShippingMethod($ID);
+                $shippingMethod = $shippingMethodFactory->getByIDFromDatabase($ID);
+                $shoppingCart->setShippingMethod($shippingMethod);
             } catch(Exception $e){
                 //Silently skip if someone tries to add a shipping method that doesn't exist
             }
@@ -68,44 +66,14 @@ if ($shoppingCart->getPreShippingTotal()->getDecimal() >= 150) {
     echo "<script>alert('The you have too many items in your cart! For orders over $150 please contact us directly!');</script>";
 }
 
-$template = new FDTSmarty($config, 'Cart.tpl');
+$template = new FDTSmarty($config, 'Cart.tpl', 'Cart');
 
-foreach ($shoppingCart->getAllSalesItems() as $salesItem) {
-    $salesItems[] = [
-        'articleID' => $salesItem->getArticle()->getID(),
-        'size' => $salesItem->getSize(),
-        'name' => $salesItem->getName(),
-        'type' => $salesItem->getProduct()->getType(),
-        'price' => $salesItem->getPurchasePrice()->getNiceFormat(),
-        'quantity' => $salesItem->getQuantity()
-    ];
-}
-
-foreach($shippingMethodFactory->getAll(false) as $shippingMethod){
-    $shippingMethods[] = [
-        'ID' => $shippingMethod->getID(),
-        'name' => $shippingMethod->getName(),
-        'price' => $shippingMethod->calculateShippingPrice($shoppingCart->getPreShippingTotal())->getNiceFormat()
-    ];
-}
-
-$template->assign('salesItems', (isset($salesItems) ? $salesItems : []));
-$template->assign('shippingMethods', $shippingMethods);
-$template->assign('total', $shoppingCart->getFinalTotal()->getNiceFormat());
+$template->assign('cartItems', $shoppingCart->getCartItems());
+$template->assign('shippingMethods', $shippingMethodFactory->getAllEnabledFromDatabase());
+$template->assign('chosenShippingMethod', $shoppingCart->getShippingMethod());
+$template->assign('coupon', $shoppingCart->getCoupon());
+$template->assign('preShippingTotal', $shoppingCart->getPreShippingTotal());
+$template->assign('total', $shoppingCart->getFinalTotal());
 $template->assign('callOutBoxText', $settings->getCartCallout());
-
-try{
-    $template->assign('chosenShippingMethodID', $shoppingCart->getShippingMethod()->getID());
-} catch(Exception $e){
-    $template->assign('chosenShippingMethodID', -1); //This will make it so none of them are selected
-}
-
-try{
-    $coupon = $shoppingCart->getCoupon();
-    $template->assign('couponCode', $coupon->getCode());
-    $template->assign('amount', $coupon->getAmount()->getNiceFormat());
-} catch(Exception $e){
-    //Do nothing!
-}
 
 $template->output();

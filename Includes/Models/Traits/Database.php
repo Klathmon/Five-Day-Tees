@@ -78,7 +78,7 @@ trait Database
         return $this->database->lastInsertId();
     }
 
-    protected function executeAndParse($statement)
+    protected function executeAndParse($statement, $passThru = null)
     {
         /** @var PDOStatement $statement */
         
@@ -90,14 +90,14 @@ trait Database
             throw new \Exception('No data in returned array');
         }
 
-        return $this->parseDatabaseResult($rows);
+        return $this->parseDatabaseResult($rows, $passThru);
     }
 
-    protected function parseDatabaseResult($array)
+    protected function parseDatabaseResult($array, $passThru = null)
     {
         foreach ($array as $row) {
             /** @var object $this */
-            $returnArray[] = $this->convertArrayToObject($row);
+            $returnArray[] = $this->convertArrayToObject($row, $passThru);
         }
 
         return $returnArray;

@@ -12,7 +12,7 @@ use Exception;
 class Entity extends \Abstracts\Entity
 {
     /** @var int */
-    protected $shippingMethodID;
+    protected $shippingmethodID;
     /** @var string */
     protected $name;
     /** @var int */

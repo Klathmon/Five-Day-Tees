@@ -88,7 +88,7 @@ SQL;
 
     public function getIDFromParts($array)
     {
-        sort($array);
+        ksort($array);
         return base64_encode(gzdeflate(http_build_query($array), 9));
     }
 
@@ -101,7 +101,7 @@ SQL;
 
     final protected function convertObjectToArray($entity)
     {
-        throw new Exception('Can\'t convert Items (or their derivitives) to Arrays');
+        throw new Exception('Can\'t convert Items (or their derivatives) to Arrays');
     }
 
     protected function convertArrayToObject($array, $passThru = [])

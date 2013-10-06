@@ -6,22 +6,44 @@
 
 namespace CartItem;
 
+use PDO;
+use PDOStatement;
+
 class Factory extends \Item\Factory
 {
 
     /**
      * @param string $ID
-     * @param string $size
      *
      * @return Entity
      */
-    public function getByIDAndSizeFromDatabase($ID, $size)
+    public function getByIDFromDatabase($ID)
     {
-        /** @var Entity $cartItem */
-        $cartItem = $this->getByIDFromDatabase($ID);
-        
-        $cartItem->setSize($size);
-        
-        return $cartItem;
+        $statement = $this->database->prepare(
+            $this->sqlSelect . ' WHERE articleID=:articleID AND productID =:productID LIMIT 1'
+        );
+
+        $IDs = $this->getPartsFromID($ID);
+
+        $statement->bindValue(':articleID', $IDs['articleID']);
+        $statement->bindValue(':productID', $IDs['productID']);
+
+        $statement->execute();
+
+        return $this->executeAndParse($statement, ['size' => $this->getPartsFromID($ID)['size']])[0];
+    }
+
+    protected function convertArrayToObject($array, $passThru = null)
+    {
+        $passThru['cartitemID'] = $this->getIDFromParts(
+            [
+                'articleID' => $array['articleID'],
+                'productID' => $array['productID'],
+                'size' => $passThru['size']
+            ]
+        );
+        $passThru['quantity'] = 1;
+
+        return parent::convertArrayToObject($array, $passThru);
     }
 }
