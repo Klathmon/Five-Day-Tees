@@ -43,7 +43,7 @@ class FDTSmarty extends Smarty
         $this->setCompileDir('Cache/CompiledTemplates');
         $this->setCacheDir('Cache/CachedTemplates');
         
-        $this->registerPlugin('function', 'currency', ['\\SmartyPlugins\\Currency', 'output'], true, ['amount', 'add']);
+        $this->registerPlugin('function', 'currency', ['\\SmartyPlugins\\Currency', 'output'], true);
 
         if($this->config->get('DEBUG', 'DEBUGGING')){
             //$this->debugging = true;
