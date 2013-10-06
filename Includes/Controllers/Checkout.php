@@ -30,13 +30,13 @@ switch ($request->get(1)) {
         );
 
         $customerFactory = new \Factory\Customer($database);
-        
+
         try{
             $customer = $customerFactory->getByPayPalPayerID($response['PAYERID']);
             $customer->setFirstName($response['FIRSTNAME']);
             $customer->setLastName($response['LASTNAME']);
             $customer->setEmail($response['EMAIL']);
-        }catch(Exception $e){
+        } catch(Exception $e){
             $customer = $customerFactory->create(
                 null,
                 $response['PAYERID'],
@@ -48,18 +48,18 @@ switch ($request->get(1)) {
                 1
             );
         }
-        
+
         $customerFactory->persist($customer);
-        
-        for($x = 0; array_key_exists('L_PAYMENTREQUEST_0_NUMBER' . $x, $response); $x++){
+
+        for ($x = 0; array_key_exists('L_PAYMENTREQUEST_0_NUMBER' . $x, $response); $x++) {
             $items[] = [
-                'ID' => $response['L_PAYMENTREQUEST_0_NUMBER' . $x],
-                'name' => $response['L_PAYMENTREQUEST_0_NAME' . $x],
+                'ID'       => $response['L_PAYMENTREQUEST_0_NUMBER' . $x],
+                'name'     => $response['L_PAYMENTREQUEST_0_NAME' . $x],
                 'quantity' => $response['L_PAYMENTREQUEST_0_QTY' . $x],
-                'amount' => $response['L_PAYMENTREQUEST_0_AMT' . $x],
+                'amount'   => $response['L_PAYMENTREQUEST_0_AMT' . $x],
             ];
         }
-        
+
         var_dump($items);
 
         echo 'IT WORKED!';
@@ -88,26 +88,23 @@ switch ($request->get(1)) {
         //$expressCheckout->addParameter('HDRBORDERCOLOR', 'Hex border color here (for the header)');
 
         $index = 0;
-        foreach ($shoppingCart->getAllSalesItems() as $salesItem) {
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NAME' . $index, $salesItem->getName());
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NUMBER' . $index, $salesItem->getKey());
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_DESC' . $index, $salesItem->getArticle()->getDescription());
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_QTY' . $index, $salesItem->getQuantity());
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_AMT' . $index, $salesItem->getPurchasePrice()->getNiceFormat());
+        foreach ($shoppingCart->getCartItems() as $cartItem) {
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NAME' . $index, $cartItem->getArticle()->getName());
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NUMBER' . $index, $cartItem->getID());
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_DESC' . $index, $cartItem->getProduct()->getDescription());
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_QTY' . $index, $cartItem->getQuantity());
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_AMT' . $index, number_format($cartItem->getCurrentPrice()->getDecimal(), 2));
             $index++;
         }
 
         /** Add the coupon as an item with a negative price if it exists. */
-
-        try{
-            $coupon = $shoppingCart->getCoupon();
+        $coupon = $shoppingCart->getCoupon();
+        if (!is_null($coupon)) {
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NAME' . $index, 'COUPON:' . $coupon->getCode());
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_NUMBER' . $index, $coupon->getID());
             $expressCheckout->addParameter('L_PAYMENTREQUEST_0_QTY' . $index, 1);
-            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_AMT' . $index, $shoppingCart->getCouponDiscount()->getNiceFormat());
+            $expressCheckout->addParameter('L_PAYMENTREQUEST_0_AMT' . $index, number_format($shoppingCart->getCouponAmount()->getDecimal(), 2));
             $index++;
-        } catch(Exception $e){
-            //Silently skip if there is no coupon.
         }
 
         $subtotal       = $shoppingCart->getPreShippingTotal();
@@ -115,18 +112,19 @@ switch ($request->get(1)) {
         $finalTotal     = $shoppingCart->getFinalTotal();
 
 
-        $expressCheckout->addParameter('PAYMENTREQUEST_0_ITEMAMT', $subtotal->getNiceFormat());
-        $expressCheckout->addParameter('PAYMENTREQUEST_0_SHIPPINGAMT', $shippingAmount->getNiceFormat());
-        $expressCheckout->addParameter('PAYMENTREQUEST_0_AMT', $finalTotal->getNiceFormat());
-
-        Debug::dump($expressCheckout);
+        $expressCheckout->addParameter('PAYMENTREQUEST_0_ITEMAMT', number_format($subtotal->getDecimal(), 2));
+        $expressCheckout->addParameter('PAYMENTREQUEST_0_SHIPPINGAMT', number_format($shippingAmount->getDecimal(), 2));
+        $expressCheckout->addParameter('PAYMENTREQUEST_0_AMT', number_format($finalTotal->getDecimal(), 2));
 
         try{
             header('Location: ' . $expressCheckout->getUserCheckoutURL());
         } catch(Exception $e){
-            //Something went wrong, show the user an error...
-            Debug::dump($e);
-            //header('Location: /500');
+            //Something went wrong, show me what if i'm debugging, otherwise show the user a 500 error...
+            if($config->get('DEBUG', 'DEBUGGING')){
+                Debug::dump($e);
+            }else{
+                header('Location: /500');
+            }
         }
         break;
 }
