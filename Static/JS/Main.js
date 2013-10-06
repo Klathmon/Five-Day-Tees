@@ -28,6 +28,7 @@
         $('.ItemsContainer').on('click', '.Item:not(.Selected)', itemClicked);
 
         $('#Viewport').on('click', '.Genders INPUT[type=radio]', changeViewport)
+            .on('click', '.Sizes LABEL', changeSize)
             .on('click', '#AddToCart', addToCart);
 
         $('#CartButton').on('click', showCart);
@@ -160,6 +161,14 @@
         var id = $this.data('id');
 
         loadViewport(encodedName, id);
+    }
+    
+    function changeSize(event){
+        var $this = $(event.target);
+        
+        $this.closest('.Sizes').find('LABEL').removeClass('checked');
+        
+        $this.parent().addClass('checked');
     }
 
     function loadViewport(encodedName, id){
